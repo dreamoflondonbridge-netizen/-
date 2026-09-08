@@ -98,6 +98,16 @@ body{
 .g-media > i{background-color:var(--media);} .g-enga  > i{background-color:var(--enga);}
 .stat .val{width:44px; text-align:right; font-size:12px;}
 .stat.bump .val{animation:pop .4s;}
+/* 최대치(900점)에 도달한 스탯 */
+.stat.maxed .val{color:#c8451f; font-weight:bold;}
+.stat.maxed .gauge{border-color:#c8451f; box-shadow:0 0 0 2px #ffd34d;}
+.stat.maxed .gauge::after{
+  content:'MAX'; position:absolute; inset:0; text-align:center; line-height:10px;
+  font-size:9px; color:#fff; text-shadow:1px 1px 0 rgba(0,0,0,.5); letter-spacing:1px;
+}
+/* 정답 모달에서 이미 최대치라 고를 수 없는 스탯 */
+.pick.maxed{filter:grayscale(.75) brightness(.9); cursor:not-allowed; opacity:.75;}
+.pick.maxed:hover{filter:grayscale(.75) brightness(.9);}
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.6)}100%{transform:scale(1)}}
 
 /* ---------- 교실 화면 ---------- */
@@ -400,6 +410,9 @@ const STAT_META = {
 };
 const STAT_KEYS = ['logic','deliv','media','enga'];
 
+/* ★ 한 스탯이 올라갈 수 있는 최대 점수. 여기까지만 오르고 더는 올라가지 않습니다. */
+const STAT_MAX = 900;
+
 /* ---------- 스테이지 이름 ---------- */
 /* 스테이지별 장소 (배경 그림이 함께 바뀝니다) */
 const PLACES = {
@@ -563,90 +576,94 @@ SENTENCES.forEach(sen => {
        · stageImagePath : 마지막에 커튼이 열리고 '강당 무대'에 서는 캐릭터
        · imagePath      : 무대가 끝난 뒤 결과 화면에 나오는 엔딩 캐릭터
      둘 다 값을 바꾸면 그림이 바뀝니다.
-     - 이 HTML 파일과 같은 폴더에 그림을 두었다면 :  "king.png"
-     - images 폴더 안에 두었다면              :  "images/king.png"
-     - 인터넷 주소(URL)를 써도 됩니다          :  "https://example.com/king.png"
+     지금은 모두 images 폴더를 가리키고 있습니다.  예) "images/king.png"
+     → 저장소의 images 폴더에 같은 이름으로 그림을 올리기만 하면 바로 나옵니다.
+     (자세한 방법은 README.md 의 '엔딩 이미지 넣기' 참고)
    ▶ 이미지 파일이 없어도 그대로 작동합니다.
      (엔딩 카드는 아래 emoji 로, 무대 캐릭터는 도트 캐릭터로 대신 표시)
    ▶ 판정 순서는 배열의 위에서 아래 순서입니다.
-     (먼저 조건이 맞는 엔딩이 채택됩니다. 순서를 바꾸고 싶다면
-      아래 객체들의 위치를 통째로 옮기면 됩니다.)
+     먼저 조건이 맞는 엔딩이 채택되므로,
+     '한 스탯 900점' 엔딩 4개를 총점 엔딩보다 위에 두었습니다.
+   ▶ cond 는 (스탯, 총점) 을 받습니다.
+       cond:(s, total) => s.logic >= STAT_MAX   ← 논리력이 최대치일 때
+       cond:(s, total) => total >= 1050         ← 총점이 1050점 이상일 때
    ================================================================== */
 const ENDINGS = [
-  /* 1. 4개 스탯 모두 200점 이상 */
+  /* ===============================================================
+     1단계 · 한 스탯을 최대치(900점)까지 채운 경우  ← 가장 먼저 검사
+     (총점 판정보다 먼저 두지 않으면 이 엔딩들은 절대 나오지 않습니다.
+      한 스탯이 900점이면 총점도 자동으로 850점을 넘기 때문입니다.)
+     =============================================================== */
+  { name:'말싸움의 달인', emoji:'🧠',
+    imagePath:'images/logic.png',
+    stageImagePath:'images/logic-stage.png',
+    desc:'논리력 900점 만점! 근거와 근거로 상대를 설득하는,\n다원중에서 말로는 아무도 못 이기는 발표자.',
+    cond:(s, total) => s.logic >= STAT_MAX },
+
+  { name:'스피치의 달인', emoji:'🎙️',
+    imagePath:'images/speech.png',
+    stageImagePath:'images/speech-stage.png',
+    desc:'전달력 900점 만점! 목소리 크기, 속도, 눈맞춤까지 완벽한\n타고난 이야기꾼 발표자.',
+    cond:(s, total) => s.deliv >= STAT_MAX },
+
+  { name:'PPT의 달인', emoji:'💻',
+    imagePath:'images/ppt.png',
+    stageImagePath:'images/ppt-stage.png',
+    desc:'매체 활용도 900점 만점! 그래프, 사진, 영상을 자유자재로\n슬라이드 한 장으로 설명을 끝내는 발표자.',
+    cond:(s, total) => s.media >= STAT_MAX },
+
+  { name:'다원중 인기쟁이', emoji:'❤️',
+    imagePath:'images/popular.png',
+    stageImagePath:'images/popular-stage.png',
+    desc:'청중 호응도 900점 만점! 발표만 시작하면 교실이 들썩,\n모두가 좋아하는 다원중의 인기쟁이.',
+    cond:(s, total) => s.enga >= STAT_MAX },
+
+  /* ===============================================================
+     2단계 · 총점(4개 스탯의 합)으로 판정
+     한 판에서 얻을 수 있는 총점은 최대 1130점입니다.
+     =============================================================== */
   { name:'전설의 발표왕', emoji:'👑',
-    imagePath:'king.png',             /* ← 엔딩 카드 이미지 */
-    stageImagePath:'stage_king.png',    /* ← 강당 무대에 세울 이미지 */
-    desc:'궁극의 육각형! 논리·전달·매체·호응 어느 하나 빠지지 않는 완전체.\n다원중 강당이 {이름}의 무대가 되었다!',   /* {이름} 은 학생이 정한 발표자 이름으로 자동 치환됩니다 */
-    cond:s => STAT_KEYS.every(k => s[k] >= 200) },
+    imagePath:'images/king.png',
+    stageImagePath:'images/king-stage.png',
+    desc:'총점 1050점 이상! 논리·전달·매체·호응 무엇 하나 빠지지 않는 완전체.\n다원중 강당이 {이름}의 무대가 되었다!',
+    cond:(s, total) => total >= 1050 },
 
-  /* 2. 4개 스탯 모두 170점 이상 */
-  { name:'다원중 수석 졸업생', emoji:'🎓',
-    imagePath:'top.png',              /* ← 엔딩 카드 이미지 */
-    stageImagePath:'stage_top.png',    /* ← 강당 무대에 세울 이미지 */
-    desc:'완벽한 모범생! 준비-조직-발표-점검까지 교과서대로 해내는 우등생 발표자.',
-    cond:s => STAT_KEYS.every(k => s[k] >= 170) },
+  { name:'발표의 신', emoji:'⚡',
+    imagePath:'images/god.png',
+    stageImagePath:'images/god-stage.png',
+    desc:'총점 950점 이상! 무대에 서는 순간 공기가 달라진다.\n선생님도 감탄한 신의 경지.',
+    cond:(s, total) => total >= 950 },
 
-  /* 3. 700점 이상 최고존엄 특화 */
-  { name:'다원중 코난', emoji:'🕵️‍♂️',
-    imagePath:'https://w7.pngwing.com/pngs/529/213/png-transparent-conan-thumbnail.png',            /* ← 엔딩 카드 이미지 */
-    stageImagePath:'https://i.namu.wiki/i/ImAWu-LWz8Ak1cuidwX1Wsmgmj5IJ_LAdSNbcDboYnBky0ZRMDpfFc_9QDwJLd9NGMf912cPukOVMpOXgcrpSg.webp',    /* ← 강당 무대에 세울 이미지 */
-    desc:'“진실은 언제나 하나!” 원인과 결과를 꿰뚫는 압도적 논리력의 소유자.',
-    cond:s => s.logic >= 700 },
-  { name:'다원중 퉁퉁이', emoji:'🎤',
-    imagePath:'https://i.namu.wiki/i/a9JuhHR2ywvt9iyZS72os-1CLev6u7p365-NBXfgFNZSHC8DlAA9j6JqOv1G9w7woPzpjA_gVMr0Wb2exZXs0g.webp',         /* ← 엔딩 카드 이미지 */
-    stageImagePath:'https://i.namu.wiki/i/mSayAxaGDQrOXArdpTpg7nSIwsueXmNemTQt70oEB95QWF4zlk0lNvx9qDITCQvf_G51VsrOGfn66oKkbYMseA.webp',    /* ← 강당 무대에 세울 이미지 */
-    desc:'“내 발표를 들어라!” 강당을 뒤흔드는 압도적 성량과 전달력의 소유자.',
-    cond:s => s.deliv >= 700 },
-  { name:'다원중 토니 스타크', emoji:'🦾',
-    imagePath:'https://pds.joongang.co.kr//news/component/htmlphoto_mmdata/201808/19/1194df18-f60b-490e-8aa9-529b2195d302.jpg',             /* ← 엔딩 카드 이미지 */
-    stageImagePath:'https://shopby-images.cdn-nhncommerce.com/20240527/163124.773185000/REFUR_42.jpg',    /* ← 강당 무대에 세울 이미지 */
-    desc:'그래프·영상·홀로그램까지! 매체 활용의 천재 발명가형 발표자.',
-    cond:s => s.media >= 700 },
-  { name:'다원중 장원영', emoji:'✨',
-    imagePath:'https://www.atstar1.com/news/photo/202512/6029627_101437_1812.jpg',             /* ← 엔딩 카드 이미지 */
-    stageImagePath:'https://7lgigmttrjuyfehsudec15072.edge.naverncp.com/news/photo/202512/788778_1278424_2940.jpg',    /* ← 강당 무대에 세울 이미지 */
-    desc:'럭키비키! 청중을 사로잡는 초긍정 아우라, 호응도 만렙 발표자.',
-    cond:s => s.enga >= 700 },
+  { name:'발표의 달인', emoji:'🏆',
+    imagePath:'images/master.png',
+    stageImagePath:'images/master-stage.png',
+    desc:'총점 850점 이상! 어떤 주제를 줘도 척척 해내는 믿음직한 발표자.',
+    cond:(s, total) => total >= 850 },
 
-  /* 4. 400점 이상 상위권 특화 */
-  { name:'다원중 주디', emoji:'🐰',
-    imagePath:'https://i.namu.wiki/i/e02EnA4Oy6hN0X622h9BlFcg8ay0j_br1AIIz911F5qW2YKRG7NfghAlvUkKVN6JxZI4dGljAS_9VpVnmtMUyw.webp',             /* ← 엔딩 카드 이미지 */
-    stageImagePath:'https://i.namu.wiki/i/MsJ1eQaPcJbEAkUtOCGCLfO0MZk_kPjhHbqWLmpc2E8UUYw8LcsFlvplIDKnwwpSXDM7F5Y3ZeeaWOzL3aGPGQ.webp',    /* ← 강당 무대에 세울 이미지 */
-    desc:'포기를 모르는 성실한 수사관! 자료를 분석하고 근거를 쌓는 논리형 발표자.',
-    cond:s => s.logic >= 400 },
-  { name:'다원중 봉미선', emoji:'📢',
-    imagePath:'https://img.insight.co.kr/static/2023/11/27/700/img_20231127085817_l80z5538.webp',             /* ← 엔딩 카드 이미지 */
-    stageImagePath:'https://i.namu.wiki/i/qgDxgrY_2WwPW6k-cF-8lFFYIJeixq3luzgsni6l8Sjc5hOihdc4frsvthCwTvFk8Y4BoL1rmqujFus9E-T9kg.webp',    /* ← 강당 무대에 세울 이미지 */
-    desc:'교실 끝까지 쩌렁쩌렁! 목소리 크기와 속도 조절이 완벽한 전달력형 발표자.',
-    cond:s => s.deliv >= 400 },
-  { name:'다원중 피터 파커', emoji:'🕸️',
-    imagePath:'https://external-preview.redd.it/who-voices-peter-parkers-ai-assistant-e-v-in-spider-man-v0-D8JF2bg132adNqrL-Bo32qumpkcUJ4kr1WMcnhi7beE.jpeg?width=640&crop=smart&auto=webp&s=c17f38b9f6736f861ca7b685f1f4681367a20435',            /* ← 엔딩 카드 이미지 */
-    stageImagePath:'https://i.namu.wiki/i/MeCRSea6Za_3-HvIhCVKTJ7gY-Qt4FjTtdHG2NhfVIPf4ZJYdPokoVrzUKav-_jxMXa8SBR0m2puO6N0w_Filg.webp',    /* ← 강당 무대에 세울 이미지 */
-    desc:'사진 한 장으로 승부한다! 매체 자료를 착착 엮어내는 재주꾼 발표자.',
-    cond:s => s.media >= 400 },
-  { name:'다원중 하츄핑', emoji:'💖',
-    imagePath:'https://i.namu.wiki/i/oOw_ggGZrMtVtoMOBQL9tXtstal02F48mHuZTITXV_AEeHrsWePkQ9r_qxaIRslpgXgpMz72gvftMYjrbjdkuA.webp',        /* ← 엔딩 카드 이미지 */
-    stageImagePath:'https://i.namu.wiki/i/QjnMdzJauau5gigMeDYQ5JtCqFADzHTlygU5dl426dAMrJiLhBD0SARL90ks6YAQdqVqZJXi9Z3LoPjk022ALA.webp',    /* ← 강당 무대에 세울 이미지 */
-    desc:'마음을 말랑말랑하게! 청중과 눈을 맞추며 호응을 이끄는 사랑스러운 발표자.',
-    cond:s => s.enga >= 400 },
-
-  /* 5. 일반 구간 판정 */
   { name:'발표의 정석', emoji:'📘',
-    imagePath:'https://i.namu.wiki/i/PRvUnGfRXRjm3P-twS3sC4P3X_j419EGY5y2FChHNsxELg5ZbVFZRhD03D1PuYKFh4vOSyC2HOVLMHfBhyNc7A.webp',         /* ← 엔딩 카드 이미지 */
-    stageImagePath:'stage_standard.png',    /* ← 강당 무대에 세울 이미지 */
-    desc:'도입-전개-정리! 기본기가 탄탄한 안정형 발표자. 이제 개성만 더하면 완벽!',
-    cond:s => STAT_KEYS.every(k => s[k] >= 150) },
+    imagePath:'images/standard.png',
+    stageImagePath:'images/standard-stage.png',
+    desc:'총점 750점 이상! 도입-전개-정리, 교과서 그대로 탄탄하게.\n이제 개성만 더하면 완벽!',
+    cond:(s, total) => total >= 750 },
+
+  { name:'준비된 발표생', emoji:'📝',
+    imagePath:'images/ready.png',
+    stageImagePath:'images/ready-stage.png',
+    desc:'총점 650점 이상! 자료도 챙기고 연습도 했다.\n준비하는 사람은 결국 잘하게 되어 있다.',
+    cond:(s, total) => total >= 650 },
+
   { name:'발표 꿈나무', emoji:'🌱',
-    imagePath:'https://us.123rf.com/450wm/ankomando/ankomando2212/ankomando221200008/195104606-%EC%B4%88%EB%93%B1%ED%95%99%EC%83%9D%EC%9D%98-%EC%9D%BC%EB%9F%AC%EC%8A%A4%ED%8A%B8.jpg?ver=6',           /* ← 엔딩 카드 이미지 */
-    stageImagePath:'stage_sprout.png',    /* ← 강당 무대에 세울 이미지 */
-    desc:'울렁증은 이제 그만! 조금씩 자라나는 중인 새싹 발표자. 다음엔 더 잘할 수 있어!',
-    cond:s => STAT_KEYS.every(k => s[k] >= 100) },
+    imagePath:'images/sprout.png',
+    stageImagePath:'images/sprout-stage.png',
+    desc:'총점 500점 이상! 울렁증은 이제 그만.\n조금씩 자라나는 중인 새싹 발표자, 다음엔 더 잘할 수 있어!',
+    cond:(s, total) => total >= 500 },
+
+  /* 위 조건에 하나도 해당하지 않을 때 (총점 500점 미만) */
   { name:'교무실로.', emoji:'🏃‍♂️',
-    imagePath:'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTa6iyfEhZEI5DoFzdLpAKKJZKZnsJtbDM3CZMbvvm_EYnqpbbwMoRD7rCf&s=10',          /* ← 엔딩 카드 이미지 */
-    stageImagePath:'stage_teacher.png',    /* ← 강당 무대에 세울 이미지 */
-    desc:'…선생님이 잠깐 보자고 하십니다. 학습지 다시 한 번 복습하고 재도전!',
-    cond:s => true }
+    imagePath:'images/teacher.png',
+    stageImagePath:'images/teacher-stage.png',
+    desc:'…선생님이 잠깐 보자고 하십니다.\n학습지 다시 한 번 복습하고 재도전!',
+    cond:(s, total) => true }
 ];
 </script>
 
@@ -1398,7 +1415,7 @@ requestAnimationFrame(drawScene);
    [4] 게임 진행 로직
    ================================================================== */
 const TOTAL = QUESTIONS.length;      /* 전체 빈칸 문항 수 (데이터에서 자동 계산) */
-const GAUGE_MAX = 500;               /* 게이지 바가 100%로 꽉 차는 기준 점수 */
+const GAUGE_MAX = STAT_MAX;          /* 게이지 바는 최대치(900점)에서 꽉 찹니다 */
 const GAIN_BASE   = 10;              /* 기본 정답 시 상승 점수 */
 const FEVER1_COMBO = 3, FEVER1_BONUS = 5;   /* 3연속 이상 → 보너스 +5  (합계 15점) */
 const FEVER2_COMBO = 5, FEVER2_BONUS = 10;  /* 5연속 이상 → 보너스 +10 (합계 20점) */
@@ -1470,6 +1487,7 @@ function updateHud(){
     const v = S.stats[k];
     row.querySelector('.gauge > i').style.width = Math.max(0, Math.min(100, v / GAUGE_MAX * 100)) + '%';
     row.querySelector('.val').textContent = v;
+    row.classList.toggle('maxed', v >= STAT_MAX);   /* 최대치면 게이지에 MAX 표시 */
   });
   const lv = Math.min(LEVEL_TITLES.length, Math.floor(S.solved / Math.ceil(TOTAL/10)) + 1);
   $('hud-level').textContent = 'Lv.' + lv + ' ' + LEVEL_TITLES[lv-1];
@@ -1481,6 +1499,9 @@ function bump(k){
   const row = statRow[k];
   row.classList.remove('bump'); void row.offsetWidth; row.classList.add('bump');
 }
+
+/* 4개 스탯이 모두 최대치인가? (그럴 땐 아무 버튼이나 누를 수 있게 열어 둠) */
+function allStatsMaxed(){ return STAT_KEYS.every(k => S.stats[k] >= STAT_MAX); }
 
 /* ---------- 콤보 / 피버 표시 ---------- */
 function updateCombo(){
@@ -1616,14 +1637,25 @@ function openStatModal(gain){
     (lv >= 2 ? '🔥🔥 SUPER FEVER! ' : lv === 1 ? '🔥 FEVER! ' : '⭐ ') + '스탯 상승! 선택하세요:';
   $('modal-sub').textContent = '올리고 싶은 능력치를 골라 주세요  (현재 ' + S.combo + '연속 정답' +
     (lv > 0 ? ' · 피버 보너스 +' + (gain - GAIN_BASE) : '') + ')';
-  document.querySelectorAll('#modal .amt').forEach(b => b.textContent = '+' + gain);
+  /* 이미 900점(최대치)인 스탯은 'MAX' 로 표시하고 고를 수 없게 함 */
+  const allMax = allStatsMaxed();
+  document.querySelectorAll('#modal .pick').forEach(btn => {
+    const k = btn.dataset.k;
+    const full = S.stats[k] >= STAT_MAX && !allMax;
+    btn.classList.toggle('maxed', full);
+    btn.disabled = full;
+    btn.querySelector('.amt').textContent = full ? 'MAX' : '+' + gain;
+  });
   elModalBg.classList.add('on');
 }
 function pickStat(k){
-  S.stats[k] += pendingGain;
+  if(S.stats[k] >= STAT_MAX && !allStatsMaxed()) return;   /* 이미 최대치인 스탯은 고를 수 없음 */
+  const before = S.stats[k];
+  S.stats[k] = Math.min(STAT_MAX, S.stats[k] + pendingGain);   /* ★ 900점을 넘지 않음 */
+  const got = S.stats[k] - before;
   Sfx.statUp();
   bump(k);
-  floatText(STAT_META[k].short + ' +' + pendingGain, '#ffe9a8');
+  floatText(STAT_META[k].short + (got > 0 ? ' +' + got : ' MAX'), '#ffe9a8');
   elModalBg.classList.remove('on');
   updateHud();
   nextQuestion();
@@ -1735,7 +1767,10 @@ function onPerformEnd(){
 
 /* ---------- 엔딩 판정 ---------- */
 function decideEnding(stats){
-  for(const e of ENDINGS){ if(e.cond(stats)) return e; }
+  const total = STAT_KEYS.reduce((a, k) => a + stats[k], 0);
+  /* 배열 위에서부터 검사해서 먼저 맞는 엔딩을 채택합니다.
+     cond 는 (스탯, 총점) 두 가지를 받습니다. */
+  for(const e of ENDINGS){ if(e.cond(stats, total)) return e; }
   return ENDINGS[ENDINGS.length - 1];
 }
 function showEnding(){

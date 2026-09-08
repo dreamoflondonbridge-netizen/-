@@ -126,6 +126,21 @@ body{
   from{box-shadow:0 0 0 4px #ffd34d, 0 0 0 8px #ff6a2d, 8px 8px 0 8px rgba(200,80,30,.35);}
   to  {box-shadow:0 0 0 6px #fff3a8, 0 0 0 10px #ff3d2d, 8px 8px 0 10px rgba(200,60,30,.45);}
 }
+#place-banner{
+  position:absolute; left:50%; top:44%; transform:translate(-50%,-50%) scale(.8);
+  opacity:0; pointer-events:none; white-space:nowrap;
+  font-size:18px; padding:10px 20px; color:#3b2a18;
+  background:#fff6e2; border:4px solid var(--frame);
+  box-shadow:0 0 0 4px #ffd9a8, 5px 5px 0 4px rgba(120,80,40,.35);
+}
+#place-banner.show{animation:placeIn 1.8s ease-out forwards;}
+@keyframes placeIn{
+  0%{opacity:0; transform:translate(-50%,-50%) scale(.7);}
+  15%{opacity:1; transform:translate(-50%,-50%) scale(1.06);}
+  25%{transform:translate(-50%,-50%) scale(1);}
+  75%{opacity:1; transform:translate(-50%,-50%) scale(1);}
+  100%{opacity:0; transform:translate(-50%,-58%) scale(1);}
+}
 #fever-flag{position:absolute; top:14px; left:14px; display:none; font-size:14px; padding:5px 10px; color:#2b2118; background:#ffd34d; border:3px solid var(--frame); box-shadow:3px 3px 0 var(--frame);}
 #fever-flag.super{background:#ff5a3d; color:#fff6e2; animation:cbounce .35s infinite alternate;}
 #stage-tag{position:absolute; bottom:14px; left:14px; font-size:11px; padding:4px 8px; color:#5c3a18; background:rgba(255,246,226,.92); border:2px solid #5c3a18;}
@@ -278,6 +293,7 @@ body{
       <div id="combo-badge">COMBO x2</div>
       <div id="fever-flag">🔥 FEVER!</div>
       <div id="stage-tag">STAGE 1</div>
+      <div id="place-banner"></div>
     </div>
 
     <!-- 하단 말풍선 대사창 -->
@@ -338,6 +354,16 @@ const STAT_META = {
 const STAT_KEYS = ['logic','deliv','media','enga'];
 
 /* ---------- 스테이지 이름 ---------- */
+/* 스테이지별 장소 (배경 그림이 함께 바뀝니다) */
+const PLACES = {
+  1:{icon:'🏫', name:'교실',   to:'교실로'},
+  2:{icon:'🎨', name:'미술실', to:'미술실로'},
+  3:{icon:'🎵', name:'음악실', to:'음악실로'},
+  4:{icon:'⚽', name:'운동장', to:'운동장으로'},
+  5:{icon:'🍚', name:'급식실', to:'급식실로'},
+  6:{icon:'🎪', name:'강당',   to:'강당으로'}
+};
+
 const STAGES = {
   1:'STAGE 1. 발표 준비 과정 간단 정리',
   2:'STAGE 2. 설명 방법',
@@ -486,11 +512,15 @@ SENTENCES.forEach(sen => {
 /* ==================================================================
    ★★★ [엔딩 캐릭터 데이터] ★★★
    ------------------------------------------------------------------
-   ▶ imagePath 값을 바꾸면 엔딩 이미지가 바뀝니다.
+   ▶ 엔딩마다 이미지가 두 장씩 들어갑니다.
+       · stageImagePath : 마지막에 커튼이 열리고 '강당 무대'에 서는 캐릭터
+       · imagePath      : 무대가 끝난 뒤 결과 화면에 나오는 엔딩 캐릭터
+     둘 다 값을 바꾸면 그림이 바뀝니다.
      - 이 HTML 파일과 같은 폴더에 그림을 두었다면 :  "king.png"
      - images 폴더 안에 두었다면              :  "images/king.png"
      - 인터넷 주소(URL)를 써도 됩니다          :  "https://example.com/king.png"
-   ▶ 이미지 파일이 없으면 자동으로 아래 emoji 가 대신 표시됩니다.
+   ▶ 이미지 파일이 없어도 그대로 작동합니다.
+     (엔딩 카드는 아래 emoji 로, 무대 캐릭터는 도트 캐릭터로 대신 표시)
    ▶ 판정 순서는 배열의 위에서 아래 순서입니다.
      (먼저 조건이 맞는 엔딩이 채택됩니다. 순서를 바꾸고 싶다면
       아래 객체들의 위치를 통째로 옮기면 됩니다.)
@@ -498,63 +528,76 @@ SENTENCES.forEach(sen => {
 const ENDINGS = [
   /* 1. 4개 스탯 모두 200점 이상 */
   { name:'전설의 발표왕', emoji:'👑',
-    imagePath:'king.png',                 /* ← 여기 경로를 바꾸세요 */
+    imagePath:'king.png',             /* ← 엔딩 카드 이미지 */
+    stageImagePath:'stage_king.png',    /* ← 강당 무대에 세울 이미지 */
     desc:'궁극의 육각형! 논리·전달·매체·호응 어느 하나 빠지지 않는 완전체.\n다원중 강당이 {이름}의 무대가 되었다!',   /* {이름} 은 학생이 정한 발표자 이름으로 자동 치환됩니다 */
     cond:s => STAT_KEYS.every(k => s[k] >= 200) },
 
   /* 2. 4개 스탯 모두 170점 이상 */
   { name:'다원중 수석 졸업생', emoji:'🎓',
-    imagePath:'top.png',                  /* ← 여기 경로를 바꾸세요 */
+    imagePath:'top.png',              /* ← 엔딩 카드 이미지 */
+    stageImagePath:'stage_top.png',    /* ← 강당 무대에 세울 이미지 */
     desc:'완벽한 모범생! 준비-조직-발표-점검까지 교과서대로 해내는 우등생 발표자.',
     cond:s => STAT_KEYS.every(k => s[k] >= 170) },
 
   /* 3. 500점 이상 최고존엄 특화 */
   { name:'다원중 코난', emoji:'🕵️‍♂️',
-    imagePath:'conan.png',                /* ← 여기 경로를 바꾸세요 */
+    imagePath:'conan.png',            /* ← 엔딩 카드 이미지 */
+    stageImagePath:'stage_conan.png',    /* ← 강당 무대에 세울 이미지 */
     desc:'“진실은 언제나 하나!” 원인과 결과를 꿰뚫는 압도적 논리력의 소유자.',
     cond:s => s.logic >= 500 },
   { name:'다원중 퉁퉁이', emoji:'🎤',
-    imagePath:'tungtung.png',             /* ← 여기 경로를 바꾸세요 */
+    imagePath:'tungtung.png',         /* ← 엔딩 카드 이미지 */
+    stageImagePath:'stage_tungtung.png',    /* ← 강당 무대에 세울 이미지 */
     desc:'“내 노래를 들어라!” 강당을 뒤흔드는 압도적 성량과 전달력의 소유자.',
     cond:s => s.deliv >= 500 },
   { name:'다원중 토니 스타크', emoji:'🦾',
-    imagePath:'tony.png',                 /* ← 여기 경로를 바꾸세요 */
+    imagePath:'tony.png',             /* ← 엔딩 카드 이미지 */
+    stageImagePath:'stage_tony.png',    /* ← 강당 무대에 세울 이미지 */
     desc:'그래프·영상·홀로그램까지! 매체 활용의 천재 발명가형 발표자.',
     cond:s => s.media >= 500 },
   { name:'다원중 장원영', emoji:'✨',
-    imagePath:'jang.png',                 /* ← 여기 경로를 바꾸세요 */
+    imagePath:'jang.png',             /* ← 엔딩 카드 이미지 */
+    stageImagePath:'stage_jang.png',    /* ← 강당 무대에 세울 이미지 */
     desc:'럭키비키! 청중을 사로잡는 초긍정 아우라, 호응도 만렙 발표자.',
     cond:s => s.enga >= 500 },
 
   /* 4. 350점 이상 상위권 특화 */
   { name:'다원중 주디', emoji:'🐰',
-    imagePath:'judy.png',                 /* ← 여기 경로를 바꾸세요 */
+    imagePath:'judy.png',             /* ← 엔딩 카드 이미지 */
+    stageImagePath:'stage_judy.png',    /* ← 강당 무대에 세울 이미지 */
     desc:'포기를 모르는 성실한 수사관! 자료를 분석하고 근거를 쌓는 논리형 발표자.',
     cond:s => s.logic >= 350 },
   { name:'다원중 봉미선', emoji:'📢',
-    imagePath:'bong.png',                 /* ← 여기 경로를 바꾸세요 */
+    imagePath:'bong.png',             /* ← 엔딩 카드 이미지 */
+    stageImagePath:'stage_bong.png',    /* ← 강당 무대에 세울 이미지 */
     desc:'교실 끝까지 쩌렁쩌렁! 목소리 크기와 속도 조절이 완벽한 전달력형 발표자.',
     cond:s => s.deliv >= 350 },
   { name:'다원중 피터 파커', emoji:'🕸️',
-    imagePath:'peter.png',                /* ← 여기 경로를 바꾸세요 */
+    imagePath:'peter.png',            /* ← 엔딩 카드 이미지 */
+    stageImagePath:'stage_peter.png',    /* ← 강당 무대에 세울 이미지 */
     desc:'사진 한 장으로 승부한다! 매체 자료를 착착 엮어내는 재주꾼 발표자.',
     cond:s => s.media >= 350 },
   { name:'다원중 하츄핑', emoji:'💖',
-    imagePath:'hachuping.png',            /* ← 여기 경로를 바꾸세요 */
+    imagePath:'hachuping.png',        /* ← 엔딩 카드 이미지 */
+    stageImagePath:'stage_hachuping.png',    /* ← 강당 무대에 세울 이미지 */
     desc:'마음을 말랑말랑하게! 청중과 눈을 맞추며 호응을 이끄는 사랑스러운 발표자.',
     cond:s => s.enga >= 350 },
 
   /* 5. 일반 구간 판정 */
   { name:'발표의 정석', emoji:'📘',
-    imagePath:'standard.png',             /* ← 여기 경로를 바꾸세요 */
+    imagePath:'standard.png',         /* ← 엔딩 카드 이미지 */
+    stageImagePath:'stage_standard.png',    /* ← 강당 무대에 세울 이미지 */
     desc:'도입-전개-정리! 기본기가 탄탄한 안정형 발표자. 이제 개성만 더하면 완벽!',
     cond:s => STAT_KEYS.every(k => s[k] >= 150) },
   { name:'발표 꿈나무', emoji:'🌱',
-    imagePath:'sprout.png',               /* ← 여기 경로를 바꾸세요 */
+    imagePath:'sprout.png',           /* ← 엔딩 카드 이미지 */
+    stageImagePath:'stage_sprout.png',    /* ← 강당 무대에 세울 이미지 */
     desc:'울렁증은 이제 그만! 조금씩 자라나는 중인 새싹 발표자. 다음엔 더 잘할 수 있어!',
     cond:s => STAT_KEYS.every(k => s[k] >= 100) },
   { name:'교무실로.', emoji:'🏃‍♂️',
-    imagePath:'teacher.png',              /* ← 여기 경로를 바꾸세요 */
+    imagePath:'teacher.png',          /* ← 엔딩 카드 이미지 */
+    stageImagePath:'stage_teacher.png',    /* ← 강당 무대에 세울 이미지 */
     desc:'…선생님이 잠깐 보자고 하십니다. 학습지 다시 한 번 복습하고 재도전!',
     cond:s => true }
 ];
@@ -602,6 +645,25 @@ const Sfx = (() => {
     osc.start(t0); osc.stop(t0 + dur + 0.02);
   }
 
+  /* 잡음(노이즈) 만들기 : 박수·커튼 소리에 사용 */
+  function noise(start, dur, vol, freq, q){
+    const c = ensure();
+    const t0 = c.currentTime + start;
+    const len = Math.max(1, Math.floor(c.sampleRate * dur));
+    const buf = c.createBuffer(1, len, c.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0; i<len; i++) d[i] = Math.random() * 2 - 1;
+    const src = c.createBufferSource(); src.buffer = buf;
+    const flt = c.createBiquadFilter();
+    flt.type = 'bandpass'; flt.frequency.setValueAtTime(freq || 1200, t0); flt.Q.value = q || 1;
+    const gain = c.createGain();
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(vol || 0.12, t0 + dur * 0.18);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(flt); flt.connect(gain); gain.connect(c.destination);
+    src.start(t0); src.stop(t0 + dur + 0.02);
+  }
+
   return {
     unlock(){ try{ ensure(); }catch(e){} },
     toggle(){ on = !on; return on; },
@@ -643,7 +705,27 @@ const Sfx = (() => {
     /* 스탯 상승 반응음 */
     statUp(){ if(!on) return; tone(659.25,0,0.08,'square',0.12); tone(987.77,0.07,0.16,'square',0.12); },
     /* 감점 반응음 */
-    statDown(){ if(!on) return; slide(330,165,0,0.22,'triangle',0.16); }
+    statDown(){ if(!on) return; slide(330,165,0,0.22,'triangle',0.16); },
+    /* 장소 이동 : 뽕~ 하고 올라가는 짧은 이동음 */
+    move(){
+      if(!on) return;
+      [523.25, 698.46, 880.00].forEach((f,i) => tone(f, i*0.07, 0.12, 'triangle', 0.13));
+    },
+    /* 무대 커튼이 여닫히는 스르륵 소리 */
+    curtain(){
+      if(!on) return;
+      noise(0.00, 0.85, 0.10, 900, 0.8);
+      noise(0.10, 0.70, 0.07, 420, 0.9);
+    },
+    /* 객석 박수 : 짧은 잡음을 여러 번 겹쳐서 표현 */
+    applause(){
+      if(!on) return;
+      for(let i=0; i<26; i++){
+        noise(Math.random() * 1.7, 0.05 + Math.random()*0.05, 0.05 + Math.random()*0.04,
+              1600 + Math.random()*2200, 1.2);
+      }
+      noise(0.00, 1.9, 0.045, 2600, 0.6);
+    }
   };
 })();
 
@@ -699,6 +781,55 @@ const FACE = {
 let mood = 'normal', blinkTimer = 0, blinking = false, tick = 0;
 let PLAYER = '지수';  /* 발표자(주인공) 이름 - 시작 화면에서 학생이 직접 정합니다 */
 let feverLv = 0;      /* 피버 단계 : 0 없음 / 1 FEVER / 2 SUPER FEVER */
+let curStage = 1;     /* 지금 보여 줄 장소 (1 교실 ~ 6 강당) */
+
+/* ---------- 피날레(커튼 → 무대 발표 → 커튼) 상태 ---------- */
+let finale = null;            /* {phase, t0, curtain} · null 이면 평소 화면 */
+let stageImgEl = null, stageImgReady = false;   /* 무대에 세울 캐릭터 이미지 */
+
+const FINALE_MS = {
+  CLOSE1 : 1000,   /* 커튼이 닫히는 시간 */
+  OPEN   :  800,   /* 커튼이 다시 열리는 시간 */
+  SHOW   : 4200,   /* 무대에서 발표하는 시간 */
+  CLOSE2 : 1000,   /* 마지막에 커튼이 닫히는 시간 */
+  HOLD   :  600    /* 닫힌 채 잠깐 머무는 시간 */
+};
+
+/* 무대 캐릭터 이미지 불러오기 (파일이 없으면 도트 캐릭터로 대체) */
+function loadStageImage(path){
+  stageImgEl = null; stageImgReady = false;
+  if(!path) return;
+  const im = new Image();
+  im.onload  = () => { stageImgEl = im; stageImgReady = true; };
+  im.onerror = () => { stageImgEl = null; stageImgReady = false; };
+  im.src = path;
+}
+
+/* 피날레 진행 : 커튼 닫힘 → 열림 → 발표 → 닫힘 → 엔딩 화면 */
+function updateFinale(){
+  if(!finale) return;
+  const t = performance.now() - finale.t0;
+
+  if(finale.phase === 'close1'){
+    finale.curtain = Math.min(1, t / FINALE_MS.CLOSE1);
+    if(t >= FINALE_MS.CLOSE1){
+      finale.phase = 'perform'; finale.t0 = performance.now();
+      onPerformStart();
+    }
+  } else if(finale.phase === 'perform'){
+    finale.curtain = Math.max(0, 1 - t / FINALE_MS.OPEN);
+    if(t >= FINALE_MS.OPEN + FINALE_MS.SHOW){
+      finale.phase = 'close2'; finale.t0 = performance.now();
+      onPerformEnd();
+    }
+  } else if(finale.phase === 'close2'){
+    finale.curtain = Math.min(1, t / FINALE_MS.CLOSE2);
+    if(t >= FINALE_MS.CLOSE2 + FINALE_MS.HOLD){
+      finale = null;
+      showEnding();
+    }
+  }
+}
 let particles = [];   /* 정답 시 색종이 / 오답 시 땀방울 */
 let floatTexts = [];  /* +10 / -5 등 떠오르는 글자 */
 let feverOn = false;
@@ -749,81 +880,370 @@ function drawFlames(level, front){
   cx2.fillRect(56, GROUND - 4, 84, 12);
 }
 
-function drawScene(){
-  tick++;
+/* ==================================================================
+   스테이지별 장소 배경 (모두 192 x 144 픽셀 캔버스에 직접 그림)
+   1 교실 / 2 미술실 / 3 음악실 / 4 운동장 / 5 급식실 / 6 강당
+   캐릭터는 화면 가운데(x 80~112)에 서고 발끝이 y=122 이므로
+   그 자리에는 가구를 두지 않습니다.
+   ================================================================== */
 
-  /* --- 벽 (환한 크림색) --- */
+/* 공통 : 책상 + 의자 하나 */
+function drawDesk(x, y){
+  px(x, y, 26, 4, '#f0c894');            /* 상판 */
+  px(x, y+4, 26, 2, '#cf9c62');
+  px(x+3, y+6, 3, 10, '#b5793c');        /* 다리 */
+  px(x+20, y+6, 3, 10, '#b5793c');
+  px(x+6, y-6, 14, 6, '#8fa3d8');        /* 의자 등받이 */
+}
+/* 공통 : 창문 (밝은 하늘) */
+function drawWindow(x, y, w, h, sky){
+  px(x, y, w, h, '#b5793c');
+  px(x+3, y+3, w-6, h-6, sky || '#c6ecff');
+  px(x+8, y+10, 10, 4, '#ffffff'); px(x+12, y+7, 6, 3, '#ffffff');
+  px(x+w-20, y+h-18, 8, 3, '#ffffff');
+  px(x + ((w/2)|0) - 1, y+3, 3, h-6, '#b5793c');
+  px(x+3, y + ((h/2)|0) - 1, w-6, 3, '#b5793c');
+}
+
+/* ---------- STAGE 1 : 교실 ---------- */
+function drawClassroom(){
   px(0, 0, 192, 100, '#fdf1de');
   px(0, 0, 192, 10, '#fbe4c4');
-  /* 벽 상단 몰딩 */
   for(let x=0; x<192; x+=8) px(x, 10, 4, 2, '#efd6ae');
 
-  /* --- 창문 --- */
-  px(126, 16, 56, 46, '#b5793c');
-  px(129, 19, 50, 40, feverOn ? '#ffd88a' : '#c6ecff');
-  /* 구름 */
-  px(134, 25, 12, 4, '#ffffff'); px(138, 22, 6, 3, '#ffffff');
-  px(158, 34, 10, 3, '#ffffff'); px(161, 31, 5, 3, '#ffffff');
-  /* 창틀 */
-  px(152, 19, 3, 40, '#b5793c'); px(129, 37, 50, 3, '#b5793c');
-  px(126, 62, 56, 3, '#8a5a2b');
+  drawWindow(126, 16, 56, 46, feverOn ? '#ffd88a' : '#c6ecff');
 
-  /* --- 칠판 --- */
+  /* 칠판 */
   px(12, 14, 104, 56, '#b5793c');
   px(15, 17, 98, 50, '#3f8168');
-  drawBoardText();
-  /* 분필 받침 + 분필 */
+  px(22, 24, 34, 3, '#ffffff');
+  px(22, 32, 62, 2, '#e2f5e8'); px(22, 38, 48, 2, '#e2f5e8');
+  px(22, 44, 68, 2, '#e2f5e8'); px(22, 50, 40, 2, '#e2f5e8');
+  px(88, 40, 2, 20, '#ffffff'); px(88, 58, 20, 2, '#ffffff');
+  px(92, 50, 4, 8, '#ffe066'); px(98, 44, 4, 14, '#8fe3a8'); px(104, 48, 3, 10, '#ffb0ad');
   px(12, 70, 104, 4, '#d8a05e');
   px(20, 67, 8, 3, '#ffffff'); px(32, 67, 6, 3, '#ffe9a8');
 
-  /* --- 벽시계 --- */
-  px(117, 15, 7, 7, '#8a5a2b');
-  px(118, 16, 5, 5, '#fffaf0');
+  /* 벽시계 · 게시물 */
+  px(117, 15, 7, 7, '#8a5a2b'); px(118, 16, 5, 5, '#fffaf0');
   px(120, 17, 1, 3, '#8a5a2b'); px(120, 19, 3, 1, '#8a5a2b');
-
-  /* --- 게시물(작은 포스터) --- */
   px(3, 18, 6, 8, '#ffb3b0'); px(3, 29, 6, 8, '#b6ecc4');
 
-  /* --- 창문에서 들어오는 햇살 --- */
+  /* 햇살 */
   cx2.fillStyle = 'rgba(255,240,190,.42)';
-  cx2.beginPath();
-  cx2.moveTo(126, 62); cx2.lineTo(182, 62); cx2.lineTo(150, 144); cx2.lineTo(72, 144);
+  cx2.beginPath(); cx2.moveTo(126,62); cx2.lineTo(182,62); cx2.lineTo(150,144); cx2.lineTo(72,144);
   cx2.closePath(); cx2.fill();
 
-  /* --- 바닥 (환한 나무색) --- */
+  /* 바닥 */
   px(0, 100, 192, 44, '#eec18d');
   px(0, 100, 192, 3, '#d9a76c');
-  for(let i=0; i<7; i++){ px(i*30 - 6, 103, 2, 41, '#e3b27c'); }
+  for(let i=0; i<7; i++) px(i*30 - 6, 103, 2, 41, '#e3b27c');
   px(0, 118, 192, 2, '#e3b27c'); px(0, 132, 192, 2, '#e3b27c');
 
-  /* --- 교탁 --- */
+  /* 교탁 · 책상 · 화분 */
   px(140, 92, 44, 8, '#d9a76c');
   px(146, 100, 32, 26, '#e8b880');
   px(148, 104, 28, 3, '#b5793c'); px(148, 112, 28, 3, '#b5793c');
-
-  /* --- 책상들(청중석) --- */
-  function desk(x, y, s){
-    px(x, y, 26*s, 4*s, '#f0c894');           /* 상판 */
-    px(x, y+4*s, 26*s, 2*s, '#cf9c62');
-    px(x+3*s, y+6*s, 3*s, 10*s, '#b5793c');   /* 다리 */
-    px(x+20*s, y+6*s, 3*s, 10*s, '#b5793c');
-    px(x+6*s, y-6*s, 14*s, 6*s, '#8fa3d8');   /* 의자 등받이 */
-  }
-  desk(2, 108, 1); desk(2, 126, 1);
-  desk(150, 128, 1);
-
-  /* --- 화분 --- */
+  drawDesk(2, 108); drawDesk(2, 126); drawDesk(150, 128);
   px(120, 116, 10, 10, '#e08a63'); px(122, 126, 6, 3, '#b06342');
   px(122, 108, 3, 8, '#5fb870'); px(126, 110, 3, 6, '#7fd68a');
+}
+
+/* ---------- STAGE 2 : 미술실 ---------- */
+function drawArtRoom(){
+  px(0, 0, 192, 100, '#fdf3e6');
+  px(0, 0, 192, 10, '#f7e7d4');
+  for(let x=0; x<192; x+=8) px(x, 10, 4, 2, '#eddac0');
+
+  drawWindow(140, 16, 48, 44);
+
+  /* 벽에 걸린 그림 액자 */
+  [[10,18,'#ffd6e0','#ff7ba8'], [40,15,'#d6f0ff','#4fb3e8'], [70,20,'#e2f7d6','#7fd68a']]
+    .forEach(([x,y,bg,fg]) => {
+      px(x-2, y-2, 28, 24, '#b5793c'); px(x, y, 24, 20, bg);
+      px(x+3, y+11, 6, 6, fg); px(x+11, y+5, 8, 12, fg);
+      px(x+4, y+4, 3, 3, '#ffd34d');
+    });
+  /* 물감 얼룩 */
+  px(102, 26, 3, 3, '#ff7ba8'); px(108, 33, 2, 2, '#4fb3e8'); px(99, 38, 2, 2, '#ffd34d');
+  px(118, 30, 2, 2, '#7fd68a');
+
+  /* 바닥 (밝은 타일) */
+  px(0, 100, 192, 44, '#f0e7d9');
+  px(0, 100, 192, 3, '#ded1be');
+  for(let x=0; x<192; x+=18) px(x, 103, 1, 41, '#e5d9c7');
+  for(let y=113; y<144; y+=14) px(0, y, 192, 1, '#e5d9c7');
+
+  /* 이젤 + 그리다 만 그림 */
+  px(17, 76, 4, 44, '#b5793c'); px(41, 76, 4, 44, '#b5793c');   /* 앞다리 */
+  px(29, 96, 4, 28, '#a9703a');                                  /* 뒷다리 */
+  px(14, 74, 34, 5, '#a9703a');                                  /* 그림 받침 */
+  px(13, 46, 36, 30, '#a9703a'); px(16, 49, 30, 24, '#fffdf5');  /* 캔버스 */
+  px(20, 60, 8, 10, '#ff9d6b'); px(31, 54, 9, 16, '#8fd0f0'); px(21, 52, 4, 4, '#ffd34d');
+
+  /* 석고상 + 받침대 */
+  px(150, 100, 22, 24, '#c9bda8'); px(147, 96, 28, 5, '#b5a892');  /* 어두운 받침대 */
+  px(156, 84, 11, 12, '#f6f1e8');                                   /* 가슴 */
+  px(154, 88, 15, 4, '#e8e0d2');                                    /* 어깨 */
+  px(157, 74, 9, 11, '#f6f1e8');                                    /* 얼굴 */
+  px(156, 71, 11, 4, '#e8e0d2');                                    /* 머리 */
+  px(159, 78, 2, 2, '#c9bda8'); px(163, 78, 2, 2, '#c9bda8');       /* 눈 */
+
+  /* 물감통 · 붓 */
+  px(118, 110, 12, 14, '#e8e2d6'); px(118, 108, 12, 3, '#cfc7b8');
+  px(120, 102, 2, 8, '#c85a4a'); px(123, 100, 2, 10, '#4a8fc8'); px(126, 103, 2, 7, '#5aa85a');
+  /* 팔레트 */
+  px(56, 116, 22, 8, '#d8a05e');
+  px(59, 118, 3, 3, '#ff7ba8'); px(64, 118, 3, 3, '#4fb3e8'); px(69, 118, 3, 3, '#ffd34d');
+}
+
+/* ---------- STAGE 3 : 음악실 ---------- */
+function drawMusicRoom(){
+  px(0, 0, 192, 100, '#f4efff');
+  px(0, 0, 192, 10, '#e9e1fa');
+  for(let x=0; x<192; x+=8) px(x, 10, 4, 2, '#ddd3f2');
+
+  drawWindow(142, 16, 46, 42);
+
+  /* 오선지 + 음표 */
+  for(let i=0; i<5; i++) px(10, 20 + i*4, 88, 1, '#9a8cc8');
+  [[20,22],[36,30],[52,24],[68,32],[84,26]].forEach(([x,y]) => {
+    px(x, y+6, 6, 4, '#4a3a7a'); px(x+5, y-4, 2, 11, '#4a3a7a');
+  });
+  px(12, 44, 3, 12, '#4a3a7a'); px(15, 44, 5, 3, '#4a3a7a');
+
+  /* 바닥 (나무) */
+  px(0, 100, 192, 44, '#e8cba4');
+  px(0, 100, 192, 3, '#d0a97a');
+  for(let i=0; i<7; i++) px(i*30 - 6, 103, 2, 41, '#dcbd91');
+
+  /* 업라이트 피아노 */
+  px(6, 74, 52, 4, '#5f4560');
+  px(6, 78, 52, 30, '#3d2c3d');
+  px(10, 94, 44, 9, '#fffaf0');
+  for(let i=0; i<10; i++) px(13 + i*4, 94, 2, 6, '#241a24');
+  px(6, 108, 52, 16, '#2f2231');
+  px(12, 112, 40, 3, '#57405a');
+
+  /* 보면대 */
+  px(124, 94, 3, 28, '#9a9aae'); px(116, 80, 20, 14, '#d9d2ea');
+  px(118, 82, 16, 10, '#fffaf0'); px(114, 120, 22, 3, '#9a9aae');
+
+  /* 벽에 걸린 기타 (왼쪽 벽) */
+  px(16, 58, 15, 16, '#d8a05e'); px(20, 62, 7, 7, '#8a5a2b');
+  px(21, 44, 4, 15, '#8a5a2b'); px(20, 40, 6, 5, '#6b4520');
+
+  /* 작은 북 */
+  px(58, 110, 16, 14, '#d94a4a');
+  px(58, 108, 16, 3, '#fffaf0'); px(58, 122, 16, 3, '#fffaf0');
+  px(62, 100, 2, 9, '#c08a4e'); px(69, 100, 2, 9, '#c08a4e');
+}
+
+/* ---------- STAGE 4 : 운동장 ---------- */
+function drawPlayground(){
+  /* 하늘 */
+  px(0, 0, 192, 74, '#a9dcff');
+  px(0, 0, 192, 28, '#8ecfff');
+  /* 해 */
+  px(160, 10, 16, 16, '#ffe066'); px(157, 13, 22, 10, '#ffe066'); px(163, 7, 10, 22, '#ffe066');
+  px(163, 13, 10, 10, '#fff3a8');
+  /* 구름 */
+  px(18, 16, 22, 6, '#ffffff'); px(25, 12, 11, 5, '#ffffff');
+  px(70, 25, 17, 5, '#ffffff'); px(76, 21, 8, 4, '#ffffff');
+  px(112, 13, 15, 5, '#ffffff');
+
+  /* 멀리 보이는 학교 건물 */
+  px(6, 44, 58, 30, '#f2e0c6'); px(6, 40, 58, 5, '#c85a4a');
+  for(let i=0; i<5; i++){ px(11 + i*11, 49, 7, 8, '#9fd8f0'); px(11 + i*11, 61, 7, 8, '#9fd8f0'); }
+  px(28, 64, 12, 10, '#a9703a');
+
+  /* 나무 */
+  px(110, 52, 6, 22, '#8a5a2b'); px(99, 34, 28, 22, '#5fb870'); px(104, 27, 18, 10, '#74d187');
+  px(152, 58, 5, 16, '#8a5a2b'); px(143, 44, 22, 18, '#5fb870');
+
+  /* 잔디 */
+  px(0, 74, 192, 26, '#83d38e');
+  px(0, 74, 192, 3, '#6cc07a');
+  for(let i=0; i<22; i++) px((i*23) % 192, 80 + (i % 3) * 6, 2, 2, '#6cc07a');
+
+  /* 축구 골대 (잔디 위에 세움) */
+  px(14, 72, 3, 24, '#f7f7f7'); px(48, 72, 3, 24, '#f7f7f7'); px(14, 70, 37, 3, '#f7f7f7');
+  for(let x=19; x<48; x+=5) px(x, 73, 1, 22, '#e6e6e6');
+  for(let y=76; y<96; y+=5) px(17, y, 31, 1, '#e6e6e6');
+
+  /* 트랙 */
+  px(0, 100, 192, 44, '#e58e5c');
+  px(0, 100, 192, 3, '#c9714b');
+  px(0, 115, 192, 2, '#fffaf0'); px(0, 135, 192, 2, '#fffaf0');
+  for(let x=0; x<192; x+=24) px(x, 125, 12, 2, '#fffaf0');
+
+  /* 축구공 */
+  px(133, 115, 9, 9, '#fffaf0');
+  px(136, 117, 3, 3, '#3a3a3a'); px(134, 121, 2, 2, '#3a3a3a'); px(139, 120, 2, 2, '#3a3a3a');
+}
+
+/* ---------- STAGE 5 : 급식실 ---------- */
+function drawCafeteria(){
+  px(0, 0, 192, 100, '#fff3e2');
+  px(0, 0, 192, 10, '#ffe7ca');
+  for(let x=0; x<192; x+=8) px(x, 10, 4, 2, '#f6dbb4');
+
+  drawWindow(150, 14, 38, 36);
+
+  /* 오늘의 메뉴판 */
+  px(10, 13, 86, 36, '#4a7a5a'); px(13, 16, 80, 30, '#5f9270');
+  px(20, 21, 46, 3, '#fffaf0');
+  px(20, 28, 32, 2, '#dff0e4'); px(20, 33, 42, 2, '#dff0e4'); px(20, 38, 26, 2, '#dff0e4');
+  px(72, 26, 16, 16, '#ffd34d'); px(75, 29, 10, 10, '#ff9d4d');
+
+  /* 바닥 (타일) */
+  px(0, 100, 192, 44, '#f2e6d2');
+  px(0, 100, 192, 3, '#ddceb5');
+  for(let x=0; x<192; x+=18) px(x, 103, 1, 41, '#e4d6bf');
+  for(let y=114; y<144; y+=15) px(0, y, 192, 1, '#e4d6bf');
+
+  /* 배식대 */
+  px(118, 84, 70, 8, '#cbd6de');
+  px(122, 92, 62, 24, '#e4ecf2');
+  px(122, 116, 62, 4, '#b9c6d0');
+  px(126, 86, 16, 5, '#9fb0bd'); px(146, 86, 16, 5, '#9fb0bd'); px(166, 86, 16, 5, '#9fb0bd');
+  px(129, 87, 10, 3, '#ffd9a0'); px(149, 87, 10, 3, '#ffb0a0'); px(169, 87, 10, 3, '#c8e8a0');
+
+  /* 식탁 + 의자 + 식판 */
+  px(2, 104, 66, 6, '#e8c89a');
+  px(8, 110, 4, 18, '#c09a68'); px(58, 110, 4, 18, '#c09a68');
+  px(0, 122, 72, 4, '#d8b483');
+  px(10, 100, 20, 5, '#8fc8e0');
+  px(12, 101, 4, 3, '#ffffff'); px(18, 101, 5, 3, '#ffd9a0'); px(25, 101, 3, 3, '#ffb0a0');
+  px(38, 100, 20, 5, '#8fc8e0');
+  px(40, 101, 5, 3, '#ffffff'); px(47, 101, 4, 3, '#c8e8a0');
+
+  /* 배식대 위에 쌓아 둔 식판 */
+  px(124, 80, 16, 3, '#8fc8e0'); px(124, 77, 16, 3, '#a5d4e8'); px(124, 74, 16, 3, '#8fc8e0');
+  /* 국자 · 집게 */
+  px(150, 78, 2, 8, '#b9c6d0'); px(148, 74, 6, 4, '#cbd6de');
+  /* 벽에 붙인 안내문 */
+  px(104, 16, 14, 18, '#fffaf0'); px(106, 20, 10, 2, '#c85a4a');
+  px(106, 24, 10, 1, '#9aa8b0'); px(106, 27, 7, 1, '#9aa8b0');
+}
+
+/* ---------- STAGE 6 : 강당 ---------- */
+function drawAuditorium(){
+  px(0, 0, 192, 144, '#3d2b4d');
+  /* 무대 뒷막 */
+  px(14, 12, 164, 86, '#5c2c46');
+  px(14, 12, 164, 4, '#7d3c5e');
+  /* 현수막 */
+  px(54, 20, 84, 18, '#e9d8b8'); px(56, 22, 80, 14, '#fffaf0');
+  px(62, 26, 22, 3, '#c85a4a'); px(88, 26, 34, 3, '#c85a4a');
+  px(62, 32, 46, 2, '#8a9ab0');
+
+  /* 스포트라이트 빛 */
+  cx2.fillStyle = 'rgba(255,240,180,.20)';
+  [64, 96, 128].forEach(x => {
+    cx2.beginPath(); cx2.moveTo(x-6, 14); cx2.lineTo(x+6, 14);
+    cx2.lineTo(x+24, 112); cx2.lineTo(x-24, 112); cx2.closePath(); cx2.fill();
+  });
+  [64, 96, 128].forEach(x => { px(x-5, 6, 10, 7, '#2d2233'); px(x-2, 13, 4, 2, '#ffe9a8'); });
+
+  /* 무대 바닥 */
+  px(0, 98, 192, 28, '#c9924f');
+  px(0, 98, 192, 3, '#e3ac6b');
+  for(let i=0; i<9; i++) px(i*22, 101, 2, 25, '#ab7440');
+  px(0, 124, 192, 4, '#6d4722');
+
+  /* 객석 */
+  px(0, 128, 192, 16, '#2b2139');
+  for(let i=0; i<8; i++){ px(4 + i*24, 133, 16, 11, '#4c3b5c'); px(8 + i*24, 128, 8, 6, '#6b5b7d'); }
+
+  /* 좌우 커튼(열린 상태) */
+  px(0, 0, 16, 128, '#a8203a'); px(176, 0, 16, 128, '#a8203a');
+  for(let y=0; y<128; y+=6){ px(0, y, 16, 2, '#8a1730'); px(176, y, 16, 2, '#8a1730'); }
+  px(14, 0, 3, 128, '#d9455f'); px(175, 0, 3, 128, '#d9455f');
+  /* 상단 금색 밸런스 */
+  px(0, 0, 192, 12, '#e8b23a'); px(0, 12, 192, 3, '#c08a1e');
+  for(let x=0; x<192; x+=12) px(x, 12, 6, 5, '#e8b23a');
+}
+
+const SCENE_DRAW = {
+  1: drawClassroom, 2: drawArtRoom, 3: drawMusicRoom,
+  4: drawPlayground, 5: drawCafeteria, 6: drawAuditorium
+};
+
+/* ---------- 무대 커튼 (피날레 연출) ----------
+   t = 0 이면 완전히 열린 상태, 1 이면 완전히 닫힌 상태 */
+function drawCurtain(t){
+  if(t <= 0) return;
+  const w = Math.round(97 * t);
+  [0, 1].forEach(side => {
+    const x0 = side ? 192 - w : 0;
+    px(x0, 0, w, 144, '#a8203a');
+    for(let i=0; i<w; i+=9){
+      px(x0 + i, 0, 3, 144, '#8a1730');
+      px(x0 + i + 4, 0, 2, 144, '#c62e4a');
+    }
+    px(side ? x0 : x0 + w - 3, 0, 3, 144, '#e05a72');
+  });
+  /* 상단 금색 밸런스는 항상 보이도록 */
+  px(0, 0, 192, 12, '#e8b23a'); px(0, 12, 192, 3, '#c08a1e');
+  for(let x=0; x<192; x+=12) px(x, 12, 6, 5, '#e8b23a');
+}
+
+/* ---------- 피날레 : 무대 위 캐릭터 & 관객 ---------- */
+function drawPerformance(){
+  /* 스포트라이트가 좌우로 살짝 흔들림 */
+  const sway = Math.sin(tick / 30) * 8;
+  cx2.fillStyle = 'rgba(255,245,200,.18)';
+  cx2.beginPath(); cx2.moveTo(96 - 8 + sway, 14); cx2.lineTo(96 + 8 + sway, 14);
+  cx2.lineTo(96 + 30, 118); cx2.lineTo(96 - 30, 118); cx2.closePath(); cx2.fill();
+
+  /* 무대 위 캐릭터 : 이미지가 준비되면 이미지, 아니면 도트 캐릭터 */
+  const bob = Math.floor(Math.sin(tick / 9) * 2);
+  if(stageImgReady && stageImgEl){
+    const bw = 60, bh = 78;
+    const r = Math.min(bw / stageImgEl.width, bh / stageImgEl.height);
+    const w = Math.max(1, Math.round(stageImgEl.width * r));
+    const h = Math.max(1, Math.round(stageImgEl.height * r));
+    cx2.drawImage(stageImgEl, 96 - (w >> 1), 122 - h + bob, w, h);
+  } else {
+    px(74, 121, 44, 4, 'rgba(40,20,40,.35)');
+    drawChar(80, 74 + bob, 2);
+  }
+
+  /* 객석 박수 : 위로 튀어 오르는 점들 */
+  for(let i=0; i<12; i++){
+    const t2 = (tick * 1.6 + i * 17) % 40;
+    px((6 + i*16) % 190, 136 - t2 * 0.45, 2, 2, i % 2 ? '#ffe9a8' : '#ffd34d');
+  }
+  /* 반짝이는 플래시 */
+  if(tick % 14 < 3) px(20 + (tick * 7) % 150, 130, 3, 3, '#fffdf0');
+}
+
+function drawScene(){
+  tick++;
+  updateFinale();
+
+  /* 피날레 중에는 강당, 평소에는 현재 스테이지의 장소 */
+  const scene = finale ? 6 : curStage;
+  (SCENE_DRAW[scene] || drawClassroom)();
+
+  if(finale){
+    if(finale.phase === 'perform') drawPerformance();
+    drawParticles();
+    drawFloatTexts();
+    drawCurtain(finale.curtain);
+    requestAnimationFrame(drawScene);
+    return;
+  }
 
   /* --- 캐릭터 그림자 --- */
-  px(74, 122, 44, 4, 'rgba(150,105,60,.20)');
+  px(74, 122, 44, 4, scene === 6 ? 'rgba(40,20,40,.30)' : 'rgba(150,105,60,.20)');
 
   /* --- 피버 불꽃 (캐릭터 뒤쪽 레이어) --- */
   if(feverOn) drawFlames(feverLv);
 
   /* --- 캐릭터 --- */
-  const bob = Math.floor(Math.sin(tick / 26) * 1.4);   /* 숨쉬기 애니메이션 */
+  const bob = Math.floor(Math.sin(tick / 26) * 1.4);
   drawChar(80, 74 + bob, 2);
 
   /* --- 이름표 (학생이 정한 발표자 이름) --- */
@@ -841,7 +1261,6 @@ function drawScene(){
       const sx = (i*37 + tick*2) % 192, sy = (i*23 + Math.sin(tick/10+i)*6 + 14) | 0;
       px(sx, sy, 2, 2, i % 2 ? '#ffd34d' : '#fff6a8');
     }
-    /* 캐릭터 앞쪽에서 한 번 더 타오르는 불꽃 (감싸는 느낌) */
     drawFlames(feverLv, true);
     cx2.fillStyle = feverLv >= 2 ? 'rgba(255,110,40,.13)' : 'rgba(255,160,60,.07)';
     cx2.fillRect(0, 0, 192, 144);
@@ -960,8 +1379,14 @@ function resetState(){
     stats: { logic:0, deliv:0, media:0, enga:0 },
     finished: false
   };
-  feverOn = false;
+  feverOn = false; feverLv = 0;
+  finale = null; finaleEnding = null;
+  stageImgEl = null; stageImgReady = false;
+  curStage = 0;                       /* 첫 문제에서 장소를 새로 잡도록 */
+  placeInited = false;
   particles = []; floatTexts = []; mood = 'normal';
+  const ar = document.getElementById('answer-row');
+  if(ar) ar.style.display = '';
 }
 
 /* ---------- DOM ---------- */
@@ -1046,7 +1471,10 @@ function buildLine(q){
 
 function renderQuestion(){
   const q = QUESTIONS[S.i];
-  elStageTag.textContent = STAGES[q.st];
+  setPlace(q.st);
+  const pl = PLACES[q.st];
+  elStageTag.textContent = 'STAGE ' + q.st + ' · ' + pl.icon + ' ' + pl.name +
+                           ' — ' + STAGES[q.st].replace(/^STAGE \d+\. /, '');
   const nBlanks = q.sen.parts.filter(x => typeof x !== 'string').length;
   elQHead.textContent = 'Q' + (S.i + 1) + '. / 총 ' + TOTAL + '문항' +
     (nBlanks > 1 ? '   (이 문장의 빈칸 ' + (q.bIdx + 1) + '/' + nBlanks + ' · 가려진 칸은 다음 차례)' : '');
@@ -1060,11 +1488,32 @@ function renderQuestion(){
 function escapeHtml(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+/* 문장 속 {이름} 을 발표자 이름으로 바꾸고, 뒤따르는 조사도 알맞게 골라 줌 */
+function withName(text){
+  return String(text)
+    .split('{이름}이(가)').join(PLAYER + josa(PLAYER, '이', '가'))
+    .split('{이름}은(는)').join(PLAYER + josa(PLAYER, '은', '는'))
+    .split('{이름}').join(PLAYER);
+}
 /* 마지막 글자의 받침 유무에 따라 조사를 골라 줌 (예: 논리력'이' / 매체 활용도'가') */
 function josa(word, withBatchim, withoutBatchim){
   const c = word.charCodeAt(word.length - 1);
   if(c < 0xAC00 || c > 0xD7A3) return withoutBatchim;      /* 한글이 아니면 기본값 */
   return ((c - 0xAC00) % 28) !== 0 ? withBatchim : withoutBatchim;
+}
+
+/* ---------- 장소(배경) 바꾸기 ---------- */
+function setPlace(st){
+  if(curStage === st) return;
+  const first = !placeInited;           /* 게임을 켠 직후 첫 장소에는 배너를 띄우지 않음 */
+  curStage = st;
+  placeInited = true;
+  if(first) return;
+  const pl = PLACES[st];
+  const banner = $('place-banner');
+  banner.textContent = pl.icon + ' ' + pl.to + ' 이동!';
+  banner.classList.remove('show'); void banner.offsetWidth; banner.classList.add('show');
+  Sfx.move();
 }
 
 /* ---------- 답 제출 ---------- */
@@ -1105,6 +1554,8 @@ function onCorrect(q){
 
 /* ---------- 스탯 선택 모달 ---------- */
 let pendingGain = 0;
+let finaleEnding = null;   /* 피날레 시작 시 미리 정해 둔 엔딩 */
+let placeInited = false;   /* 장소 이동 배너를 처음 한 번은 건너뛰기 위한 표시 */
 function openStatModal(gain){
   pendingGain = gain;
   const lv = feverLevel(S.combo);
@@ -1159,9 +1610,74 @@ function onWrong(q){
 function nextQuestion(){
   mood = 'normal';
   S.i++;
-  if(S.i >= TOTAL){ showEnding(); return; }
+  if(S.i >= TOTAL){ playFinale(); return; }
   elFb.textContent = ''; elFb.className = '';
   renderQuestion();
+}
+
+/* ==================================================================
+   피날레 연출 : 커튼이 닫혔다 열리면 강당 무대 → 발표 → 커튼이 닫히고 엔딩
+   ------------------------------------------------------------------
+   무대에서 보여 줄 모습은 '총점'에 따라 4단계로 나뉘고,
+   무대에 서는 캐릭터 그림은 엔딩의 stageImagePath 를 사용합니다.
+   ================================================================== */
+const PERFORMANCES = [
+  { min:900, title:'👑 완벽한 무대!',
+    line:'{이름}이(가) 무대에 서자 강당이 조용해졌다.\n또렷한 목소리, 완벽한 자료, 터져 나오는 박수!' },
+  { min:760, title:'🎉 대성공!',
+    line:'{이름}은(는) 청중을 바라보며 여유 있게 발표했다.\n여기저기서 고개를 끄덕이는 친구들!' },
+  { min:640, title:'👏 성공적인 발표!',
+    line:'{이름}은(는) 준비한 대로 차분히 발표를 마쳤다.\n따뜻한 박수가 강당을 채웠다.' },
+  { min:0,   title:'🙂 무사히 마쳤다!',
+    line:'{이름}은(는) 조금 떨렸지만 끝까지 해냈다.\n울렁증을 이겨 낸 것만으로도 큰 발전!' }
+];
+function performanceFor(total){
+  return PERFORMANCES.find(pf => total >= pf.min) || PERFORMANCES[PERFORMANCES.length - 1];
+}
+
+function playFinale(){
+  S.finished = true;
+  clearSave();                       /* 끝까지 풀었으므로 저장 기록은 지움 */
+  feverOn = false; feverLv = 0; updateCombo();
+  mood = 'happy';
+
+  /* 결과를 미리 정해 두고, 무대에 세울 이미지를 불러온다 */
+  finaleEnding = decideEnding(S.stats);
+  loadStageImage(finaleEnding.stageImagePath);
+
+  /* 대사창을 무대 안내로 바꾸고 입력창은 숨긴다 */
+  $('answer-row').style.display = 'none';
+  elStageTag.textContent = 'STAGE 6 · 🎪 강당 — 발표 무대';
+  elQHead.textContent = '🎬 발표 무대';
+  elQCtx.textContent = '모든 복습을 마쳤습니다!';
+  elQLine.innerHTML = '<b>' + escapeHtml(PLAYER) + '</b>의 발표가 곧 시작됩니다…';
+  elFb.className = ''; elFb.textContent = '🎭 커튼이 천천히 닫힙니다…';
+
+  Sfx.curtain();
+  finale = { phase:'close1', t0: performance.now(), curtain: 0 };
+}
+
+/* 커튼이 열리고 무대가 시작될 때 */
+function onPerformStart(){
+  const total = STAT_KEYS.reduce((a, k) => a + S.stats[k], 0);
+  const pf = performanceFor(total);
+  elQHead.textContent = '🎬 발표 무대';
+  elQCtx.textContent = '총점 ' + total + '점';
+  elQLine.innerHTML = '<b>' + escapeHtml(pf.title) + '</b>';
+  elFb.className = 'good';
+  elFb.textContent = withName(pf.line).split('\n').join(' ');
+  Sfx.ending();
+  burst('good');
+  setTimeout(() => burst('good'), 500);
+  setTimeout(() => burst('good'), 1100);
+  setTimeout(() => Sfx.applause(), 1600);
+}
+
+/* 무대가 끝나고 커튼이 다시 닫힐 때 */
+function onPerformEnd(){
+  elFb.className = '';
+  elFb.textContent = '🎭 커튼이 닫힙니다… 잠시 후 결과가 발표됩니다!';
+  Sfx.curtain();
 }
 
 /* ---------- 엔딩 판정 ---------- */
@@ -1171,17 +1687,19 @@ function decideEnding(stats){
 }
 function showEnding(){
   S.finished = true;
-  clearSave();        /* 끝까지 풀었으므로 저장 기록은 지움 */
+  clearSave();
   feverOn = false; updateCombo();
   elGame.style.display = 'none';
   elEnding.classList.add('on');
   Sfx.ending();
   burst('good'); setTimeout(() => burst('good'), 300); setTimeout(() => burst('good'), 620);
 
-  const end = decideEnding(S.stats);
+  const end = finaleEnding || decideEnding(S.stats);
+  finaleEnding = null;
+  $('answer-row').style.display = '';   /* 다음 판을 위해 입력창 되돌리기 */
   $('ed-title-line').textContent = '🎉 ' + PLAYER + '의 발표 육성 완료! 최종 결과 🎉';
   $('ed-name').textContent = end.emoji + ' ' + end.name;
-  $('ed-desc').innerHTML = escapeHtml(end.desc.split('{이름}').join(PLAYER)).replace(/\n/g, '<br>');
+  $('ed-desc').innerHTML = escapeHtml(withName(end.desc)).replace(/\n/g, '<br>');
 
   /* 엔딩 캐릭터 이미지 : imagePath 를 <img src="..."> 로 출력 */
   const wrap = $('ed-img-wrap');

@@ -20,10 +20,13 @@
 *{box-sizing:border-box; margin:0; padding:0;}
 body{
   font-family:"Galmuri11","DungGeunMo","Neo둥근모",'Apple SD Gothic Neo','Malgun Gothic',monospace;
-  background:#1b1430;
+  /* 환하고 따뜻한 파스텔 교실 분위기 */
+  background:#ffeede;
   background-image:
-    radial-gradient(circle at 20% 10%, #3a2a5e 0%, transparent 45%),
-    radial-gradient(circle at 80% 90%, #2a3a6e 0%, transparent 45%);
+    radial-gradient(circle at 15% 8%,  #fff6d9 0%, transparent 50%),
+    radial-gradient(circle at 85% 12%, #ffe0e6 0%, transparent 50%),
+    radial-gradient(circle at 50% 100%,#ffeac9 0%, transparent 60%),
+    linear-gradient(180deg, #fff3e0 0%, #ffe3d2 100%);
   color:var(--ink);
   min-height:100vh;
   display:flex; align-items:flex-start; justify-content:center;
@@ -38,9 +41,9 @@ body{
   background:var(--paper);
   border:4px solid var(--frame);
   box-shadow:
-    0 0 0 4px #d9c39a,
+    0 0 0 4px #ffd9a8,
     0 0 0 8px var(--frame),
-    8px 8px 0 8px rgba(0,0,0,.35);
+    8px 8px 0 8px rgba(120,80,40,.20);
   position:relative;
 }
 .pixel-btn{
@@ -83,7 +86,7 @@ body{
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.6)}100%{transform:scale(1)}}
 
 /* ---------- 교실 화면 ---------- */
-#stage-wrap{position:relative; padding:6px; background:#0f0b1c; border:4px solid var(--frame); box-shadow:0 0 0 4px #d9c39a, 0 0 0 8px var(--frame), 8px 8px 0 8px rgba(0,0,0,.35);}
+#stage-wrap{position:relative; padding:6px; background:#ffe6c2; border:4px solid var(--frame); box-shadow:0 0 0 4px #ffd9a8, 0 0 0 8px var(--frame), 8px 8px 0 8px rgba(120,80,40,.20);}
 #scene{display:block; width:100%; height:auto; image-rendering:pixelated;}
 #stage-wrap.shake{animation:shake .35s;}
 @keyframes shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-6px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(4px,2px)}}
@@ -95,9 +98,15 @@ body{
   animation:cbounce .5s infinite alternate;
 }
 @keyframes cbounce{from{transform:translateY(0)}to{transform:translateY(-5px)}}
-#stage-wrap.fever{box-shadow:0 0 0 4px #ffd34d, 0 0 0 8px #e0453d, 8px 8px 0 8px rgba(0,0,0,.35);}
+#stage-wrap.fever{box-shadow:0 0 0 4px #ffd34d, 0 0 0 8px #ff8a3d, 8px 8px 0 8px rgba(200,110,40,.30);}
+#stage-wrap.super-fever{animation:feverPulse .5s infinite alternate;}
+@keyframes feverPulse{
+  from{box-shadow:0 0 0 4px #ffd34d, 0 0 0 8px #ff6a2d, 8px 8px 0 8px rgba(200,80,30,.35);}
+  to  {box-shadow:0 0 0 6px #fff3a8, 0 0 0 10px #ff3d2d, 8px 8px 0 10px rgba(200,60,30,.45);}
+}
 #fever-flag{position:absolute; top:14px; left:14px; display:none; font-size:14px; padding:5px 10px; color:#2b2118; background:#ffd34d; border:3px solid var(--frame); box-shadow:3px 3px 0 var(--frame);}
-#stage-tag{position:absolute; bottom:14px; left:14px; font-size:11px; padding:4px 8px; color:#ffe9a8; background:rgba(20,14,8,.85); border:2px solid #ffe9a8;}
+#fever-flag.super{background:#ff5a3d; color:#fff6e2; animation:cbounce .35s infinite alternate;}
+#stage-tag{position:absolute; bottom:14px; left:14px; font-size:11px; padding:4px 8px; color:#5c3a18; background:rgba(255,246,226,.92); border:2px solid #5c3a18;}
 
 /* ---------- 하단 : 말풍선 대사창 ---------- */
 #talk{margin-top:16px; padding:14px 16px; position:relative;}
@@ -114,6 +123,18 @@ body{
   display:inline-block; min-width:88px; text-align:center;
   background:#ffe9a8; border-bottom:4px solid var(--frame);
   padding:0 8px; margin:0 2px;
+}
+/* 지금 풀어야 할 빈칸 */
+.blank.now{background:#ffe066; animation:blankGlow 1.1s infinite alternate;}
+@keyframes blankGlow{from{background:#ffe9a8;}to{background:#ffcf3d;}}
+/* 이미 맞힌 빈칸 : 정답을 보여 줌 */
+.blank.solved{background:#c8f0cf; border-bottom-color:#2f7d4a; color:#1e6b3c; min-width:0;}
+/* 아직 풀지 않은 빈칸 : 모자이크로 가려서 정답이 새어 나가지 않게 함 */
+.blank.mask{
+  min-width:0; color:transparent; user-select:none; cursor:not-allowed;
+  border-bottom-color:#8a7350;
+  background:
+    repeating-linear-gradient(45deg,#c9b48f 0 5px,#ab9370 5px 10px);
 }
 #feedback{margin-top:10px; font-size:13px; min-height:20px; line-height:1.6; word-break:keep-all;}
 #feedback.bad{color:#c0392b;} #feedback.good{color:#1e7a4f;}
@@ -140,6 +161,15 @@ body{
 #start,#ending{display:none; padding:22px 18px; text-align:center;}
 #start.on,#ending.on{display:block;}
 #start h1{font-size:22px; line-height:1.5; margin-bottom:6px;}
+.name-row{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin-bottom:16px; font-size:13px;}
+.name-row input{
+  font-family:inherit; font-size:16px; width:150px; padding:8px 10px; text-align:center;
+  background:#fffdf5; border:3px solid var(--frame); color:var(--ink);
+  box-shadow:inset 3px 3px 0 rgba(0,0,0,.10);
+}
+.name-row input:focus{outline:none; background:#fff9df;}
+.name-hint{font-size:11px; color:#9b8560; width:100%;}
+.ed-btns{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
 #start .lead{font-size:13px; color:#6b543a; line-height:1.8; margin:10px 0 16px;}
 .rules{text-align:left; font-size:12px; line-height:1.9; background:#f3e6c6; border:3px solid var(--frame); padding:12px; margin-bottom:16px;}
 #ending .ed-title{font-size:14px; color:#8a6a3a;}
@@ -160,17 +190,25 @@ body{
   <section id="start" class="pixel-box on">
     <h1>👑 다원중<br>전설의 발표왕 키우기!</h1>
     <p class="lead">
-      발표 울렁증이 있는 주인공 <b>‘지수’</b>.<br>
+      발표 울렁증이 있는 우리 반 주인공!<br>
       국어 학습지 빈칸 퀴즈를 풀어 스탯을 올리고,<br>
       최고의 발표자로 키워 주세요!
     </p>
     <div class="rules">
       ▸ 빈칸에 알맞은 말을 입력하고 <b>[확인]</b>!<br>
       ▸ 정답이면 원하는 스탯을 <b>+10</b> 올릴 수 있어요.<br>
-      ▸ 2연속 정답 → <b>COMBO</b> 뱃지 / 3연속 정답 → <b>FEVER</b> 모드(+15)<br>
+      ▸ 한 문장에 빈칸이 여러 개면, 아직 안 푼 빈칸은 <b>모자이크</b>로 가려져요.<br>
+      ▸ 2연속 정답 → <b>COMBO</b> 뱃지<br>
+      ▸ 3연속 정답 → <b>🔥 FEVER</b> 보너스 <b>+5</b> (한 번에 +15)<br>
+      ▸ 5연속 정답 → <b>🔥🔥 SUPER FEVER</b> 보너스 <b>+10</b> (한 번에 +20)<br>
       ▸ 오답이면 스탯 하나가 <b>-5</b>! 맞힐 때까지 다음 문제로 못 가요.<br>
       ▸ 띄어쓰기·대소문자는 무시하고 채점해요.<br>
       ▸ 모든 문제를 풀면 최종 스탯에 따라 <b>엔딩 캐릭터</b>가 결정!
+    </div>
+    <div class="name-row">
+      <label for="player-name">🎀 발표자 이름</label>
+      <input id="player-name" type="text" maxlength="5" placeholder="지수" autocomplete="off">
+      <span class="name-hint">(최대 5글자 · 비워 두면 ‘지수’)</span>
     </div>
     <button class="pixel-btn" id="btn-start" style="font-size:16px; padding:12px 28px;">▶ 발표 육성 시작!</button>
     <p class="credit">Web Audio API 8비트 효과음 사용 · 소리를 켜고 플레이하면 더 재미있어요!</p>
@@ -219,12 +257,15 @@ body{
 
   <!-- ============ 엔딩 화면 ============ -->
   <section id="ending" class="pixel-box">
-    <div class="ed-title">🎉 발표 육성 완료! 최종 결과 🎉</div>
+    <div class="ed-title" id="ed-title-line">🎉 발표 육성 완료! 최종 결과 🎉</div>
     <div class="ed-name" id="ed-name">—</div>
     <div class="ed-img-wrap" id="ed-img-wrap"></div>
     <div class="ed-desc" id="ed-desc"></div>
     <div class="ed-stats" id="ed-stats"></div>
-    <button class="pixel-btn" id="btn-retry" style="font-size:16px; padding:12px 28px;">🔁 다시 도전하기</button>
+    <div class="ed-btns">
+      <button class="pixel-btn" id="btn-retry" style="font-size:16px; padding:12px 24px;">🔁 다시 도전하기</button>
+      <button class="pixel-btn" id="btn-home" style="font-size:14px; padding:12px 18px;">🏠 처음 화면 (이름 바꾸기)</button>
+    </div>
   </section>
 
   <!-- ============ 정답 시 스탯 선택 모달 ============ -->
@@ -268,83 +309,140 @@ const STAGES = {
 };
 
 /* ------------------------------------------------------------------
-   문제 데이터 (학습지 빈칸 전체)
-   st  : 스테이지 번호
-   ctx : 발문(문제 상황 설명)
-   pre : 빈칸 앞 문장 / post : 빈칸 뒤 문장
-   ans : 정답 배열(첫 번째가 대표 정답, 나머지는 허용되는 표현)
+   문제 데이터 - "문장 단위"로 저장합니다.
+   parts 안에서
+     · 그냥 문자열      → 화면에 그대로 보여 주는 글자
+     · { a:['정답', ...] } → 빈칸 (첫 번째가 대표 정답, 나머지는 허용 표현)
+   한 문장에 빈칸이 여러 개면 왼쪽부터 차례대로 출제되고,
+   아직 풀지 않은 뒤쪽 빈칸은 정답이 새어 나가지 않도록 모자이크로 가립니다.
    ------------------------------------------------------------------ */
-const QUESTIONS = [
+const SENTENCES = [
   /* ===== STAGE 1. 발표 준비 과정 간단 정리 ===== */
-  {st:1, ctx:'1. 지수와 친구들의 발표 목적은?', pre:'동아리 활동의 ', post:' 소개와 가입 권유', ans:['장점']},
-  {st:1, ctx:'1. 지수와 친구들의 발표 목적은?', pre:'동아리 활동의 장점 소개와 가입 ', post:'', ans:['권유']},
-  {st:1, ctx:'2. 지수와 친구들이 발표 내용을 마련할 때 고려한 점은?', pre:'발표 ', post:'와의 관련성', ans:['주제']},
-  {st:1, ctx:'2. 지수와 친구들이 발표 내용을 마련할 때 고려한 점은?', pre:'', post:'의 관심이나 이해도, 흥미 등', ans:['청중']},
-  {st:1, ctx:'3. 지수와 친구들이 수집한 자료를 재구성하는 방안은?', pre:'문자로 된 설문 조사 결과를 ', post:'(으)로 재구성하기', ans:['그래프']},
-  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?', pre:'청중의 ', post:'를 끌기에 좋은 방법을 고려한다.', ans:['관심']},
-  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?', pre:'내용이 명료해지고 발표의 ', post:'이 자연스러워지도록 발표 내용을 조직한다.', ans:['흐름']},
-  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?', pre:'발표 내용의 순서를 ', post:'거나 항목을 조정하며 발표 내용을 조직한다.', ans:['바꾸','바꾸다','바꾸기']},
-  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?', pre:'발표 내용의 순서를 바꾸거나 항목을 ', post:'하며 발표 내용을 조직한다.', ans:['조정']},
-  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?', pre:'발표 목적이나 대상의 특성에 적절한 설명 ', post:'을 활용하여 발표 내용을 구성한다.', ans:['방법']},
+  {st:1, ctx:'1. 지수와 친구들의 발표 목적은?',
+   parts:['동아리 활동의 ', {a:['장점']}, ' 소개와 가입 ', {a:['권유']}]},
+
+  {st:1, ctx:'2. 지수와 친구들이 발표 내용을 마련할 때 고려한 점은?',
+   parts:['발표 ', {a:['주제']}, '와의 관련성']},
+  {st:1, ctx:'2. 지수와 친구들이 발표 내용을 마련할 때 고려한 점은?',
+   parts:[{a:['청중']}, '의 관심이나 이해도, 흥미 등']},
+
+  {st:1, ctx:'3. 지수와 친구들이 수집한 자료를 재구성하는 방안은?',
+   parts:['문자로 된 설문 조사 결과를 ', {a:['그래프']}, '(으)로 재구성하기']},
+
+  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?',
+   parts:['청중의 ', {a:['관심']}, '을 끌기에 좋은 방법을 고려한다.']},
+  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?',
+   parts:['내용이 명료해지고 발표의 ', {a:['흐름']}, '이 자연스러워지도록 발표 내용을 조직한다.']},
+  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?',
+   parts:['발표 내용의 순서를 ', {a:['바꾸','바꾸다','바꾸기']}, '거나 항목을 ', {a:['조정']}, '하며 발표 내용을 조직한다.']},
+  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?',
+   parts:['발표 목적이나 대상의 특성에 적절한 설명 ', {a:['방법']}, '을 활용하여 발표 내용을 구성한다.']},
 
   /* ===== STAGE 2. 설명 방법 ===== */
-  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'', post:' : 둘 이상의 대상을 견주어 공통점을 드러내는 방법', ans:['정의']},
-  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'', post:' : 둘 이상의 대상을 견주어 차이점을 드러내는 방법', ans:['비교']},
-  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'', post:' : 일정 기준에 따라 상위 항목을 하위 항목으로 나누어 설명하는 방법', ans:['구분']},
-  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'', post:' : 일정 기준에 따라 하위 항목을 상위 항목으로 묶어 설명하는 방법', ans:['분류']},
-  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'인과 : 어떤 대상을 ', post:'과 결과를 중심으로 설명하는 방법', ans:['원인']},
-  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'인과 : 어떤 대상을 원인과 ', post:'를 중심으로 설명하는 방법', ans:['결과']},
-  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'', post:' : 대상을 그 구성 요소나 부분으로 나누어 설명하는 방법', ans:['분석']},
+  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류',
+   parts:[{a:['비교']}, ' : 둘 이상의 대상을 견주어 공통점을 드러내는 방법']},
+  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류',
+   parts:[{a:['대조']}, ' : 둘 이상의 대상을 견주어 차이점을 드러내는 방법']},
+  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류',
+   parts:[{a:['구분']}, ' : 일정 기준에 따라 상위 항목을 하위 항목으로 나누어 설명하는 방법']},
+  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류',
+   parts:[{a:['분류']}, ' : 일정 기준에 따라 하위 항목을 상위 항목으로 묶어 설명하는 방법']},
+  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류',
+   parts:['인과 : 어떤 대상을 ', {a:['원인']}, '과 ', {a:['결과']}, '를 중심으로 설명하는 방법']},
+  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류',
+   parts:[{a:['분석']}, ' : 대상을 그 구성 요소나 부분으로 나누어 설명하는 방법']},
 
   /* ===== STAGE 3. 지수의 발표 과정 따라가기 ===== */
-  {st:3, ctx:'6. “달리기의 효과를 제시하기 위해 꾸준히 달리기를 한 뒤에 어떤 결과가 나타났는지를 제시해 볼까?”', pre:'활용한 설명 방법 → ', post:'', ans:['인과']},
-  {st:3, ctx:'6. “동아리에서 진행한 활동을 소개하기 위해 그동안 우리가 했던 다양하고 재미있는 달리기 활동을 예로 들어 보자.”', pre:'활용한 설명 방법 → ', post:'', ans:['예시']},
-  {st:3, ctx:'7. 지수가 발표 도입 부분에서 설문 조사 결과를 제시한 까닭은?', pre:'설문 조사 결과를 제시하여 발표에 대한 청중의 ', post:'을 높이고 흥미를 끌기 위해서이다.', ans:['관심']},
-  {st:3, ctx:'7. 지수가 발표 도입 부분에서 설문 조사 결과를 제시한 까닭은?', pre:'설문 조사 결과를 제시하여 발표에 대한 청중의 관심을 높이고 ', post:'를 끌기 위해서이다.', ans:['흥미']},
-  {st:3, ctx:'8. 지수가 발표 전개 부분에서 10킬로미터 마라톤 종목에 출전한다고 말하며 목소리를 크게 한 까닭은?', pre:'청중의 집중을 ', post:'하고, 질문을 통해 청중의 반응을 살피며 발표하기 위해서이다.', ans:['유도']},
-  {st:3, ctx:'8. 지수가 발표 전개 부분에서 10킬로미터 마라톤 종목에 출전한다고 말하며 목소리를 크게 한 까닭은?', pre:'청중의 집중을 유도하고, ', post:'을 통해 청중의 반응을 살피며 발표하기 위해서이다.', ans:['질문']},
-  {st:3, ctx:'9. 지수가 청중에게 질문을 던진 까닭은?', pre:'청중을 발표에 ', post:'시키기 위함과 동아리 활동에 관한 청중의 관심과 흥미를 끌기 위해서이다.', ans:['집중']},
-  {st:3, ctx:'9. 지수가 청중에게 질문을 던진 까닭은?', pre:'청중을 발표에 집중시키기 위함과 동아리 활동에 관한 청중의 ', post:'과 흥미를 끌기 위해서이다.', ans:['관심']},
-  {st:3, ctx:'10. 지수가 발표에서 활용한 동아리 블로그 화면 사진이 적절했는지 평가해 보자.', pre:'발표 목적인 ‘동아리 소개와 가입 권유’에 따라 동아리 가입 방법을 ', post:'적으로 보여 줄 수 있으므로 적절하다.', ans:['구체']},
-  {st:3, ctx:'11. 지수가 발표를 마무리하며 말을 인용한 까닭은 무엇일까?', pre:'동아리가 추구하는 ‘협력과 협동’의 방향성을 ', post:'하고, 청중에게 깊은 인상을 남기며 발표를 마무리하기 위해서이다.', ans:['강조']},
-  {st:3, ctx:'11. 지수가 발표를 마무리하며 말을 인용한 까닭은 무엇일까?', pre:'‘협력과 협동’의 방향성을 강조하고, 청중에게 깊은 ', post:'을 남기며 발표를 마무리하기 위해서이다.', ans:['인상']},
-  {st:3, ctx:'12. 지수와 친구들이 발표가 끝난 후 점검하고 있는 것은?', pre:'발표 내용을 ', post:'적으로 조직했는지 점검하고 있다.', ans:['체계']},
-  {st:3, ctx:'12. 지수와 친구들이 발표가 끝난 후 점검하고 있는 것은?', pre:'자료의 내용을 ', post:'하기 쉽게 그래프 등으로 재구성했는지 점검하고 있다.', ans:['이해']},
-  {st:3, ctx:'12. 지수와 친구들이 발표가 끝난 후 점검하고 있는 것은?', pre:'자료의 내용을 이해하기 쉽게 그래프 등으로 ', post:'구성했는지 점검하고 있다.', ans:['재']},
-  {st:3, ctx:'12. 지수와 친구들이 발표가 끝난 후 점검하고 있는 것은?', pre:'발표 ', post:'이나 대상의 특성에 적절한 설명 방법을 활용했는지 점검하고 있다.', ans:['목적']},
-  {st:3, ctx:'12. 지수와 친구들이 발표가 끝난 후 점검하고 있는 것은?', pre:'발표 목적이나 대상의 특성에 적절한 설명 ', post:'을 활용했는지 점검하고 있다.', ans:['방법']},
+  {st:3, ctx:'6. “달리기의 효과를 제시하기 위해 꾸준히 달리기를 한 뒤에 어떤 결과가 나타났는지를 제시해 볼까?”',
+   parts:['활용한 설명 방법 → ', {a:['인과']}]},
+  {st:3, ctx:'6. “동아리에서 진행한 활동을 소개하기 위해 그동안 우리가 했던 다양하고 재미있는 달리기 활동을 예로 들어 보자.”',
+   parts:['활용한 설명 방법 → ', {a:['예시']}]},
+
+  {st:3, ctx:'7. 지수가 발표 도입 부분에서 설문 조사 결과를 제시한 까닭은?',
+   parts:['설문 조사 결과를 제시하여 발표에 대한 청중의 ', {a:['관심']}, '을 높이고 ', {a:['흥미']}, '를 끌기 위해서이다.']},
+
+  {st:3, ctx:'8. 지수가 발표 전개 부분에서 10킬로미터 마라톤 종목에 출전한다고 말하며 목소리를 크게 한 까닭은?',
+   parts:['청중의 집중을 ', {a:['유도']}, '하고, ', {a:['질문']}, '을 통해 청중의 반응을 살피며 발표하기 위해서이다.']},
+
+  {st:3, ctx:'9. 지수가 청중에게 질문을 던진 까닭은?',
+   parts:['청중을 발표에 ', {a:['집중']}, '시키기 위함과 동아리 활동에 관한 청중의 ', {a:['관심']}, '과 흥미를 끌기 위해서이다.']},
+
+  {st:3, ctx:'10. 지수가 발표에서 활용한 동아리 블로그 화면 사진이 적절했는지 평가해 보자.',
+   parts:['발표 목적인 ‘동아리 소개와 가입 권유’에 따라 동아리 가입 방법을 ', {a:['구체']}, '적으로 보여 줄 수 있으므로 적절하다.']},
+
+  {st:3, ctx:'11. 지수가 발표를 마무리하며 말을 인용한 까닭은 무엇일까?',
+   parts:['동아리가 추구하는 ‘협력과 협동’의 방향성을 ', {a:['강조']}, '하고, 청중에게 깊은 ', {a:['인상']}, '을 남기며 발표를 마무리하기 위해서이다.']},
+
+  {st:3, ctx:'12. 지수와 친구들이 발표가 끝난 후 점검하고 있는 것은?',
+   parts:['발표 내용을 ', {a:['체계']}, '적으로 조직했는지 점검하고 있다.']},
+  {st:3, ctx:'12. 지수와 친구들이 발표가 끝난 후 점검하고 있는 것은?',
+   parts:['자료의 내용을 ', {a:['이해']}, '하기 쉽게 그래프 등으로 ', {a:['재']}, '구성했는지 점검하고 있다.']},
+  {st:3, ctx:'12. 지수와 친구들이 발표가 끝난 후 점검하고 있는 것은?',
+   parts:['발표 ', {a:['목적']}, '이나 대상의 특성에 적절한 설명 ', {a:['방법']}, '을 활용했는지 점검하고 있다.']},
 
   /* ===== STAGE 4. 발표 준비 과정 핵심 정리 ===== */
-  {st:4, ctx:'13. 발표 주제 정하기', pre:'정보를 전달하려는 ', post:'인지, 청중을 설득하려는 목적인지를 고려하여 발표 주제를 구체적으로 설정하기', ans:['목적']},
-  {st:4, ctx:'14. 발표 목적, 청중 분석하기', pre:'발표를 통해 이루고자 하는 ', post:' 명확히 하기', ans:['목적']},
-  {st:4, ctx:'14. 발표 목적, 청중 분석하기', pre:'청중의 ', post:'사나 지적 수준 등을 고려하기', ans:['관심']},
-  {st:4, ctx:'14. 발표 목적, 청중 분석하기', pre:'청중의 관심사나 지적 ', post:' 등을 고려하기', ans:['수준']},
-  {st:4, ctx:'15. 자료 수집하고 재구성하기', pre:'다양한 ', post:'를 수집하기', ans:['자료']},
-  {st:4, ctx:'16. 발표 내용 체계적으로 조직하기', pre:'발표 내용을 ‘', post:' - 전개 - 정리’로 나누어 개요 작성하기', ans:['도입']},
-  {st:4, ctx:'16. 발표 내용 체계적으로 조직하기', pre:'발표 내용을 ‘도입 - 전개 - ', post:'’로 나누어 개요 작성하기', ans:['정리']},
+  {st:4, ctx:'13. 발표 주제 정하기',
+   parts:['정보를 전달하려는 ', {a:['목적']}, '인지, 청중을 설득하려는 목적인지를 고려하여 발표 주제를 구체적으로 설정하기']},
+
+  {st:4, ctx:'14. 발표 목적, 청중 분석하기',
+   parts:['발표를 통해 이루고자 하는 ', {a:['목적']}, ' 명확히 하기']},
+  {st:4, ctx:'14. 발표 목적, 청중 분석하기',
+   parts:['청중의 ', {a:['관심']}, '사나 지적 ', {a:['수준']}, ' 등을 고려하기']},
+
+  {st:4, ctx:'15. 자료 수집하고 재구성하기',
+   parts:['다양한 ', {a:['자료']}, '를 수집하기']},
+
+  {st:4, ctx:'16. 발표 내용 체계적으로 조직하기',
+   parts:['발표 내용을 ‘', {a:['도입']}, ' - 전개 - ', {a:['정리']}, '’로 나누어 개요 작성하기']},
 
   /* ===== STAGE 5. 발표 내용 체계적으로 조직하기 ===== */
-  {st:5, ctx:'17. [도입] 단계에서 하는 일', pre:'발표 ', post:'나 목적, 배경과 발표 순서를 제시함', ans:['주제']},
-  {st:5, ctx:'17. [도입] 단계에서 하는 일', pre:'발표 주제나 ', post:', 배경과 발표 순서를 제시함', ans:['목적']},
-  {st:5, ctx:'17. [도입] 단계에서 하는 일', pre:'발표 주제나 목적, 배경과 발표 ', post:'를 제시함', ans:['순서']},
-  {st:5, ctx:'17. [도입] 단계에서 하는 일', pre:'청중의 경험을 환기하는 ', post:'이나 흥미로운 사실을 제시하여 청중의 관심을 이끎', ans:['질문']},
-  {st:5, ctx:'18. [전개] 단계에서 하는 일', pre:'발표 목적이나 대상의 특성에 적절한 설명 ', post:'을 활용하여 구체적인 내용을 제시함', ans:['방법']},
-  {st:5, ctx:'19. [정리] 단계에서 하는 일', pre:'발표 내용을 ', post:'하고 중요한 내용을 다시 강조함', ans:['요약']},
-  {st:5, ctx:'19. [정리] 단계에서 하는 일', pre:'발표 내용을 요약하고 중요한 내용을 다시 ', post:'함', ans:['강조']},
-  {st:5, ctx:'19. [정리] 단계에서 하는 일', pre:'', post:'적인 표현 등을 활용하여 청중에게 깊은 인상을 남기고 청중의 실천을 촉구함', ans:['인상']},
+  {st:5, ctx:'17. [도입] 단계에서 하는 일',
+   parts:['발표 ', {a:['주제']}, '나 ', {a:['목적']}, ', 배경과 발표 ', {a:['순서']}, '를 제시함']},
+  {st:5, ctx:'17. [도입] 단계에서 하는 일',
+   parts:['청중의 경험을 환기하는 ', {a:['질문']}, '이나 흥미로운 사실을 제시하여 청중의 관심을 이끎']},
+
+  {st:5, ctx:'18. [전개] 단계에서 하는 일',
+   parts:['발표 목적이나 대상의 특성에 적절한 설명 ', {a:['방법']}, '을 활용하여 구체적인 내용을 제시함']},
+
+  {st:5, ctx:'19. [정리] 단계에서 하는 일',
+   parts:['발표 내용을 ', {a:['요약']}, '하고 중요한 내용을 다시 ', {a:['강조']}, '함']},
+  {st:5, ctx:'19. [정리] 단계에서 하는 일',
+   parts:[{a:['인상']}, '적인 표현 등을 활용하여 청중에게 깊은 인상을 남기고 청중의 실천을 촉구함']},
 
   /* ===== STAGE 6. 지수의 발표 내용과 활용한 매체 자료 ===== */
-  {st:6, ctx:'20. [도입] 발표 내용', pre:'인사 및 동아리 ‘두런두런’ ', post:', 발표 목적 및 발표 순서 소개', ans:['소개']},
-  {st:6, ctx:'20. [도입] 발표 내용', pre:'인사 및 동아리 ‘두런두런’ 소개, 발표 목적 및 발표 ', post:' 소개', ans:['순서']},
-  {st:6, ctx:'20. [도입] 매체 자료', pre:'발표 제목과 순서가 담긴 ', post:' 자료', ans:['시각']},
-  {st:6, ctx:'21. [전개] 매체 자료', pre:'교내 학생들을 대상으로 한 설문 조사 결과 ', post:'', ans:['그래프']},
-  {st:6, ctx:'21. [전개] 매체 자료', pre:'동아리 부원들의 ', post:' 영상', ans:['인터뷰']},
-  {st:6, ctx:'21. [전개] 매체 자료', pre:'재미있는 달리기 활동 ', post:'', ans:['사진']},
-  {st:6, ctx:'21. [전개] 매체 자료', pre:'마라톤의 종목과 난도를 정리한 ', post:'', ans:['그림']},
-  {st:6, ctx:'21. [전개] 매체 자료', pre:'마라톤 대비 훈련 방법을 정리한 ', post:'', ans:['표']},
-  {st:6, ctx:'22. [정리] 발표 내용', pre:'발표 내용 ', post:' 및 동아리 가입 권유, 마무리 인사', ans:['요약']},
-  {st:6, ctx:'22. [정리] 매체 자료', pre:'인상적인 표현이 담긴 ', post:' 자료', ans:['시각']}
+  {st:6, ctx:'20. [도입] 발표 내용',
+   parts:['인사 및 동아리 ‘두런두런’ ', {a:['소개']}, ', 발표 목적 및 발표 ', {a:['순서']}, ' 소개']},
+  {st:6, ctx:'20. [도입] 매체 자료',
+   parts:['발표 제목과 순서가 담긴 ', {a:['시각']}, ' 자료']},
+
+  {st:6, ctx:'21. [전개] 매체 자료',
+   parts:['교내 학생들을 대상으로 한 설문 조사 결과 ', {a:['그래프']}]},
+  {st:6, ctx:'21. [전개] 매체 자료',
+   parts:['동아리 부원들의 ', {a:['인터뷰']}, ' 영상']},
+  {st:6, ctx:'21. [전개] 매체 자료',
+   parts:['재미있는 달리기 활동 ', {a:['사진']}]},
+  {st:6, ctx:'21. [전개] 매체 자료',
+   parts:['마라톤의 종목과 난도를 정리한 ', {a:['그림']}]},
+  {st:6, ctx:'21. [전개] 매체 자료',
+   parts:['마라톤 대비 훈련 방법을 정리한 ', {a:['표']}]},
+
+  {st:6, ctx:'22. [정리] 발표 내용',
+   parts:['발표 내용 ', {a:['요약']}, ' 및 동아리 가입 권유, 마무리 인사']},
+  {st:6, ctx:'22. [정리] 매체 자료',
+   parts:['인상적인 표현이 담긴 ', {a:['시각']}, ' 자료']}
 ];
+
+/* 문장 데이터를 "빈칸 1개 = 문제 1개" 형태로 펼칩니다. */
+const QUESTIONS = [];
+SENTENCES.forEach(sen => {
+  let bIdx = 0;
+  sen.parts.forEach(part => {
+    if(typeof part !== 'string'){
+      QUESTIONS.push({ sen:sen, bIdx:bIdx, ans:part.a, st:sen.st, ctx:sen.ctx });
+      bIdx++;
+    }
+  });
+});
 
 /* ==================================================================
    ★★★ [엔딩 캐릭터 데이터] ★★★
@@ -362,7 +460,7 @@ const ENDINGS = [
   /* 1. 4개 스탯 모두 200점 이상 */
   { name:'전설의 발표왕', emoji:'👑',
     imagePath:'king.png',                 /* ← 여기 경로를 바꾸세요 */
-    desc:'궁극의 육각형! 논리·전달·매체·호응 어느 하나 빠지지 않는 완전체.\n다원중 강당이 지수의 무대가 되었다!',
+    desc:'궁극의 육각형! 논리·전달·매체·호응 어느 하나 빠지지 않는 완전체.\n다원중 강당이 {이름}의 무대가 되었다!',   /* {이름} 은 학생이 정한 발표자 이름으로 자동 치환됩니다 */
     cond:s => STAT_KEYS.every(k => s[k] >= 200) },
 
   /* 2. 4개 스탯 모두 170점 이상 */
@@ -560,6 +658,8 @@ const FACE = {
 };
 
 let mood = 'normal', blinkTimer = 0, blinking = false, tick = 0;
+let PLAYER = '지수';  /* 발표자(주인공) 이름 - 시작 화면에서 학생이 직접 정합니다 */
+let feverLv = 0;      /* 피버 단계 : 0 없음 / 1 FEVER / 2 SUPER FEVER */
 let particles = [];   /* 정답 시 색종이 / 오답 시 땀방울 */
 let floatTexts = [];  /* +10 / -5 등 떠오르는 글자 */
 let feverOn = false;
@@ -568,94 +668,144 @@ function px(x, y, w, h, color){ cx2.fillStyle = color; cx2.fillRect(x, y, w, h);
 
 function drawBoardText(){
   /* 칠판 분필 글씨 느낌의 선들 */
-  px(22, 24, 34, 3, '#eaf6ee');
-  px(22, 32, 62, 2, '#cfe6d6'); px(22, 38, 48, 2, '#cfe6d6');
-  px(22, 44, 68, 2, '#cfe6d6'); px(22, 50, 40, 2, '#cfe6d6');
+  px(22, 24, 34, 3, '#ffffff');
+  px(22, 32, 62, 2, '#e2f5e8'); px(22, 38, 48, 2, '#e2f5e8');
+  px(22, 44, 68, 2, '#e2f5e8'); px(22, 50, 40, 2, '#e2f5e8');
   /* 칠판 구석 작은 그래프 그림 */
-  px(88, 40, 2, 20, '#eaf6ee'); px(88, 58, 20, 2, '#eaf6ee');
-  px(92, 50, 4, 8, '#ffe9a8'); px(98, 44, 4, 14, '#9fe0b6'); px(104, 48, 3, 10, '#f5a3a0');
+  px(88, 40, 2, 20, '#ffffff'); px(88, 58, 20, 2, '#ffffff');
+  px(92, 50, 4, 8, '#ffe066'); px(98, 44, 4, 14, '#8fe3a8'); px(104, 48, 3, 10, '#ffb0ad');
+}
+
+/* ---------- (4) 피버 불꽃 이펙트 : 캐릭터 주변이 활활 ---------- */
+function drawFlames(level, front){
+  const GROUND = 124;
+  /* 캐릭터 좌우에서 타오르는 불기둥 (SUPER FEVER 는 더 많이, 더 크게)
+     front = true 면 캐릭터 발밑 앞쪽에 작게 한 겹 더 그려서 불에 감싸인 느낌을 냄 */
+  const cols = front            ? [84, 96, 108]
+             : level >= 2       ? [58, 66, 74, 118, 126, 134, 86, 106]
+             :                    [66, 74, 118, 126];
+  cols.forEach((x, i) => {
+    const phase = tick * 0.32 + i * 1.9;
+    const h = (front ? 8 : level >= 2 ? 20 : 13) + Math.sin(phase) * 4 + Math.sin(phase * 2.3) * 2;
+    for(let y = 0; y < h; y++){
+      const w = Math.max(2, ((h - y) * 0.55) | 0);
+      const c = y < h * 0.30 ? '#fff3a8'          /* 심지(가장 뜨거운 곳) */
+              : y < h * 0.62 ? '#ffc32e'
+              : y < h * 0.85 ? '#ff8a2e'
+              :                '#ff4d2e';
+      px(x - (w >> 1) + ((Math.sin(phase + y * 0.4) * 1.2) | 0), GROUND - y, w, 2, c);
+    }
+  });
+  if(front) return;   /* 앞쪽 레이어는 불기둥만 그리고 끝 */
+
+  /* 위로 흩날리는 불티 */
+  for(let i = 0; i < (level >= 2 ? 14 : 8); i++){
+    const t  = (tick * 1.5 + i * 29) % 90;
+    const ex = 96 + Math.sin(i * 2.1 + tick / 22) * (level >= 2 ? 56 : 42);
+    const ey = GROUND - t;
+    px(ex | 0, ey | 0, 2, 2, i % 3 === 0 ? '#fff3a8' : (i % 3 === 1 ? '#ffb02e' : '#ff5a2e'));
+  }
+  /* 바닥에 번지는 따뜻한 빛 */
+  cx2.fillStyle = level >= 2 ? 'rgba(255,140,40,.22)' : 'rgba(255,170,60,.14)';
+  cx2.fillRect(56, GROUND - 4, 84, 12);
 }
 
 function drawScene(){
   tick++;
 
-  /* --- 벽 --- */
-  px(0, 0, 192, 100, '#f2e0be');
-  px(0, 0, 192, 10, '#e6cfa6');
+  /* --- 벽 (환한 크림색) --- */
+  px(0, 0, 192, 100, '#fdf1de');
+  px(0, 0, 192, 10, '#fbe4c4');
   /* 벽 상단 몰딩 */
-  for(let x=0; x<192; x+=8) px(x, 10, 4, 2, '#d8bd8f');
+  for(let x=0; x<192; x+=8) px(x, 10, 4, 2, '#efd6ae');
 
   /* --- 창문 --- */
-  px(126, 16, 56, 46, '#8a5a2b');
-  px(129, 19, 50, 40, feverOn ? '#ffd88a' : '#a9dcf5');
+  px(126, 16, 56, 46, '#b5793c');
+  px(129, 19, 50, 40, feverOn ? '#ffd88a' : '#c6ecff');
   /* 구름 */
   px(134, 25, 12, 4, '#ffffff'); px(138, 22, 6, 3, '#ffffff');
   px(158, 34, 10, 3, '#ffffff'); px(161, 31, 5, 3, '#ffffff');
   /* 창틀 */
-  px(152, 19, 3, 40, '#8a5a2b'); px(129, 37, 50, 3, '#8a5a2b');
-  px(126, 62, 56, 3, '#5c3a18');
+  px(152, 19, 3, 40, '#b5793c'); px(129, 37, 50, 3, '#b5793c');
+  px(126, 62, 56, 3, '#8a5a2b');
 
   /* --- 칠판 --- */
-  px(12, 14, 104, 56, '#8a5a2b');
-  px(15, 17, 98, 50, '#2f5d4a');
+  px(12, 14, 104, 56, '#b5793c');
+  px(15, 17, 98, 50, '#3f8168');
   drawBoardText();
   /* 분필 받침 + 분필 */
-  px(12, 70, 104, 4, '#c08a4e');
+  px(12, 70, 104, 4, '#d8a05e');
   px(20, 67, 8, 3, '#ffffff'); px(32, 67, 6, 3, '#ffe9a8');
 
   /* --- 벽시계 --- */
-  px(118, 16, 5, 5, '#3b2a18');
-  px(119, 17, 3, 3, '#fff6e2');
+  px(117, 15, 7, 7, '#8a5a2b');
+  px(118, 16, 5, 5, '#fffaf0');
+  px(120, 17, 1, 3, '#8a5a2b'); px(120, 19, 3, 1, '#8a5a2b');
 
   /* --- 게시물(작은 포스터) --- */
-  px(4, 20, 5, 7, '#f5a3a0'); px(4, 30, 5, 7, '#9fe0b6');
+  px(3, 18, 6, 8, '#ffb3b0'); px(3, 29, 6, 8, '#b6ecc4');
 
-  /* --- 바닥 --- */
-  px(0, 100, 192, 44, '#c99a6a');
-  px(0, 100, 192, 3, '#a97b4e');
-  for(let i=0; i<7; i++){ px(i*30 - 6, 103, 2, 41, '#b98a5c'); }
-  px(0, 118, 192, 2, '#b98a5c'); px(0, 132, 192, 2, '#b98a5c');
+  /* --- 창문에서 들어오는 햇살 --- */
+  cx2.fillStyle = 'rgba(255,240,190,.42)';
+  cx2.beginPath();
+  cx2.moveTo(126, 62); cx2.lineTo(182, 62); cx2.lineTo(150, 144); cx2.lineTo(72, 144);
+  cx2.closePath(); cx2.fill();
+
+  /* --- 바닥 (환한 나무색) --- */
+  px(0, 100, 192, 44, '#eec18d');
+  px(0, 100, 192, 3, '#d9a76c');
+  for(let i=0; i<7; i++){ px(i*30 - 6, 103, 2, 41, '#e3b27c'); }
+  px(0, 118, 192, 2, '#e3b27c'); px(0, 132, 192, 2, '#e3b27c');
 
   /* --- 교탁 --- */
-  px(140, 92, 44, 8, '#a97b4e');
-  px(146, 100, 32, 26, '#c08a4e');
-  px(148, 104, 28, 3, '#8a5a2b'); px(148, 112, 28, 3, '#8a5a2b');
+  px(140, 92, 44, 8, '#d9a76c');
+  px(146, 100, 32, 26, '#e8b880');
+  px(148, 104, 28, 3, '#b5793c'); px(148, 112, 28, 3, '#b5793c');
 
   /* --- 책상들(청중석) --- */
   function desk(x, y, s){
-    px(x, y, 26*s, 4*s, '#d8a86e');           /* 상판 */
-    px(x, y+4*s, 26*s, 2*s, '#a97b4e');
-    px(x+3*s, y+6*s, 3*s, 10*s, '#8a5a2b');   /* 다리 */
-    px(x+20*s, y+6*s, 3*s, 10*s, '#8a5a2b');
-    px(x+6*s, y-6*s, 14*s, 6*s, '#6f83b8');   /* 의자 등받이 */
+    px(x, y, 26*s, 4*s, '#f0c894');           /* 상판 */
+    px(x, y+4*s, 26*s, 2*s, '#cf9c62');
+    px(x+3*s, y+6*s, 3*s, 10*s, '#b5793c');   /* 다리 */
+    px(x+20*s, y+6*s, 3*s, 10*s, '#b5793c');
+    px(x+6*s, y-6*s, 14*s, 6*s, '#8fa3d8');   /* 의자 등받이 */
   }
   desk(2, 108, 1); desk(2, 126, 1);
   desk(150, 128, 1);
 
   /* --- 화분 --- */
-  px(120, 116, 10, 10, '#c0714f'); px(122, 126, 6, 3, '#8a4a30');
-  px(122, 108, 3, 8, '#4f9e5e'); px(126, 110, 3, 6, '#6bbf74');
+  px(120, 116, 10, 10, '#e08a63'); px(122, 126, 6, 3, '#b06342');
+  px(122, 108, 3, 8, '#5fb870'); px(126, 110, 3, 6, '#7fd68a');
 
   /* --- 캐릭터 그림자 --- */
-  px(74, 122, 44, 4, 'rgba(60,40,20,.22)');
+  px(74, 122, 44, 4, 'rgba(150,105,60,.20)');
+
+  /* --- 피버 불꽃 (캐릭터 뒤쪽 레이어) --- */
+  if(feverOn) drawFlames(feverLv);
 
   /* --- 캐릭터 --- */
   const bob = Math.floor(Math.sin(tick / 26) * 1.4);   /* 숨쉬기 애니메이션 */
   drawChar(80, 74 + bob, 2);
 
-  /* --- 이름표 --- */
-  px(78, 128, 34, 10, '#fff6e2');
+  /* --- 이름표 (학생이 정한 발표자 이름) --- */
+  const tagW = Math.max(28, PLAYER.length * 9 + 10);
+  px(96 - (tagW >> 1), 127, tagW, 11, '#fffaf0');
+  px(96 - (tagW >> 1), 127, tagW, 2, '#e2cfa8');
   cx2.fillStyle = '#3b2a18';
   cx2.font = '8px monospace';
   cx2.textAlign = 'center';
-  cx2.fillText('지수', 95, 136);
+  cx2.fillText(PLAYER, 96, 135);
 
-  /* --- 피버 이펙트 : 반짝이는 배경 별 --- */
+  /* --- 피버 이펙트 : 반짝이는 배경 별 + 화면 전체 붉은 열기 --- */
   if(feverOn){
-    for(let i=0; i<10; i++){
+    for(let i=0; i<(feverLv>=2?16:10); i++){
       const sx = (i*37 + tick*2) % 192, sy = (i*23 + Math.sin(tick/10+i)*6 + 14) | 0;
       px(sx, sy, 2, 2, i % 2 ? '#ffd34d' : '#fff6a8');
     }
+    /* 캐릭터 앞쪽에서 한 번 더 타오르는 불꽃 (감싸는 느낌) */
+    drawFlames(feverLv, true);
+    cx2.fillStyle = feverLv >= 2 ? 'rgba(255,110,40,.13)' : 'rgba(255,160,60,.07)';
+    cx2.fillRect(0, 0, 192, 144);
   }
 
   drawParticles();
@@ -738,9 +888,23 @@ requestAnimationFrame(drawScene);
    ================================================================== */
 const TOTAL = QUESTIONS.length;      /* 전체 빈칸 문항 수 (데이터에서 자동 계산) */
 const GAUGE_MAX = 500;               /* 게이지 바가 100%로 꽉 차는 기준 점수 */
-const GAIN_NORMAL = 10;              /* 일반 정답 시 상승 점수 */
-const GAIN_FEVER  = 15;              /* 피버(3연속 이상) 시 상승 점수 */
+const GAIN_BASE   = 10;              /* 기본 정답 시 상승 점수 */
+const FEVER1_COMBO = 3, FEVER1_BONUS = 5;   /* 3연속 이상 → 보너스 +5  (합계 15점) */
+const FEVER2_COMBO = 5, FEVER2_BONUS = 10;  /* 5연속 이상 → 보너스 +10 (합계 20점) */
 const PENALTY     = 5;               /* 오답 시 감점 */
+
+/* 콤보 수에 따른 상승 점수 계산 */
+function gainFor(combo){
+  if(combo >= FEVER2_COMBO) return GAIN_BASE + FEVER2_BONUS;
+  if(combo >= FEVER1_COMBO) return GAIN_BASE + FEVER1_BONUS;
+  return GAIN_BASE;
+}
+/* 피버 단계 : 0 = 없음, 1 = FEVER, 2 = SUPER FEVER */
+function feverLevel(combo){
+  if(combo >= FEVER2_COMBO) return 2;
+  if(combo >= FEVER1_COMBO) return 1;
+  return 0;
+}
 
 const LEVEL_TITLES = [
   '발표 새싹', '떨리는 목소리', '또박또박 연습생', '자료 수집가', '개요 설계자',
@@ -809,18 +973,46 @@ function updateCombo(){
   } else {
     elCombo.style.display = 'none';
   }
-  feverOn = S.combo >= 3;
+  feverLv = feverLevel(S.combo);
+  feverOn = feverLv > 0;
   elFever.style.display = feverOn ? 'block' : 'none';
+  elFever.textContent = feverLv >= 2 ? '🔥🔥 SUPER FEVER!' : '🔥 FEVER!';
+  elFever.classList.toggle('super', feverLv >= 2);
   elWrap.classList.toggle('fever', feverOn);
+  elWrap.classList.toggle('super-fever', feverLv >= 2);
 }
 
 /* ---------- 문제 출력 ---------- */
+/* 한 문장을 화면용 HTML 로 만든다.
+   · 이미 맞힌 빈칸  → 정답을 보여 줌(초록색)
+   · 지금 풀 빈칸    → ?
+   · 아직 안 푼 빈칸 → 모자이크로 가림 (정답 스포 방지)          */
+function buildLine(q){
+  let html = '', b = 0;
+  q.sen.parts.forEach(part => {
+    if(typeof part === 'string'){ html += escapeHtml(part); return; }
+    const word = part.a[0];
+    if(b < q.bIdx){
+      html += '<span class="blank solved">' + escapeHtml(word) + '</span>';
+    } else if(b === q.bIdx){
+      html += '<span class="blank now">?</span>';
+    } else {
+      html += '<span class="blank mask" title="다음 차례 빈칸이에요">' +
+              '▩'.repeat(Math.max(2, word.length)) + '</span>';
+    }
+    b++;
+  });
+  return html;
+}
+
 function renderQuestion(){
   const q = QUESTIONS[S.i];
   elStageTag.textContent = STAGES[q.st];
-  elQHead.textContent = 'Q' + (S.i + 1) + '. / 총 ' + TOTAL + '문항';
+  const nBlanks = q.sen.parts.filter(x => typeof x !== 'string').length;
+  elQHead.textContent = 'Q' + (S.i + 1) + '. / 총 ' + TOTAL + '문항' +
+    (nBlanks > 1 ? '   (이 문장의 빈칸 ' + (q.bIdx + 1) + '/' + nBlanks + ' · 가려진 칸은 다음 차례)' : '');
   elQCtx.textContent = q.ctx;
-  elQLine.innerHTML = escapeHtml(q.pre) + '<span class="blank">?</span>' + escapeHtml(q.post);
+  elQLine.innerHTML = buildLine(q);
   elAnswer.value = '';
   elAnswer.focus();
   S.tries = 0;
@@ -843,7 +1035,7 @@ function submit(){
   const raw = elAnswer.value;
   if(normalize(raw) === ''){
     elFb.className = 'bad';
-    elFb.textContent = '💬 지수 : "빈칸에 들어갈 말을 적어 줘!"';
+    elFb.textContent = '💬 ' + PLAYER + ' : "빈칸에 들어갈 말을 적어 줘!"';
     return;
   }
   if(isCorrect(raw, q.ans)) onCorrect(q);
@@ -859,14 +1051,15 @@ function onCorrect(q){
   updateCombo();
   burst('good');
 
-  if(S.combo >= 3){ Sfx.combo(); }   /* 3연속 이상 → 콤보/피버 효과음 */
-  else            { Sfx.correct(); } /* 정답 효과음 */
+  if(feverLv > 0){ Sfx.combo(); }    /* 피버 → 콤보 효과음 */
+  else           { Sfx.correct(); }  /* 정답 효과음 */
 
-  const gain = S.combo >= 3 ? GAIN_FEVER : GAIN_NORMAL;
+  const gain = gainFor(S.combo);
   elFb.className = 'good';
   elFb.textContent = '⭕ 정답! 「' + q.ans[0] + '」 ' +
-    (S.combo >= 3 ? '🔥 FEVER! 스탯이 +' + gain + '점 오릅니다!' :
-     S.combo === 2 ? '🔥 COMBO! 좋아, 이 기세를 유지하자!' : '지수의 자신감이 올라갔어!');
+    (feverLv >= 2 ? '🔥🔥 SUPER FEVER! 스탯이 +' + gain + '점 오릅니다!' :
+     feverLv === 1 ? '🔥 FEVER! 스탯이 +' + gain + '점 오릅니다!' :
+     S.combo === 2 ? '🔥 COMBO! 좋아, 이 기세를 유지하자!' : PLAYER + '의 자신감이 올라갔어!');
 
   setTimeout(() => openStatModal(gain), 420);
 }
@@ -875,8 +1068,11 @@ function onCorrect(q){
 let pendingGain = 0;
 function openStatModal(gain){
   pendingGain = gain;
-  $('modal-title').textContent = (gain === GAIN_FEVER ? '🔥 FEVER! ' : '⭐ ') + '스탯 상승! 선택하세요:';
-  $('modal-sub').textContent = '올리고 싶은 능력치를 골라 주세요  (현재 콤보 ' + S.combo + '연속)';
+  const lv = feverLevel(S.combo);
+  $('modal-title').textContent =
+    (lv >= 2 ? '🔥🔥 SUPER FEVER! ' : lv === 1 ? '🔥 FEVER! ' : '⭐ ') + '스탯 상승! 선택하세요:';
+  $('modal-sub').textContent = '올리고 싶은 능력치를 골라 주세요  (현재 ' + S.combo + '연속 정답' +
+    (lv > 0 ? ' · 피버 보너스 +' + (gain - GAIN_BASE) : '') + ')';
   document.querySelectorAll('#modal .amt').forEach(b => b.textContent = '+' + gain);
   elModalBg.classList.add('on');
 }
@@ -941,8 +1137,9 @@ function showEnding(){
   burst('good'); setTimeout(() => burst('good'), 300); setTimeout(() => burst('good'), 620);
 
   const end = decideEnding(S.stats);
+  $('ed-title-line').textContent = '🎉 ' + PLAYER + '의 발표 육성 완료! 최종 결과 🎉';
   $('ed-name').textContent = end.emoji + ' ' + end.name;
-  $('ed-desc').innerHTML = escapeHtml(end.desc).replace(/\n/g, '<br>');
+  $('ed-desc').innerHTML = escapeHtml(end.desc.split('{이름}').join(PLAYER)).replace(/\n/g, '<br>');
 
   /* 엔딩 캐릭터 이미지 : imagePath 를 <img src="..."> 로 출력 */
   const wrap = $('ed-img-wrap');
@@ -967,11 +1164,13 @@ function showEnding(){
 $('btn-start').addEventListener('click', () => {
   Sfx.unlock();                 /* 브라우저 오디오 정책 : 사용자 조작 시점에 해제 */
   Sfx.blip();
+  /* 학생이 입력한 이름을 주인공 이름으로 사용 (비워 두면 '지수') */
+  PLAYER = ($('player-name').value || '').trim().slice(0, 5) || '지수';
   resetState();
   elStart.classList.remove('on');
   elEnding.classList.remove('on');
   elGame.style.display = 'block';
-  elFb.textContent = '💬 지수 : "좋아… 심호흡하고, 첫 번째 빈칸부터 가 보자!"';
+  elFb.textContent = '💬 ' + PLAYER + ' : "좋아… 심호흡하고, 첫 번째 빈칸부터 가 보자!"';
   elFb.className = '';
   updateCombo();
   renderQuestion();
@@ -989,10 +1188,18 @@ $('btn-retry').addEventListener('click', () => {
   resetState();
   elEnding.classList.remove('on');
   elGame.style.display = 'block';
-  elFb.textContent = '💬 지수 : "이번엔 더 잘할 수 있어! 다시 도전!"';
+  elFb.textContent = '💬 ' + PLAYER + ' : "이번엔 더 잘할 수 있어! 다시 도전!"';
   elFb.className = '';
   updateCombo();
   renderQuestion();
+});
+
+$('btn-home').addEventListener('click', () => {
+  Sfx.blip();
+  elEnding.classList.remove('on');
+  elGame.style.display = 'none';
+  elStart.classList.add('on');
+  $('player-name').value = (PLAYER === '지수' ? '' : PLAYER);
 });
 
 $('sound-toggle').addEventListener('click', () => {

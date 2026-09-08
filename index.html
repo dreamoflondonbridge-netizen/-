@@ -183,6 +183,15 @@ body{
 #start,#ending{display:none; padding:22px 18px; text-align:center;}
 #start.on,#ending.on{display:block;}
 #start h1{font-size:22px; line-height:1.5; margin-bottom:6px;}
+#resume-box{
+  display:none; margin:0 0 18px; padding:14px;
+  background:#e6f4ea; border:3px solid #2f7d4a;
+  box-shadow:inset 3px 3px 0 rgba(255,255,255,.6), 4px 4px 0 #2f7d4a;
+}
+#resume-box.on{display:block;}
+#resume-box .resume-title{font-size:14px; color:#1e6b3c; margin-bottom:6px;}
+#resume-box .resume-info{font-size:12px; color:#3c6b50; line-height:1.8; margin-bottom:12px;}
+#start.has-save #btn-start{background:#e2cfa8; font-size:14px; padding:10px 20px;}
 .name-row{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; margin-bottom:16px; font-size:13px;}
 .name-row input{
   font-family:inherit; font-size:16px; width:150px; padding:8px 10px; text-align:center;
@@ -227,6 +236,12 @@ body{
       ▸ 띄어쓰기·대소문자는 무시하고 채점해요.<br>
       ▸ 모든 문제를 풀면 최종 스탯에 따라 <b>엔딩 캐릭터</b>가 결정!
     </div>
+    <div id="resume-box">
+      <div class="resume-title">💾 저장된 기록이 있어요!</div>
+      <div class="resume-info" id="resume-info">—</div>
+      <button class="pixel-btn" id="btn-resume" style="font-size:16px; padding:12px 24px;">▶ 이어서 하기</button>
+    </div>
+
     <div class="name-row">
       <label for="player-name">🎀 발표자 이름</label>
       <input id="player-name" type="text" maxlength="5" placeholder="지수"
@@ -1108,6 +1123,7 @@ function pickStat(k){
   elModalBg.classList.remove('on');
   updateHud();
   nextQuestion();
+  saveGame();          /* 한 문제 풀 때마다 자동 저장 */
 }
 
 /* ---------- 오답 처리 ---------- */
@@ -1135,6 +1151,7 @@ function onWrong(q){
   elAnswer.value = '';
   elAnswer.focus();
   updateHud();
+  saveGame();          /* 틀렸을 때 깎인 점수도 저장 */
   setTimeout(() => { if(mood === 'sad') mood = 'normal'; }, 1400);
 }
 
@@ -1154,6 +1171,7 @@ function decideEnding(stats){
 }
 function showEnding(){
   S.finished = true;
+  clearSave();        /* 끝까지 풀었으므로 저장 기록은 지움 */
   feverOn = false; updateCombo();
   elGame.style.display = 'none';
   elEnding.classList.add('on');
@@ -1183,13 +1201,96 @@ function showEnding(){
 }
 
 /* ==================================================================
-   [5] 이벤트 연결
+   [5] 자동 저장 (기기 안에만 저장 · 서버로 보내지 않음)
+   ------------------------------------------------------------------
+   태블릿에서 다른 앱을 쓰다 돌아오거나 실수로 화면을 닫아도
+   풀던 문제부터 이어서 할 수 있도록 진행 상황을 자동으로 저장합니다.
+   저장 위치는 그 기기의 브라우저(localStorage)이며,
+   기기를 바꾸거나 방문 기록을 지우면 저장 내용도 사라집니다.
+   ================================================================== */
+const SAVE_KEY = 'dawon-presentation-king-save-v1';
+
+function saveGame(){
+  if(!S || S.finished) return;
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      v: 1,
+      player: PLAYER,
+      i: S.i, solved: S.solved,
+      combo: S.combo, maxCombo: S.maxCombo,
+      stats: S.stats,
+      total: TOTAL,          /* 문항 수가 바뀌면 예전 기록은 버리기 위해 함께 저장 */
+      ts: Date.now()
+    }));
+  }catch(e){ /* 시크릿 모드 등 저장이 막힌 환경에서는 그냥 넘어감 */ }
+}
+function loadSave(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return null;
+    const d = JSON.parse(raw);
+    /* 형식이 다르거나, 문제 수가 바뀌었거나, 이미 다 푼 기록이면 사용하지 않음 */
+    if(!d || d.v !== 1 || d.total !== TOTAL) return null;
+    if(typeof d.i !== 'number' || d.i < 0 || d.i >= TOTAL) return null;
+    if(!d.stats || STAT_KEYS.some(k => typeof d.stats[k] !== 'number')) return null;
+    return d;
+  }catch(e){ return null; }
+}
+function clearSave(){
+  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+}
+
+/* 시작 화면에 저장된 기록 안내를 표시 */
+function refreshResumeBox(){
+  const d = loadSave();
+  const box = $('resume-box');
+  if(!d){
+    box.classList.remove('on');
+    elStart.classList.remove('has-save');
+    $('btn-start').textContent = '▶ 발표 육성 시작!';
+    return;
+  }
+  const when = new Date(d.ts);
+  const stamp = (when.getMonth()+1) + '월 ' + when.getDate() + '일 ' +
+                String(when.getHours()).padStart(2,'0') + ':' + String(when.getMinutes()).padStart(2,'0');
+  $('resume-info').innerHTML =
+    '<b>' + escapeHtml(d.player) + '</b> · ' + d.solved + '/' + d.total + '문항 (' +
+    Math.round(d.solved / d.total * 100) + '%) · ' + stamp + ' 저장<br>' +
+    STAT_KEYS.map(k => STAT_META[k].icon + ' ' + d.stats[k]).join('  ');
+  box.classList.add('on');
+  elStart.classList.add('has-save');
+  $('btn-start').textContent = '🔄 처음부터 새로 시작';
+}
+
+/* 저장된 기록으로 게임 이어서 시작 */
+function resumeGame(d){
+  PLAYER = d.player || '지수';
+  resetState();
+  S.i = d.i; S.solved = d.solved;
+  S.combo = d.combo || 0; S.maxCombo = d.maxCombo || 0;
+  STAT_KEYS.forEach(k => S.stats[k] = d.stats[k]);
+  elStart.classList.remove('on');
+  elEnding.classList.remove('on');
+  elGame.style.display = 'block';
+  elFb.textContent = '💬 ' + PLAYER + ' : "다시 왔다! ' + (S.i + 1) + '번 문제부터 이어서 하자!"';
+  elFb.className = '';
+  updateCombo();
+  renderQuestion();
+}
+
+/* 앱을 전환하거나 화면을 닫을 때도 한 번 더 저장 */
+window.addEventListener('pagehide', saveGame);
+document.addEventListener('visibilitychange', () => { if(document.hidden) saveGame(); });
+
+/* ==================================================================
+   [6] 이벤트 연결
    ================================================================== */
 $('btn-start').addEventListener('click', () => {
   Sfx.unlock();                 /* 브라우저 오디오 정책 : 사용자 조작 시점에 해제 */
   Sfx.blip();
   /* 학생이 입력한 이름을 주인공 이름으로 사용 (비워 두면 '지수') */
   PLAYER = ($('player-name').value || '').trim().slice(0, 5) || '지수';
+  clearSave();                  /* 처음부터 새로 시작하므로 이전 기록은 지움 */
   resetState();
   elStart.classList.remove('on');
   elEnding.classList.remove('on');
@@ -1198,6 +1299,13 @@ $('btn-start').addEventListener('click', () => {
   elFb.className = '';
   updateCombo();
   renderQuestion();
+});
+
+$('btn-resume').addEventListener('click', () => {
+  Sfx.unlock(); Sfx.blip();
+  const d = loadSave();
+  if(!d){ refreshResumeBox(); return; }   /* 그 사이 기록이 사라졌으면 안내만 갱신 */
+  resumeGame(d);
 });
 
 $('btn-submit').addEventListener('click', submit);
@@ -1234,6 +1342,7 @@ $('btn-home').addEventListener('click', () => {
   elGame.style.display = 'none';
   elStart.classList.add('on');
   $('player-name').value = (PLAYER === '지수' ? '' : PLAYER);
+  refreshResumeBox();
 });
 
 $('sound-toggle').addEventListener('click', () => {
@@ -1245,6 +1354,7 @@ $('sound-toggle').addEventListener('click', () => {
 /* 초기화 */
 resetState();
 updateHud();
+refreshResumeBox();   /* 저장된 기록이 있으면 시작 화면에 '이어서 하기' 표시 */
 </script>
 </body>
 </html>

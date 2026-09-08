@@ -2,7 +2,12 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffeede">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="발표왕 키우기">
 <title>다원중 전설의 발표왕 키우기!</title>
 <!-- 픽셀 폰트(인터넷 연결 시 적용, 오프라인이면 자동으로 기본 폰트로 대체됩니다) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css">
@@ -18,6 +23,14 @@
   --frame:#2b2118;
 }
 *{box-sizing:border-box; margin:0; padding:0;}
+/* ---------- 태블릿 / 스마트폰 터치 대응 ---------- */
+button, input{
+  touch-action:manipulation;              /* 두 번 탭했을 때 화면이 확대되지 않도록 */
+  -webkit-tap-highlight-color:transparent;/* 탭할 때 파란 사각형이 번쩍이지 않도록 */
+}
+/* 글자를 길게 눌러도 드래그 선택되지 않도록 (입력창은 제외) */
+#hud, #stage-wrap, #talk .q-head, #talk .q-ctx, #talk .q-line, #feedback,
+#modal, #start .rules, #ending{ -webkit-user-select:none; user-select:none; }
 body{
   font-family:"Galmuri11","DungGeunMo","Neo둥근모",'Apple SD Gothic Neo','Malgun Gothic',monospace;
   /* 환하고 따뜻한 파스텔 교실 분위기 */
@@ -33,6 +46,8 @@ body{
   padding:12px;
   image-rendering:pixelated;
   -webkit-font-smoothing:none;
+  overscroll-behavior-y:contain;   /* 게임 중 화면을 당겨서 새로 고침되는 사고 방지 */
+  -webkit-text-size-adjust:100%;
 }
 #app{width:100%; max-width:760px;}
 
@@ -86,6 +101,13 @@ body{
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.6)}100%{transform:scale(1)}}
 
 /* ---------- 교실 화면 ---------- */
+/* 가로로 눕힌 태블릿에서도 스크롤 없이 한 화면에 들어오도록 교실 크기 제한
+   (교실 그림 비율이 4:3 이라 높이 기준으로 가로 폭을 계산) */
+@media (orientation:landscape) and (max-height:900px){
+  #stage-wrap{ max-width:calc(46vh * 4 / 3); margin-left:auto; margin-right:auto; }
+  #hud{ padding:8px 10px; }
+  .stat{font-size:11px;}
+}
 #stage-wrap{position:relative; padding:6px; background:#ffe6c2; border:4px solid var(--frame); box-shadow:0 0 0 4px #ffd9a8, 0 0 0 8px var(--frame), 8px 8px 0 8px rgba(120,80,40,.20);}
 #scene{display:block; width:100%; height:auto; image-rendering:pixelated;}
 #stage-wrap.shake{animation:shake .35s;}
@@ -207,7 +229,8 @@ body{
     </div>
     <div class="name-row">
       <label for="player-name">🎀 발표자 이름</label>
-      <input id="player-name" type="text" maxlength="5" placeholder="지수" autocomplete="off">
+      <input id="player-name" type="text" maxlength="5" placeholder="지수"
+             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
       <span class="name-hint">(최대 5글자 · 비워 두면 ‘지수’)</span>
     </div>
     <button class="pixel-btn" id="btn-start" style="font-size:16px; padding:12px 28px;">▶ 발표 육성 시작!</button>
@@ -249,7 +272,8 @@ body{
       <div class="q-line" id="q-line"></div>
       <div id="feedback"></div>
       <div id="answer-row">
-        <input id="answer" type="text" autocomplete="off" placeholder="빈칸에 들어갈 말을 입력하세요">
+        <input id="answer" type="text" placeholder="빈칸에 들어갈 말을 입력하세요"
+             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
         <button class="pixel-btn" id="btn-submit">확인</button>
       </div>
     </section>
@@ -1177,7 +1201,17 @@ $('btn-start').addEventListener('click', () => {
 });
 
 $('btn-submit').addEventListener('click', submit);
-elAnswer.addEventListener('keydown', e => { if(e.key === 'Enter') submit(); });
+/* 한글을 조합하는 중(예: '관시ㅁ')에 눌린 엔터는 글자를 확정하는 용도이므로 채점하지 않는다.
+   태블릿 화상 키보드에서 마지막 글자가 잘린 채 제출되는 것을 막아 준다. */
+elAnswer.addEventListener('keydown', e => {
+  if(e.key !== 'Enter') return;
+  if(e.isComposing || e.keyCode === 229) return;
+  submit();
+});
+/* 화상 키보드가 올라올 때 입력창이 가려지지 않도록 살짝 스크롤 */
+elAnswer.addEventListener('focus', () => {
+  setTimeout(() => elAnswer.scrollIntoView({block:'center', behavior:'smooth'}), 300);
+});
 
 document.querySelectorAll('#modal .pick').forEach(b => {
   b.addEventListener('click', () => pickStat(b.dataset.k));

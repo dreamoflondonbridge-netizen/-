@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>다원중 전설의 발표왕 키우기!</title>
+<!-- 픽셀 폰트(인터넷 연결 시 적용, 오프라인이면 자동으로 기본 폰트로 대체됩니다) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css">
+<style>
+/* ============================================================
+   다원중 전설의 발표왕 키우기!  -  단일 HTML 육성 시뮬레이션
+   HTML + CSS + JavaScript(Web Audio API) 통합 파일
+   ============================================================ */
+:root{
+  --wood:#8a5a2b; --wood-d:#5c3a18; --wood-l:#c08a4e;
+  --paper:#fff6e2; --ink:#3b2a18;
+  --logic:#6c8cff; --deliv:#ff9f4d; --media:#4fd2c2; --enga:#ff7bac;
+  --frame:#2b2118;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  font-family:"Galmuri11","DungGeunMo","Neo둥근모",'Apple SD Gothic Neo','Malgun Gothic',monospace;
+  background:#1b1430;
+  background-image:
+    radial-gradient(circle at 20% 10%, #3a2a5e 0%, transparent 45%),
+    radial-gradient(circle at 80% 90%, #2a3a6e 0%, transparent 45%);
+  color:var(--ink);
+  min-height:100vh;
+  display:flex; align-items:flex-start; justify-content:center;
+  padding:12px;
+  image-rendering:pixelated;
+  -webkit-font-smoothing:none;
+}
+#app{width:100%; max-width:760px;}
+
+/* ---------- 공통 픽셀 프레임 ---------- */
+.pixel-box{
+  background:var(--paper);
+  border:4px solid var(--frame);
+  box-shadow:
+    0 0 0 4px #d9c39a,
+    0 0 0 8px var(--frame),
+    8px 8px 0 8px rgba(0,0,0,.35);
+  position:relative;
+}
+.pixel-btn{
+  font-family:inherit; font-size:14px; cursor:pointer;
+  background:var(--wood-l); color:#2b2118;
+  border:3px solid var(--frame);
+  box-shadow:inset -3px -3px 0 rgba(0,0,0,.28), inset 3px 3px 0 rgba(255,255,255,.45), 3px 3px 0 var(--frame);
+  padding:10px 14px;
+  transition:transform .05s;
+}
+.pixel-btn:hover{filter:brightness(1.08);}
+.pixel-btn:active{transform:translate(3px,3px); box-shadow:inset -3px -3px 0 rgba(0,0,0,.28), inset 3px 3px 0 rgba(255,255,255,.45), 0 0 0 var(--frame);}
+
+/* ---------- 상단 UI : 복습 현황 ---------- */
+#hud{margin-bottom:10px; padding:10px 12px;}
+.hud-top{display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:8px;}
+.hud-title{font-size:15px; letter-spacing:1px; background:var(--frame); color:#ffe9a8; padding:4px 10px; border:3px solid var(--wood-d);}
+.hud-chip{font-size:12px; background:#efe0bd; border:2px solid var(--frame); padding:4px 8px;}
+#sound-toggle{font-size:12px; padding:5px 9px;}
+.bars{display:grid; grid-template-columns:1fr 1fr; gap:6px 12px;}
+@media(max-width:520px){ .bars{grid-template-columns:1fr;} }
+.stat{display:flex; align-items:center; gap:6px; font-size:12px;}
+.stat .ico{width:20px; text-align:center; font-size:14px;}
+.stat .nm{width:66px; white-space:nowrap;}
+.gauge{
+  flex:1; height:16px; background:#e2cfa8;
+  border:3px solid var(--frame); border-radius:9px;
+  overflow:hidden; position:relative;
+}
+.gauge > i{
+  display:block; height:100%; width:0%;
+  border-radius:6px 0 0 6px;
+  transition:width .35s cubic-bezier(.2,.8,.3,1);
+  background-image:linear-gradient(180deg, rgba(255,255,255,.55) 0 35%, rgba(0,0,0,.10) 100%);
+}
+.g-logic > i{background-color:var(--logic);} .g-deliv > i{background-color:var(--deliv);}
+.g-media > i{background-color:var(--media);} .g-enga  > i{background-color:var(--enga);}
+.stat .val{width:44px; text-align:right; font-size:12px;}
+.stat.bump .val{animation:pop .4s;}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.6)}100%{transform:scale(1)}}
+
+/* ---------- 교실 화면 ---------- */
+#stage-wrap{position:relative; padding:6px; background:#0f0b1c; border:4px solid var(--frame); box-shadow:0 0 0 4px #d9c39a, 0 0 0 8px var(--frame), 8px 8px 0 8px rgba(0,0,0,.35);}
+#scene{display:block; width:100%; height:auto; image-rendering:pixelated;}
+#stage-wrap.shake{animation:shake .35s;}
+@keyframes shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-6px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,-2px)}80%{transform:translate(4px,2px)}}
+#combo-badge{
+  position:absolute; top:14px; right:14px; display:none;
+  font-size:15px; padding:6px 10px; color:#fff;
+  background:#e0453d; border:3px solid var(--frame);
+  box-shadow:3px 3px 0 var(--frame);
+  animation:cbounce .5s infinite alternate;
+}
+@keyframes cbounce{from{transform:translateY(0)}to{transform:translateY(-5px)}}
+#stage-wrap.fever{box-shadow:0 0 0 4px #ffd34d, 0 0 0 8px #e0453d, 8px 8px 0 8px rgba(0,0,0,.35);}
+#fever-flag{position:absolute; top:14px; left:14px; display:none; font-size:14px; padding:5px 10px; color:#2b2118; background:#ffd34d; border:3px solid var(--frame); box-shadow:3px 3px 0 var(--frame);}
+#stage-tag{position:absolute; bottom:14px; left:14px; font-size:11px; padding:4px 8px; color:#ffe9a8; background:rgba(20,14,8,.85); border:2px solid #ffe9a8;}
+
+/* ---------- 하단 : 말풍선 대사창 ---------- */
+#talk{margin-top:16px; padding:14px 16px; position:relative;}
+#talk::before{ /* 말풍선 꼬리 (픽셀 계단 모양) */
+  content:""; position:absolute; top:-18px; left:52px; width:16px; height:16px;
+  background:var(--paper);
+  border-left:4px solid var(--frame); border-top:4px solid var(--frame);
+  transform:rotate(45deg);
+}
+.q-head{font-size:12px; color:#8a6a3a; margin-bottom:4px;}
+.q-ctx{font-size:13px; color:#6b543a; margin-bottom:8px; line-height:1.6;}
+.q-line{font-size:16px; line-height:1.8; word-break:keep-all;}
+.blank{
+  display:inline-block; min-width:88px; text-align:center;
+  background:#ffe9a8; border-bottom:4px solid var(--frame);
+  padding:0 8px; margin:0 2px;
+}
+#feedback{margin-top:10px; font-size:13px; min-height:20px; line-height:1.6; word-break:keep-all;}
+#feedback.bad{color:#c0392b;} #feedback.good{color:#1e7a4f;}
+#answer-row{display:flex; gap:8px; margin-top:12px;}
+#answer{
+  flex:1; font-family:inherit; font-size:16px; padding:10px;
+  background:#fffdf5; border:3px solid var(--frame); color:var(--ink);
+  box-shadow:inset 3px 3px 0 rgba(0,0,0,.12);
+}
+#answer:focus{outline:none; background:#fff9df;}
+
+/* ---------- 정답 모달 ---------- */
+#modal-bg{position:fixed; inset:0; background:rgba(10,6,20,.72); display:none; align-items:center; justify-content:center; padding:16px; z-index:50;}
+#modal-bg.on{display:flex;}
+#modal{width:100%; max-width:440px; padding:18px; text-align:center;}
+#modal h2{font-size:17px; margin-bottom:4px;}
+#modal .sub{font-size:12px; color:#7a5f3c; margin-bottom:14px;}
+.stat-picks{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.pick{display:flex; align-items:center; justify-content:center; gap:6px; font-size:14px;}
+.pick.p1{background:var(--logic);} .pick.p2{background:var(--deliv);}
+.pick.p3{background:var(--media);} .pick.p4{background:var(--enga);}
+
+/* ---------- 시작 / 엔딩 화면 ---------- */
+#start,#ending{display:none; padding:22px 18px; text-align:center;}
+#start.on,#ending.on{display:block;}
+#start h1{font-size:22px; line-height:1.5; margin-bottom:6px;}
+#start .lead{font-size:13px; color:#6b543a; line-height:1.8; margin:10px 0 16px;}
+.rules{text-align:left; font-size:12px; line-height:1.9; background:#f3e6c6; border:3px solid var(--frame); padding:12px; margin-bottom:16px;}
+#ending .ed-title{font-size:14px; color:#8a6a3a;}
+#ending .ed-name{font-size:26px; margin:6px 0 10px;}
+#ending .ed-img-wrap{width:200px; height:200px; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; background:#f3e6c6; border:4px solid var(--frame); box-shadow:inset 4px 4px 0 rgba(0,0,0,.12);}
+#ending .ed-img-wrap img{max-width:100%; max-height:100%; image-rendering:pixelated;}
+#ending .ed-fallback{font-size:64px;}
+#ending .ed-desc{font-size:13px; line-height:1.9; margin-bottom:14px; word-break:keep-all;}
+#ending .ed-stats{display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:13px; margin:0 auto 16px; max-width:360px;}
+#ending .ed-stats div{background:#f3e6c6; border:2px solid var(--frame); padding:6px;}
+.credit{margin-top:14px; font-size:11px; color:#9b8560; text-align:center;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ 시작 화면 ============ -->
+  <section id="start" class="pixel-box on">
+    <h1>👑 다원중<br>전설의 발표왕 키우기!</h1>
+    <p class="lead">
+      발표 울렁증이 있는 주인공 <b>‘지수’</b>.<br>
+      국어 학습지 빈칸 퀴즈를 풀어 스탯을 올리고,<br>
+      최고의 발표자로 키워 주세요!
+    </p>
+    <div class="rules">
+      ▸ 빈칸에 알맞은 말을 입력하고 <b>[확인]</b>!<br>
+      ▸ 정답이면 원하는 스탯을 <b>+10</b> 올릴 수 있어요.<br>
+      ▸ 2연속 정답 → <b>COMBO</b> 뱃지 / 3연속 정답 → <b>FEVER</b> 모드(+15)<br>
+      ▸ 오답이면 스탯 하나가 <b>-5</b>! 맞힐 때까지 다음 문제로 못 가요.<br>
+      ▸ 띄어쓰기·대소문자는 무시하고 채점해요.<br>
+      ▸ 모든 문제를 풀면 최종 스탯에 따라 <b>엔딩 캐릭터</b>가 결정!
+    </div>
+    <button class="pixel-btn" id="btn-start" style="font-size:16px; padding:12px 28px;">▶ 발표 육성 시작!</button>
+    <p class="credit">Web Audio API 8비트 효과음 사용 · 소리를 켜고 플레이하면 더 재미있어요!</p>
+  </section>
+
+  <!-- ============ 게임 화면 ============ -->
+  <main id="game" style="display:none;">
+
+    <!-- 상단 HUD -->
+    <section id="hud" class="pixel-box">
+      <div class="hud-top">
+        <span class="hud-title">📋 복습 현황</span>
+        <span class="hud-chip" id="hud-level">Lv.1 발표 새싹</span>
+        <span class="hud-chip" id="hud-prog">진도율 0% (0/0)</span>
+        <span class="hud-chip" id="hud-combo">🔥 최고 콤보 0</span>
+        <button class="pixel-btn" id="sound-toggle">🔊 소리 ON</button>
+      </div>
+      <div class="bars">
+        <div class="stat" id="st-logic"><span class="ico">🧠</span><span class="nm">논리력</span><span class="gauge g-logic"><i></i></span><span class="val">0</span></div>
+        <div class="stat" id="st-deliv"><span class="ico">🎙️</span><span class="nm">전달력</span><span class="gauge g-deliv"><i></i></span><span class="val">0</span></div>
+        <div class="stat" id="st-media"><span class="ico">💻</span><span class="nm">매체 활용</span><span class="gauge g-media"><i></i></span><span class="val">0</span></div>
+        <div class="stat" id="st-enga"><span class="ico">❤️</span><span class="nm">청중 호응</span><span class="gauge g-enga"><i></i></span><span class="val">0</span></div>
+      </div>
+    </section>
+
+    <!-- 교실 전경 (픽셀 캔버스) -->
+    <div id="stage-wrap">
+      <canvas id="scene" width="192" height="144"></canvas>
+      <div id="combo-badge">COMBO x2</div>
+      <div id="fever-flag">🔥 FEVER!</div>
+      <div id="stage-tag">STAGE 1</div>
+    </div>
+
+    <!-- 하단 말풍선 대사창 -->
+    <section id="talk" class="pixel-box">
+      <div class="q-head" id="q-head">Q1.</div>
+      <div class="q-ctx" id="q-ctx"></div>
+      <div class="q-line" id="q-line"></div>
+      <div id="feedback"></div>
+      <div id="answer-row">
+        <input id="answer" type="text" autocomplete="off" placeholder="빈칸에 들어갈 말을 입력하세요">
+        <button class="pixel-btn" id="btn-submit">확인</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ 엔딩 화면 ============ -->
+  <section id="ending" class="pixel-box">
+    <div class="ed-title">🎉 발표 육성 완료! 최종 결과 🎉</div>
+    <div class="ed-name" id="ed-name">—</div>
+    <div class="ed-img-wrap" id="ed-img-wrap"></div>
+    <div class="ed-desc" id="ed-desc"></div>
+    <div class="ed-stats" id="ed-stats"></div>
+    <button class="pixel-btn" id="btn-retry" style="font-size:16px; padding:12px 28px;">🔁 다시 도전하기</button>
+  </section>
+
+  <!-- ============ 정답 시 스탯 선택 모달 ============ -->
+  <div id="modal-bg">
+    <div id="modal" class="pixel-box">
+      <h2 id="modal-title">⭐ 스탯 상승! 선택하세요:</h2>
+      <div class="sub" id="modal-sub">올리고 싶은 능력치를 골라 주세요</div>
+      <div class="stat-picks">
+        <button class="pixel-btn pick p1" data-k="logic"><span>🧠</span><span>논리력 <b class="amt">+10</b></span></button>
+        <button class="pixel-btn pick p2" data-k="deliv"><span>🎙️</span><span>전달력 <b class="amt">+10</b></span></button>
+        <button class="pixel-btn pick p3" data-k="media"><span>💻</span><span>매체활용 <b class="amt">+10</b></span></button>
+        <button class="pixel-btn pick p4" data-k="enga"><span>❤️</span><span>청중호응 <b class="amt">+10</b></span></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ==================================================================
+   [1] 게임 데이터
+   ================================================================== */
+
+/* ---------- 스탯 정의 ---------- */
+const STAT_META = {
+  logic:{icon:'🧠', name:'논리력',     short:'논리'},
+  deliv:{icon:'🎙️', name:'전달력',     short:'전달'},
+  media:{icon:'💻', name:'매체 활용도', short:'매체'},
+  enga :{icon:'❤️', name:'청중 호응도', short:'호응'}
+};
+const STAT_KEYS = ['logic','deliv','media','enga'];
+
+/* ---------- 스테이지 이름 ---------- */
+const STAGES = {
+  1:'STAGE 1. 발표 준비 과정 간단 정리',
+  2:'STAGE 2. 설명 방법',
+  3:'STAGE 3. 지수의 발표 과정 따라가기',
+  4:'STAGE 4. 발표 준비 과정 핵심 정리',
+  5:'STAGE 5. 발표 내용 체계적으로 조직하기',
+  6:'STAGE 6. 지수의 발표 내용과 매체 자료'
+};
+
+/* ------------------------------------------------------------------
+   문제 데이터 (학습지 빈칸 전체)
+   st  : 스테이지 번호
+   ctx : 발문(문제 상황 설명)
+   pre : 빈칸 앞 문장 / post : 빈칸 뒤 문장
+   ans : 정답 배열(첫 번째가 대표 정답, 나머지는 허용되는 표현)
+   ------------------------------------------------------------------ */
+const QUESTIONS = [
+  /* ===== STAGE 1. 발표 준비 과정 간단 정리 ===== */
+  {st:1, ctx:'1. 지수와 친구들의 발표 목적은?', pre:'동아리 활동의 ', post:' 소개와 가입 권유', ans:['장점']},
+  {st:1, ctx:'1. 지수와 친구들의 발표 목적은?', pre:'동아리 활동의 장점 소개와 가입 ', post:'', ans:['권유']},
+  {st:1, ctx:'2. 지수와 친구들이 발표 내용을 마련할 때 고려한 점은?', pre:'발표 ', post:'와의 관련성', ans:['주제']},
+  {st:1, ctx:'2. 지수와 친구들이 발표 내용을 마련할 때 고려한 점은?', pre:'', post:'의 관심이나 이해도, 흥미 등', ans:['청중']},
+  {st:1, ctx:'3. 지수와 친구들이 수집한 자료를 재구성하는 방안은?', pre:'문자로 된 설문 조사 결과를 ', post:'(으)로 재구성하기', ans:['그래프']},
+  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?', pre:'청중의 ', post:'를 끌기에 좋은 방법을 고려한다.', ans:['관심']},
+  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?', pre:'내용이 명료해지고 발표의 ', post:'이 자연스러워지도록 발표 내용을 조직한다.', ans:['흐름']},
+  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?', pre:'발표 내용의 순서를 ', post:'거나 항목을 조정하며 발표 내용을 조직한다.', ans:['바꾸','바꾸다','바꾸기']},
+  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?', pre:'발표 내용의 순서를 바꾸거나 항목을 ', post:'하며 발표 내용을 조직한다.', ans:['조정']},
+  {st:1, ctx:'4. 발표 내용을 조직할 때 고려해야 하는 점은?', pre:'발표 목적이나 대상의 특성에 적절한 설명 ', post:'을 활용하여 발표 내용을 구성한다.', ans:['방법']},
+
+  /* ===== STAGE 2. 설명 방법 ===== */
+  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'', post:' : 둘 이상의 대상을 견주어 공통점을 드러내는 방법', ans:['정의']},
+  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'', post:' : 둘 이상의 대상을 견주어 차이점을 드러내는 방법', ans:['비교']},
+  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'', post:' : 일정 기준에 따라 상위 항목을 하위 항목으로 나누어 설명하는 방법', ans:['구분']},
+  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'', post:' : 일정 기준에 따라 하위 항목을 상위 항목으로 묶어 설명하는 방법', ans:['분류']},
+  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'인과 : 어떤 대상을 ', post:'과 결과를 중심으로 설명하는 방법', ans:['원인']},
+  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'인과 : 어떤 대상을 원인과 ', post:'를 중심으로 설명하는 방법', ans:['결과']},
+  {st:2, ctx:'5. 발표에 활용할 수 있는 설명 방법의 종류', pre:'', post:' : 대상을 그 구성 요소나 부분으로 나누어 설명하는 방법', ans:['분석']},
+
+  /* ===== STAGE 3. 지수의 발표 과정 따라가기 ===== */
+  {st:3, ctx:'6. “달리기의 효과를 제시하기 위해 꾸준히 달리기를 한 뒤에 어떤 결과가 나타났는지를 제시해 볼까?”', pre:'활용한 설명 방법 → ', post:'', ans:['인과']},
+  {st:3, ctx:'6. “동아리에서 진행한 활동을 소개하기 위해 그동안 우리가 했던 다양하고 재미있는 달리기 활동을 예로 들어 보자.”', pre:'활용한 설명 방법 → ', post:'', ans:['예시']},
+  {st:3, ctx:'7. 지수가 발표 도입 부분에서 설문 조사 결과를 제시한 까닭은?', pre:'설문 조사 결과를 제시하여 발표에 대한 청중의 ', post:'을 높이고 흥미를 끌기 위해서이다.', ans:['관심']},
+  {st:3, ctx:'7. 지수가 발표 도입 부분에서 설문 조사 결과를 제시한 까닭은?', pre:'설문 조사 결과를 제시하여 발표에 대한 청중의 관심을 높이고 ', post:'를 끌기 위해서이다.', ans:['흥미']},
+  {st:3, ctx:'8. 지수가 발표 전개 부분에서 10킬로미터 마라톤 종목에 출전한다고 말하며 목소리를 크게 한 까닭은?', pre:'청중의 집중을 ', post:'하고, 질문을 통해 청중의 반응을 살피며 발표하기 위해서이다.', ans:['유도']},
+  {st:3, ctx:'8. 지수가 발표 전개 부분에서 10킬로미터 마라톤 종목에 출전한다고 말하며 목소리를 크게 한 까닭은?', pre:'청중의 집중을 유도하고, ', post:'을 통해 청중의 반응을 살피며 발표하기 위해서이다.', ans:['질문']},
+  {st:3, ctx:'9. 지수가 청중에게 질문을 던진 까닭은?', pre:'청중을 발표에 ', post:'시키기 위함과 동아리 활동에 관한 청중의 관심과 흥미를 끌기 위해서이다.', ans:['집중']},
+  {st:3, ctx:'9. 지수가 청중에게 질문을 던진 까닭은?', pre:'청중을 발표에 집중시키기 위함과 동아리 활동에 관한 청중의 ', post:'과 흥미를 끌기 위해서이다.', ans:['관심']},
+  {st:3, ctx:'10. 지수가 발표에서 활용한 동아리 블로그 화면 사진이 적절했는지 평가해 보자.', pre:'발표 목적인 ‘동아리 소개와 가입 권유’에 따라 동아리 가입 방법을 ', post:'적으로 보여 줄 수 있으므로 적절하다.', ans:['구체']},
+  {st:3, ctx:'11. 지수가 발표를 마무리하며 말을 인용한 까닭은 무엇일까?', pre:'동아리가 추구하는 ‘협력과 협동’의 방향성을 ', post:'하고, 청중에게 깊은 인상을 남기며 발표를 마무리하기 위해서이다.', ans:['강조']},
+  {st:3, ctx:'11. 지수가 발표를 마무리하며 말을 인용한 까닭은 무엇일까?', pre:'‘협력과 협동’의 방향성을 강조하고, 청중에게 깊은 ', post:'을 남기며 발표를 마무리하기 위해서이다.', ans:['인상']},
+  {st:3, ctx:'12. 지수와 친구들이 발표가 끝난 후 점검하고 있는 것은?', pre:'발표 내용을 ', post:'적으로 조직했는지 점검하고 있다.', ans:['체계']},
+  {st:3, ctx:'12. 지수와 친구들이 발표가 끝난 후 점검하고 있는 것은?', pre:'자료의 내용을 ', post:'하기 쉽게 그래프 등으로 재구성했는지 점검하고 있다.', ans:['이해']},
+  {st:3, ctx:'12. 지수와 친구들이 발표가 끝난 후 점검하고 있는 것은?', pre:'자료의 내용을 이해하기 쉽게 그래프 등으로 ', post:'구성했는지 점검하고 있다.', ans:['재']},
+  {st:3, ctx:'12. 지수와 친구들이 발표가 끝난 후 점검하고 있는 것은?', pre:'발표 ', post:'이나 대상의 특성에 적절한 설명 방법을 활용했는지 점검하고 있다.', ans:['목적']},
+  {st:3, ctx:'12. 지수와 친구들이 발표가 끝난 후 점검하고 있는 것은?', pre:'발표 목적이나 대상의 특성에 적절한 설명 ', post:'을 활용했는지 점검하고 있다.', ans:['방법']},
+
+  /* ===== STAGE 4. 발표 준비 과정 핵심 정리 ===== */
+  {st:4, ctx:'13. 발표 주제 정하기', pre:'정보를 전달하려는 ', post:'인지, 청중을 설득하려는 목적인지를 고려하여 발표 주제를 구체적으로 설정하기', ans:['목적']},
+  {st:4, ctx:'14. 발표 목적, 청중 분석하기', pre:'발표를 통해 이루고자 하는 ', post:' 명확히 하기', ans:['목적']},
+  {st:4, ctx:'14. 발표 목적, 청중 분석하기', pre:'청중의 ', post:'사나 지적 수준 등을 고려하기', ans:['관심']},
+  {st:4, ctx:'14. 발표 목적, 청중 분석하기', pre:'청중의 관심사나 지적 ', post:' 등을 고려하기', ans:['수준']},
+  {st:4, ctx:'15. 자료 수집하고 재구성하기', pre:'다양한 ', post:'를 수집하기', ans:['자료']},
+  {st:4, ctx:'16. 발표 내용 체계적으로 조직하기', pre:'발표 내용을 ‘', post:' - 전개 - 정리’로 나누어 개요 작성하기', ans:['도입']},
+  {st:4, ctx:'16. 발표 내용 체계적으로 조직하기', pre:'발표 내용을 ‘도입 - 전개 - ', post:'’로 나누어 개요 작성하기', ans:['정리']},
+
+  /* ===== STAGE 5. 발표 내용 체계적으로 조직하기 ===== */
+  {st:5, ctx:'17. [도입] 단계에서 하는 일', pre:'발표 ', post:'나 목적, 배경과 발표 순서를 제시함', ans:['주제']},
+  {st:5, ctx:'17. [도입] 단계에서 하는 일', pre:'발표 주제나 ', post:', 배경과 발표 순서를 제시함', ans:['목적']},
+  {st:5, ctx:'17. [도입] 단계에서 하는 일', pre:'발표 주제나 목적, 배경과 발표 ', post:'를 제시함', ans:['순서']},
+  {st:5, ctx:'17. [도입] 단계에서 하는 일', pre:'청중의 경험을 환기하는 ', post:'이나 흥미로운 사실을 제시하여 청중의 관심을 이끎', ans:['질문']},
+  {st:5, ctx:'18. [전개] 단계에서 하는 일', pre:'발표 목적이나 대상의 특성에 적절한 설명 ', post:'을 활용하여 구체적인 내용을 제시함', ans:['방법']},
+  {st:5, ctx:'19. [정리] 단계에서 하는 일', pre:'발표 내용을 ', post:'하고 중요한 내용을 다시 강조함', ans:['요약']},
+  {st:5, ctx:'19. [정리] 단계에서 하는 일', pre:'발표 내용을 요약하고 중요한 내용을 다시 ', post:'함', ans:['강조']},
+  {st:5, ctx:'19. [정리] 단계에서 하는 일', pre:'', post:'적인 표현 등을 활용하여 청중에게 깊은 인상을 남기고 청중의 실천을 촉구함', ans:['인상']},
+
+  /* ===== STAGE 6. 지수의 발표 내용과 활용한 매체 자료 ===== */
+  {st:6, ctx:'20. [도입] 발표 내용', pre:'인사 및 동아리 ‘두런두런’ ', post:', 발표 목적 및 발표 순서 소개', ans:['소개']},
+  {st:6, ctx:'20. [도입] 발표 내용', pre:'인사 및 동아리 ‘두런두런’ 소개, 발표 목적 및 발표 ', post:' 소개', ans:['순서']},
+  {st:6, ctx:'20. [도입] 매체 자료', pre:'발표 제목과 순서가 담긴 ', post:' 자료', ans:['시각']},
+  {st:6, ctx:'21. [전개] 매체 자료', pre:'교내 학생들을 대상으로 한 설문 조사 결과 ', post:'', ans:['그래프']},
+  {st:6, ctx:'21. [전개] 매체 자료', pre:'동아리 부원들의 ', post:' 영상', ans:['인터뷰']},
+  {st:6, ctx:'21. [전개] 매체 자료', pre:'재미있는 달리기 활동 ', post:'', ans:['사진']},
+  {st:6, ctx:'21. [전개] 매체 자료', pre:'마라톤의 종목과 난도를 정리한 ', post:'', ans:['그림']},
+  {st:6, ctx:'21. [전개] 매체 자료', pre:'마라톤 대비 훈련 방법을 정리한 ', post:'', ans:['표']},
+  {st:6, ctx:'22. [정리] 발표 내용', pre:'발표 내용 ', post:' 및 동아리 가입 권유, 마무리 인사', ans:['요약']},
+  {st:6, ctx:'22. [정리] 매체 자료', pre:'인상적인 표현이 담긴 ', post:' 자료', ans:['시각']}
+];
+
+/* ==================================================================
+   ★★★ [엔딩 캐릭터 데이터] ★★★
+   ------------------------------------------------------------------
+   ▶ imagePath 값을 바꾸면 엔딩 이미지가 바뀝니다.
+     - 이 HTML 파일과 같은 폴더에 그림을 두었다면 :  "king.png"
+     - images 폴더 안에 두었다면              :  "images/king.png"
+     - 인터넷 주소(URL)를 써도 됩니다          :  "https://example.com/king.png"
+   ▶ 이미지 파일이 없으면 자동으로 아래 emoji 가 대신 표시됩니다.
+   ▶ 판정 순서는 배열의 위에서 아래 순서입니다.
+     (먼저 조건이 맞는 엔딩이 채택됩니다. 순서를 바꾸고 싶다면
+      아래 객체들의 위치를 통째로 옮기면 됩니다.)
+   ================================================================== */
+const ENDINGS = [
+  /* 1. 4개 스탯 모두 200점 이상 */
+  { name:'전설의 발표왕', emoji:'👑',
+    imagePath:'king.png',                 /* ← 여기 경로를 바꾸세요 */
+    desc:'궁극의 육각형! 논리·전달·매체·호응 어느 하나 빠지지 않는 완전체.\n다원중 강당이 지수의 무대가 되었다!',
+    cond:s => STAT_KEYS.every(k => s[k] >= 200) },
+
+  /* 2. 4개 스탯 모두 170점 이상 */
+  { name:'다원중 수석 졸업생', emoji:'🎓',
+    imagePath:'top.png',                  /* ← 여기 경로를 바꾸세요 */
+    desc:'완벽한 모범생! 준비-조직-발표-점검까지 교과서대로 해내는 우등생 발표자.',
+    cond:s => STAT_KEYS.every(k => s[k] >= 170) },
+
+  /* 3. 500점 이상 최고존엄 특화 */
+  { name:'다원중 코난', emoji:'🕵️‍♂️',
+    imagePath:'conan.png',                /* ← 여기 경로를 바꾸세요 */
+    desc:'“진실은 언제나 하나!” 원인과 결과를 꿰뚫는 압도적 논리력의 소유자.',
+    cond:s => s.logic >= 500 },
+  { name:'다원중 퉁퉁이', emoji:'🎤',
+    imagePath:'tungtung.png',             /* ← 여기 경로를 바꾸세요 */
+    desc:'“내 노래를 들어라!” 강당을 뒤흔드는 압도적 성량과 전달력의 소유자.',
+    cond:s => s.deliv >= 500 },
+  { name:'다원중 토니 스타크', emoji:'🦾',
+    imagePath:'tony.png',                 /* ← 여기 경로를 바꾸세요 */
+    desc:'그래프·영상·홀로그램까지! 매체 활용의 천재 발명가형 발표자.',
+    cond:s => s.media >= 500 },
+  { name:'다원중 장원영', emoji:'✨',
+    imagePath:'jang.png',                 /* ← 여기 경로를 바꾸세요 */
+    desc:'럭키비키! 청중을 사로잡는 초긍정 아우라, 호응도 만렙 발표자.',
+    cond:s => s.enga >= 500 },
+
+  /* 4. 350점 이상 상위권 특화 */
+  { name:'다원중 주디', emoji:'🐰',
+    imagePath:'judy.png',                 /* ← 여기 경로를 바꾸세요 */
+    desc:'포기를 모르는 성실한 수사관! 자료를 분석하고 근거를 쌓는 논리형 발표자.',
+    cond:s => s.logic >= 350 },
+  { name:'다원중 봉미선', emoji:'📢',
+    imagePath:'bong.png',                 /* ← 여기 경로를 바꾸세요 */
+    desc:'교실 끝까지 쩌렁쩌렁! 목소리 크기와 속도 조절이 완벽한 전달력형 발표자.',
+    cond:s => s.deliv >= 350 },
+  { name:'다원중 피터 파커', emoji:'🕸️',
+    imagePath:'peter.png',                /* ← 여기 경로를 바꾸세요 */
+    desc:'사진 한 장으로 승부한다! 매체 자료를 착착 엮어내는 재주꾼 발표자.',
+    cond:s => s.media >= 350 },
+  { name:'다원중 하츄핑', emoji:'💖',
+    imagePath:'hachuping.png',            /* ← 여기 경로를 바꾸세요 */
+    desc:'마음을 말랑말랑하게! 청중과 눈을 맞추며 호응을 이끄는 사랑스러운 발표자.',
+    cond:s => s.enga >= 350 },
+
+  /* 5. 일반 구간 판정 */
+  { name:'발표의 정석', emoji:'📘',
+    imagePath:'standard.png',             /* ← 여기 경로를 바꾸세요 */
+    desc:'도입-전개-정리! 기본기가 탄탄한 안정형 발표자. 이제 개성만 더하면 완벽!',
+    cond:s => STAT_KEYS.every(k => s[k] >= 150) },
+  { name:'발표 꿈나무', emoji:'🌱',
+    imagePath:'sprout.png',               /* ← 여기 경로를 바꾸세요 */
+    desc:'울렁증은 이제 그만! 조금씩 자라나는 중인 새싹 발표자. 다음엔 더 잘할 수 있어!',
+    cond:s => STAT_KEYS.every(k => s[k] >= 100) },
+  { name:'교무실로.', emoji:'🏃‍♂️',
+    imagePath:'teacher.png',              /* ← 여기 경로를 바꾸세요 */
+    desc:'…선생님이 잠깐 보자고 하십니다. 학습지 다시 한 번 복습하고 재도전!',
+    cond:s => true }
+];
+</script>
+
+<script>
+/* ==================================================================
+   [2] 효과음 사운드 시스템 - 외부 파일 없이 Web Audio API 로 8비트 연출
+   ================================================================== */
+const Sfx = (() => {
+  let ctx = null, on = true;
+
+  function ensure(){
+    if(!ctx){ ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+    if(ctx.state === 'suspended'){ ctx.resume(); }
+    return ctx;
+  }
+  /* 8비트 느낌의 단음 : type(square/triangle) + 짧은 감쇠 */
+  function tone(freq, start, dur, type, vol){
+    const c = ensure();
+    const t0 = c.currentTime + start;
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type || 'square';
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(vol || 0.18, t0 + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(t0); osc.stop(t0 + dur + 0.02);
+  }
+  /* 피치가 미끄러지는 음 (삐- 하강음 등) */
+  function slide(f1, f2, start, dur, type, vol){
+    const c = ensure();
+    const t0 = c.currentTime + start;
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type || 'square';
+    osc.frequency.setValueAtTime(f1, t0);
+    osc.frequency.linearRampToValueAtTime(f2, t0 + dur);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(vol || 0.2, t0 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(t0); osc.stop(t0 + dur + 0.02);
+  }
+
+  return {
+    unlock(){ try{ ensure(); }catch(e){} },
+    toggle(){ on = !on; return on; },
+    isOn(){ return on; },
+
+    /* 1) 정답 : 띵동~ 경쾌한 높은 피치음 */
+    correct(){
+      if(!on) return;
+      tone(1046.50, 0.00, 0.12, 'square', 0.16);  // C6
+      tone(1567.98, 0.10, 0.26, 'square', 0.16);  // G6
+      tone(2093.00, 0.20, 0.18, 'triangle', 0.10);// C7 (반짝임)
+    },
+    /* 2) 오답 : 삐- 낮고 둔탁한 경고음 */
+    wrong(){
+      if(!on) return;
+      slide(196, 110, 0.00, 0.34, 'square', 0.20); // G3 → A2
+      tone(98, 0.06, 0.30, 'triangle', 0.16);      // 낮고 둔탁한 층
+    },
+    /* 3) 콤보/피버 : 띠리리링~ 피치 상승 아르페지오 */
+    combo(){
+      if(!on) return;
+      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98];
+      notes.forEach((f,i) => tone(f, i*0.055, 0.13, 'square', 0.14));
+      tone(2093.00, notes.length*0.055, 0.25, 'triangle', 0.12);
+    },
+    /* 4) 엔딩 : 짜잔~ 감격스러운 축하 팡파르 */
+    ending(){
+      if(!on) return;
+      const fan = [
+        [523.25,0.00,0.16],[659.25,0.14,0.16],[783.99,0.28,0.16],
+        [1046.50,0.42,0.42],[783.99,0.86,0.14],[1046.50,1.00,0.14],
+        [1318.51,1.14,0.60]
+      ];
+      fan.forEach(([f,s,d]) => { tone(f, s, d, 'square', 0.16); tone(f/2, s, d, 'triangle', 0.09); });
+      [0.42, 1.14].forEach(s => { tone(1567.98, s+0.05, 0.30, 'triangle', 0.08); });
+    },
+    /* 클릭 등 소소한 반응음 */
+    blip(){ if(!on) return; tone(880, 0, 0.06, 'square', 0.10); },
+    /* 스탯 상승 반응음 */
+    statUp(){ if(!on) return; tone(659.25,0,0.08,'square',0.12); tone(987.77,0.07,0.16,'square',0.12); },
+    /* 감점 반응음 */
+    statDown(){ if(!on) return; slide(330,165,0,0.22,'triangle',0.16); }
+  };
+})();
+
+/* ==================================================================
+   [3] 픽셀 아트 교실 & 캐릭터 렌더링 (Canvas)
+   ================================================================== */
+const cv  = document.getElementById('scene');
+const cx2 = cv.getContext('2d');
+cx2.imageSmoothingEnabled = false;
+
+/* ---------- 캐릭터 픽셀 맵 (16 x 24) ----------
+   . 투명 / h 머리카락 / s 피부 / e 눈 / k 감은눈 / m 입 / p 볼터치
+   w 셔츠 / u 교복 / U 교복(치마) / r 리본 / g 다리 / b 신발          */
+const PAL = {
+  h:'#3b2a20', s:'#ffd9b3', e:'#241a12', k:'#3b2a20', m:'#c1524c',
+  p:'#ffb3ba', w:'#fdfaf2', u:'#3b5590', U:'#27386b', r:'#d9453f',
+  g:'#5b5b6e', b:'#2e2a2a'
+};
+const BODY = [
+  '................',
+  '.....hhhhhh.....',
+  '....hhhhhhhh....',
+  '...hhhhhhhhhh...',
+  '...hhsssssshh...',
+  '...hssssssssh...',
+  '@EYES@',
+  '...hssssssssh...',
+  '@MOUTH@',
+  '...hssssssssh...',
+  '......ssss......',
+  '...wwwwwwwwww...',
+  '...uuwwrrwwuu...',
+  '..uuuuwrrwuuuu..',
+  '..uuuuuwwuuuuu..',
+  '..suuuuuuuuuus..',
+  '...uuuuuuuuuu...',
+  '...UUUUUUUUUU...',
+  '..UUUUUUUUUUUU..',
+  '..UUUUUUUUUUUU..',
+  '.....gg..gg.....',
+  '.....gg..gg.....',
+  '.....gg..gg.....',
+  '....bbb..bbb....'
+];
+/* 표정 변형 : 눈 / 입 */
+const FACE = {
+  normal:{ eyes:'...hseesseesh...', mouth:'...hpssmmssph...' },  /* 평소 */
+  happy :{ eyes:'...hskksskksh...', mouth:'...hpsmmmmsph...' },  /* 정답 - 웃는 눈 + 활짝 웃음 */
+  sad   :{ eyes:'...hseesseesh...', mouth:'...hpsssmssph...' },  /* 오답 - 시무룩 */
+  blink :{ eyes:'...hskksskksh...', mouth:'...hpssmmssph...' }   /* 눈 깜빡임 */
+};
+
+let mood = 'normal', blinkTimer = 0, blinking = false, tick = 0;
+let particles = [];   /* 정답 시 색종이 / 오답 시 땀방울 */
+let floatTexts = [];  /* +10 / -5 등 떠오르는 글자 */
+let feverOn = false;
+
+function px(x, y, w, h, color){ cx2.fillStyle = color; cx2.fillRect(x, y, w, h); }
+
+function drawBoardText(){
+  /* 칠판 분필 글씨 느낌의 선들 */
+  px(22, 24, 34, 3, '#eaf6ee');
+  px(22, 32, 62, 2, '#cfe6d6'); px(22, 38, 48, 2, '#cfe6d6');
+  px(22, 44, 68, 2, '#cfe6d6'); px(22, 50, 40, 2, '#cfe6d6');
+  /* 칠판 구석 작은 그래프 그림 */
+  px(88, 40, 2, 20, '#eaf6ee'); px(88, 58, 20, 2, '#eaf6ee');
+  px(92, 50, 4, 8, '#ffe9a8'); px(98, 44, 4, 14, '#9fe0b6'); px(104, 48, 3, 10, '#f5a3a0');
+}
+
+function drawScene(){
+  tick++;
+
+  /* --- 벽 --- */
+  px(0, 0, 192, 100, '#f2e0be');
+  px(0, 0, 192, 10, '#e6cfa6');
+  /* 벽 상단 몰딩 */
+  for(let x=0; x<192; x+=8) px(x, 10, 4, 2, '#d8bd8f');
+
+  /* --- 창문 --- */
+  px(126, 16, 56, 46, '#8a5a2b');
+  px(129, 19, 50, 40, feverOn ? '#ffd88a' : '#a9dcf5');
+  /* 구름 */
+  px(134, 25, 12, 4, '#ffffff'); px(138, 22, 6, 3, '#ffffff');
+  px(158, 34, 10, 3, '#ffffff'); px(161, 31, 5, 3, '#ffffff');
+  /* 창틀 */
+  px(152, 19, 3, 40, '#8a5a2b'); px(129, 37, 50, 3, '#8a5a2b');
+  px(126, 62, 56, 3, '#5c3a18');
+
+  /* --- 칠판 --- */
+  px(12, 14, 104, 56, '#8a5a2b');
+  px(15, 17, 98, 50, '#2f5d4a');
+  drawBoardText();
+  /* 분필 받침 + 분필 */
+  px(12, 70, 104, 4, '#c08a4e');
+  px(20, 67, 8, 3, '#ffffff'); px(32, 67, 6, 3, '#ffe9a8');
+
+  /* --- 벽시계 --- */
+  px(118, 16, 5, 5, '#3b2a18');
+  px(119, 17, 3, 3, '#fff6e2');
+
+  /* --- 게시물(작은 포스터) --- */
+  px(4, 20, 5, 7, '#f5a3a0'); px(4, 30, 5, 7, '#9fe0b6');
+
+  /* --- 바닥 --- */
+  px(0, 100, 192, 44, '#c99a6a');
+  px(0, 100, 192, 3, '#a97b4e');
+  for(let i=0; i<7; i++){ px(i*30 - 6, 103, 2, 41, '#b98a5c'); }
+  px(0, 118, 192, 2, '#b98a5c'); px(0, 132, 192, 2, '#b98a5c');
+
+  /* --- 교탁 --- */
+  px(140, 92, 44, 8, '#a97b4e');
+  px(146, 100, 32, 26, '#c08a4e');
+  px(148, 104, 28, 3, '#8a5a2b'); px(148, 112, 28, 3, '#8a5a2b');
+
+  /* --- 책상들(청중석) --- */
+  function desk(x, y, s){
+    px(x, y, 26*s, 4*s, '#d8a86e');           /* 상판 */
+    px(x, y+4*s, 26*s, 2*s, '#a97b4e');
+    px(x+3*s, y+6*s, 3*s, 10*s, '#8a5a2b');   /* 다리 */
+    px(x+20*s, y+6*s, 3*s, 10*s, '#8a5a2b');
+    px(x+6*s, y-6*s, 14*s, 6*s, '#6f83b8');   /* 의자 등받이 */
+  }
+  desk(2, 108, 1); desk(2, 126, 1);
+  desk(150, 128, 1);
+
+  /* --- 화분 --- */
+  px(120, 116, 10, 10, '#c0714f'); px(122, 126, 6, 3, '#8a4a30');
+  px(122, 108, 3, 8, '#4f9e5e'); px(126, 110, 3, 6, '#6bbf74');
+
+  /* --- 캐릭터 그림자 --- */
+  px(74, 122, 44, 4, 'rgba(60,40,20,.22)');
+
+  /* --- 캐릭터 --- */
+  const bob = Math.floor(Math.sin(tick / 26) * 1.4);   /* 숨쉬기 애니메이션 */
+  drawChar(80, 74 + bob, 2);
+
+  /* --- 이름표 --- */
+  px(78, 128, 34, 10, '#fff6e2');
+  cx2.fillStyle = '#3b2a18';
+  cx2.font = '8px monospace';
+  cx2.textAlign = 'center';
+  cx2.fillText('지수', 95, 136);
+
+  /* --- 피버 이펙트 : 반짝이는 배경 별 --- */
+  if(feverOn){
+    for(let i=0; i<10; i++){
+      const sx = (i*37 + tick*2) % 192, sy = (i*23 + Math.sin(tick/10+i)*6 + 14) | 0;
+      px(sx, sy, 2, 2, i % 2 ? '#ffd34d' : '#fff6a8');
+    }
+  }
+
+  drawParticles();
+  drawFloatTexts();
+  requestAnimationFrame(drawScene);
+}
+
+function drawChar(ox, oy, s){
+  /* 눈 깜빡임 처리 */
+  blinkTimer++;
+  if(blinkTimer > 190){ blinking = true; }
+  if(blinkTimer > 200){ blinking = false; blinkTimer = 0; }
+  const f = FACE[mood] || FACE.normal;
+  const eyeRow   = (blinking && mood !== 'happy') ? FACE.blink.eyes : f.eyes;
+  const mouthRow = f.mouth;
+
+  for(let r=0; r<BODY.length; r++){
+    let row = BODY[r];
+    if(row === '@EYES@')  row = eyeRow;
+    if(row === '@MOUTH@') row = mouthRow;
+    for(let c=0; c<row.length; c++){
+      const ch = row[c];
+      if(ch === '.') continue;
+      const col = PAL[ch];
+      if(!col) continue;
+      px(ox + c*s, oy + r*s, s, s, col);
+    }
+  }
+  /* 마이크 소품 (오른손에 쥔 마이크) */
+  px(ox + 14*s, oy + 15*s - 2, 2*s, 2*s, '#3a3a3a');
+  px(ox + 14*s + 1, oy + 17*s - 2, s, 3*s, '#9a9a9a');
+}
+
+/* ---------- 이펙트 ---------- */
+function burst(kind){
+  const colors = ['#ffd34d','#ff7bac','#6c8cff','#4fd2c2','#ff9f4d','#ffffff'];
+  const n = kind === 'good' ? 26 : 10;
+  for(let i=0; i<n; i++){
+    particles.push({
+      x: 96 + (Math.random()*40 - 20),
+      y: kind === 'good' ? 70 + Math.random()*20 : 82,
+      vx: (Math.random()*2 - 1) * (kind === 'good' ? 1.3 : 0.5),
+      vy: kind === 'good' ? -(0.8 + Math.random()*1.6) : (0.6 + Math.random()),
+      life: 60 + Math.random()*30,
+      c: kind === 'good' ? colors[(Math.random()*colors.length)|0] : '#8ac6ee'
+    });
+  }
+}
+function drawParticles(){
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.045; p.life--;
+    px(p.x|0, p.y|0, 2, 2, p.c);
+  });
+}
+function floatText(txt, color){
+  /* 이미 떠 있는 글자와 겹치지 않도록 위치를 어긋나게 하고 최대 3개까지만 유지 */
+  const n = floatTexts.length;
+  floatTexts.push({ t:txt, c:color, x:96 + (n % 2 ? 30 : -30), y:112 + n*10, life:80 });
+  if(floatTexts.length > 3) floatTexts.shift();
+}
+function drawFloatTexts(){
+  floatTexts = floatTexts.filter(f => f.life > 0);
+  cx2.font = '9px monospace';
+  cx2.textAlign = 'center';
+  floatTexts.forEach(f => {
+    f.y -= 0.30; f.life--;
+    /* 검은 테두리 + 색 글자 (도트 게임 느낌) */
+    cx2.fillStyle = '#2b2118';
+    [[-1,0],[1,0],[0,-1],[0,1]].forEach(([dx,dy]) => cx2.fillText(f.t, f.x+dx, f.y+dy));
+    cx2.fillStyle = f.c; cx2.fillText(f.t, f.x, f.y);
+  });
+}
+requestAnimationFrame(drawScene);
+</script>
+
+<script>
+/* ==================================================================
+   [4] 게임 진행 로직
+   ================================================================== */
+const TOTAL = QUESTIONS.length;      /* 전체 빈칸 문항 수 (데이터에서 자동 계산) */
+const GAUGE_MAX = 500;               /* 게이지 바가 100%로 꽉 차는 기준 점수 */
+const GAIN_NORMAL = 10;              /* 일반 정답 시 상승 점수 */
+const GAIN_FEVER  = 15;              /* 피버(3연속 이상) 시 상승 점수 */
+const PENALTY     = 5;               /* 오답 시 감점 */
+
+const LEVEL_TITLES = [
+  '발표 새싹', '떨리는 목소리', '또박또박 연습생', '자료 수집가', '개요 설계자',
+  '무대 적응 완료', '청중 사로잡기', '설명의 달인', '발표 에이스', '전설의 문턱'
+];
+
+let S = {};
+function resetState(){
+  S = {
+    i: 0,                                        /* 현재 문제 인덱스 */
+    solved: 0,                                   /* 맞힌 문항 수 */
+    combo: 0, maxCombo: 0,                       /* 콤보 */
+    tries: 0,                                    /* 현재 문제 시도 횟수 */
+    stats: { logic:0, deliv:0, media:0, enga:0 },
+    finished: false
+  };
+  feverOn = false;
+  particles = []; floatTexts = []; mood = 'normal';
+}
+
+/* ---------- DOM ---------- */
+const $ = id => document.getElementById(id);
+const elStart=$('start'), elGame=$('game'), elEnding=$('ending');
+const elQHead=$('q-head'), elQCtx=$('q-ctx'), elQLine=$('q-line'), elFb=$('feedback');
+const elAnswer=$('answer'), elModalBg=$('modal-bg'), elCombo=$('combo-badge'), elFever=$('fever-flag');
+const elStageTag=$('stage-tag'), elWrap=$('stage-wrap');
+const statRow = { logic:$('st-logic'), deliv:$('st-deliv'), media:$('st-media'), enga:$('st-enga') };
+
+/* ---------- 정답 판정 : 띄어쓰기 무시 / 대소문자 무시 ---------- */
+function normalize(str){
+  return String(str)
+    .toLowerCase()                       /* 대소문자 무시 */
+    .replace(/\s+/g, '')                 /* 띄어쓰기(모든 공백) 무시 */
+    .replace(/[.,·’'"“”()~!?\-_/]/g, ''); /* 문장 부호 무시 */
+}
+function isCorrect(input, answers){
+  const v = normalize(input);
+  if(v === '') return false;
+  return answers.some(a => normalize(a) === v);
+}
+
+/* ---------- HUD 갱신 ---------- */
+function updateHud(){
+  STAT_KEYS.forEach(k => {
+    const row = statRow[k];
+    const v = S.stats[k];
+    row.querySelector('.gauge > i').style.width = Math.max(0, Math.min(100, v / GAUGE_MAX * 100)) + '%';
+    row.querySelector('.val').textContent = v;
+  });
+  const lv = Math.min(LEVEL_TITLES.length, Math.floor(S.solved / Math.ceil(TOTAL/10)) + 1);
+  $('hud-level').textContent = 'Lv.' + lv + ' ' + LEVEL_TITLES[lv-1];
+  const pct = Math.round(S.solved / TOTAL * 100);
+  $('hud-prog').textContent = '진도율 ' + pct + '% (' + S.solved + '/' + TOTAL + ')';
+  $('hud-combo').textContent = '🔥 최고 콤보 ' + S.maxCombo;
+}
+function bump(k){
+  const row = statRow[k];
+  row.classList.remove('bump'); void row.offsetWidth; row.classList.add('bump');
+}
+
+/* ---------- 콤보 / 피버 표시 ---------- */
+function updateCombo(){
+  if(S.combo >= 2){
+    elCombo.style.display = 'block';
+    elCombo.textContent = 'COMBO x' + S.combo;
+  } else {
+    elCombo.style.display = 'none';
+  }
+  feverOn = S.combo >= 3;
+  elFever.style.display = feverOn ? 'block' : 'none';
+  elWrap.classList.toggle('fever', feverOn);
+}
+
+/* ---------- 문제 출력 ---------- */
+function renderQuestion(){
+  const q = QUESTIONS[S.i];
+  elStageTag.textContent = STAGES[q.st];
+  elQHead.textContent = 'Q' + (S.i + 1) + '. / 총 ' + TOTAL + '문항';
+  elQCtx.textContent = q.ctx;
+  elQLine.innerHTML = escapeHtml(q.pre) + '<span class="blank">?</span>' + escapeHtml(q.post);
+  elAnswer.value = '';
+  elAnswer.focus();
+  S.tries = 0;
+  updateHud();
+}
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+/* 마지막 글자의 받침 유무에 따라 조사를 골라 줌 (예: 논리력'이' / 매체 활용도'가') */
+function josa(word, withBatchim, withoutBatchim){
+  const c = word.charCodeAt(word.length - 1);
+  if(c < 0xAC00 || c > 0xD7A3) return withoutBatchim;      /* 한글이 아니면 기본값 */
+  return ((c - 0xAC00) % 28) !== 0 ? withBatchim : withoutBatchim;
+}
+
+/* ---------- 답 제출 ---------- */
+function submit(){
+  if(S.finished) return;
+  const q = QUESTIONS[S.i];
+  const raw = elAnswer.value;
+  if(normalize(raw) === ''){
+    elFb.className = 'bad';
+    elFb.textContent = '💬 지수 : "빈칸에 들어갈 말을 적어 줘!"';
+    return;
+  }
+  if(isCorrect(raw, q.ans)) onCorrect(q);
+  else onWrong(q);
+}
+
+/* ---------- 정답 처리 ---------- */
+function onCorrect(q){
+  S.combo++;
+  S.maxCombo = Math.max(S.maxCombo, S.combo);
+  S.solved++;
+  mood = 'happy';
+  updateCombo();
+  burst('good');
+
+  if(S.combo >= 3){ Sfx.combo(); }   /* 3연속 이상 → 콤보/피버 효과음 */
+  else            { Sfx.correct(); } /* 정답 효과음 */
+
+  const gain = S.combo >= 3 ? GAIN_FEVER : GAIN_NORMAL;
+  elFb.className = 'good';
+  elFb.textContent = '⭕ 정답! 「' + q.ans[0] + '」 ' +
+    (S.combo >= 3 ? '🔥 FEVER! 스탯이 +' + gain + '점 오릅니다!' :
+     S.combo === 2 ? '🔥 COMBO! 좋아, 이 기세를 유지하자!' : '지수의 자신감이 올라갔어!');
+
+  setTimeout(() => openStatModal(gain), 420);
+}
+
+/* ---------- 스탯 선택 모달 ---------- */
+let pendingGain = 0;
+function openStatModal(gain){
+  pendingGain = gain;
+  $('modal-title').textContent = (gain === GAIN_FEVER ? '🔥 FEVER! ' : '⭐ ') + '스탯 상승! 선택하세요:';
+  $('modal-sub').textContent = '올리고 싶은 능력치를 골라 주세요  (현재 콤보 ' + S.combo + '연속)';
+  document.querySelectorAll('#modal .amt').forEach(b => b.textContent = '+' + gain);
+  elModalBg.classList.add('on');
+}
+function pickStat(k){
+  S.stats[k] += pendingGain;
+  Sfx.statUp();
+  bump(k);
+  floatText(STAT_META[k].short + ' +' + pendingGain, '#ffe9a8');
+  elModalBg.classList.remove('on');
+  updateHud();
+  nextQuestion();
+}
+
+/* ---------- 오답 처리 ---------- */
+function onWrong(q){
+  S.tries++;
+  S.combo = 0;              /* 콤보 리셋 */
+  mood = 'sad';
+  updateCombo();
+  Sfx.wrong();
+  burst('bad');
+  elWrap.classList.remove('shake'); void elWrap.offsetWidth; elWrap.classList.add('shake');
+
+  /* 4개 스탯 중 하나를 무작위로 -5점 */
+  const k = STAT_KEYS[(Math.random() * STAT_KEYS.length) | 0];
+  S.stats[k] = Math.max(0, S.stats[k] - PENALTY);
+  setTimeout(() => { Sfx.statDown(); }, 220);
+  bump(k);
+  floatText(STAT_META[k].short + ' -' + PENALTY, '#ff8a8a');
+
+  elFb.className = 'bad';
+  const nm = STAT_META[k].name;
+  elFb.textContent = '❌ 오답이야! ' + nm + josa(nm, '이', '가') + ' -' + PENALTY +
+                     '점 깎였어. 다시 맞춰야 다음으로 넘어갈 수 있어!' +
+                     (S.tries >= 3 ? '  (힌트: ' + q.ans[0].length + '글자, 「' + q.ans[0][0] + '」(으)로 시작해)' : '');
+  elAnswer.value = '';
+  elAnswer.focus();
+  updateHud();
+  setTimeout(() => { if(mood === 'sad') mood = 'normal'; }, 1400);
+}
+
+/* ---------- 다음 문제 / 엔딩 ---------- */
+function nextQuestion(){
+  mood = 'normal';
+  S.i++;
+  if(S.i >= TOTAL){ showEnding(); return; }
+  elFb.textContent = ''; elFb.className = '';
+  renderQuestion();
+}
+
+/* ---------- 엔딩 판정 ---------- */
+function decideEnding(stats){
+  for(const e of ENDINGS){ if(e.cond(stats)) return e; }
+  return ENDINGS[ENDINGS.length - 1];
+}
+function showEnding(){
+  S.finished = true;
+  feverOn = false; updateCombo();
+  elGame.style.display = 'none';
+  elEnding.classList.add('on');
+  Sfx.ending();
+  burst('good'); setTimeout(() => burst('good'), 300); setTimeout(() => burst('good'), 620);
+
+  const end = decideEnding(S.stats);
+  $('ed-name').textContent = end.emoji + ' ' + end.name;
+  $('ed-desc').innerHTML = escapeHtml(end.desc).replace(/\n/g, '<br>');
+
+  /* 엔딩 캐릭터 이미지 : imagePath 를 <img src="..."> 로 출력 */
+  const wrap = $('ed-img-wrap');
+  wrap.innerHTML = '';
+  const img = document.createElement('img');
+  img.src = end.imagePath;          /* ★ ENDINGS 배열의 imagePath 값이 그대로 들어갑니다 */
+  img.alt = end.name;
+  /* 이미지 파일이 아직 없을 때는 이모지로 대체 표시 */
+  img.onerror = () => { wrap.innerHTML = '<span class="ed-fallback">' + end.emoji + '</span>'; };
+  wrap.appendChild(img);
+
+  const total = STAT_KEYS.reduce((a, k) => a + S.stats[k], 0);
+  $('ed-stats').innerHTML =
+    STAT_KEYS.map(k => '<div>' + STAT_META[k].icon + ' ' + STAT_META[k].name + ' : <b>' + S.stats[k] + '</b></div>').join('') +
+    '<div>📊 총점 : <b>' + total + '</b></div>' +
+    '<div>🔥 최고 콤보 : <b>' + S.maxCombo + '</b></div>';
+}
+
+/* ==================================================================
+   [5] 이벤트 연결
+   ================================================================== */
+$('btn-start').addEventListener('click', () => {
+  Sfx.unlock();                 /* 브라우저 오디오 정책 : 사용자 조작 시점에 해제 */
+  Sfx.blip();
+  resetState();
+  elStart.classList.remove('on');
+  elEnding.classList.remove('on');
+  elGame.style.display = 'block';
+  elFb.textContent = '💬 지수 : "좋아… 심호흡하고, 첫 번째 빈칸부터 가 보자!"';
+  elFb.className = '';
+  updateCombo();
+  renderQuestion();
+});
+
+$('btn-submit').addEventListener('click', submit);
+elAnswer.addEventListener('keydown', e => { if(e.key === 'Enter') submit(); });
+
+document.querySelectorAll('#modal .pick').forEach(b => {
+  b.addEventListener('click', () => pickStat(b.dataset.k));
+});
+
+$('btn-retry').addEventListener('click', () => {
+  Sfx.blip();
+  resetState();
+  elEnding.classList.remove('on');
+  elGame.style.display = 'block';
+  elFb.textContent = '💬 지수 : "이번엔 더 잘할 수 있어! 다시 도전!"';
+  elFb.className = '';
+  updateCombo();
+  renderQuestion();
+});
+
+$('sound-toggle').addEventListener('click', () => {
+  const on = Sfx.toggle();
+  $('sound-toggle').textContent = on ? '🔊 소리 ON' : '🔇 소리 OFF';
+  if(on) Sfx.blip();
+});
+
+/* 초기화 */
+resetState();
+updateHud();
+</script>
+</body>
+</html>

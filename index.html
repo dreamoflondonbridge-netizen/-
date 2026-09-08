@@ -126,6 +126,43 @@ body{
   from{box-shadow:0 0 0 4px #ffd34d, 0 0 0 8px #ff6a2d, 8px 8px 0 8px rgba(200,80,30,.35);}
   to  {box-shadow:0 0 0 6px #fff3a8, 0 0 0 10px #ff3d2d, 8px 8px 0 10px rgba(200,60,30,.45);}
 }
+/* ---------- 무대 연출 레이어 (캔버스 영역에 정확히 겹침) ---------- */
+#stage-overlay{
+  position:absolute; left:6px; right:6px; top:6px; bottom:6px;
+  overflow:hidden; pointer-events:none;
+}
+/* 선생님이 넣은 무대 캐릭터 이미지 : 도트로 변환하지 않고 원본 그대로 */
+#stage-actor{
+  position:absolute; left:50%; bottom:15.3%;
+  height:56%; width:auto; max-width:60%;
+  transform:translateX(-50%);
+  display:none;
+  image-rendering:auto;                 /* ← 픽셀화하지 않고 부드럽게 표시 */
+  -ms-interpolation-mode:bicubic;
+  filter:drop-shadow(0 3px 0 rgba(40,20,40,.35));
+  animation:actorBob 1.6s ease-in-out infinite alternate;
+}
+#stage-actor.on{display:block;}
+@keyframes actorBob{from{transform:translateX(-50%) translateY(0);}to{transform:translateX(-50%) translateY(-3%);}}
+
+/* 무대 커튼 : 좌우에서 닫혔다 열림 (이미지보다 위에 그려짐) */
+.curtain{
+  position:absolute; top:0; bottom:0; width:0;
+  background:repeating-linear-gradient(90deg,
+    #8a1730 0 4px, #a8203a 4px 10px, #c62e4a 10px 13px, #a8203a 13px 19px);
+  display:none;
+}
+.curtain.on{display:block;}
+.curtain-l{left:0; border-right:3px solid #e05a72;}
+.curtain-r{right:0; border-left:3px solid #e05a72;}
+.curtain-valance{
+  position:absolute; left:0; right:0; top:0; height:10%;
+  background:repeating-linear-gradient(90deg, #e8b23a 0 8px, #d9a12e 8px 12px);
+  border-bottom:3px solid #c08a1e;
+  display:none;
+}
+.curtain-valance.on{display:block;}
+
 #place-banner{
   position:absolute; left:50%; top:44%; transform:translate(-50%,-50%) scale(.8);
   opacity:0; pointer-events:none; white-space:nowrap;
@@ -221,7 +258,8 @@ body{
 #ending .ed-title{font-size:14px; color:#8a6a3a;}
 #ending .ed-name{font-size:26px; margin:6px 0 10px;}
 #ending .ed-img-wrap{width:200px; height:200px; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; background:#f3e6c6; border:4px solid var(--frame); box-shadow:inset 4px 4px 0 rgba(0,0,0,.12);}
-#ending .ed-img-wrap img{max-width:100%; max-height:100%; image-rendering:pixelated;}
+/* 엔딩 카드 이미지도 도트로 변환하지 않고 원본 그대로 표시 */
+#ending .ed-img-wrap img{max-width:100%; max-height:100%; image-rendering:auto;}
 #ending .ed-fallback{font-size:64px;}
 #ending .ed-desc{font-size:13px; line-height:1.9; margin-bottom:14px; word-break:keep-all;}
 #ending .ed-stats{display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:13px; margin:0 auto 16px; max-width:360px;}
@@ -292,6 +330,15 @@ body{
       <canvas id="scene" width="192" height="144"></canvas>
       <div id="combo-badge">COMBO x2</div>
       <div id="fever-flag">🔥 FEVER!</div>
+      <!-- 무대 연출용 겹침 레이어 : 캔버스 위에 얹혀서 그려집니다.
+           선생님이 넣은 무대 이미지는 여기에서 '원본 화질 그대로' 표시됩니다.
+           (캔버스에 그리면 192x144 도트로 뭉개지기 때문에 분리했습니다) -->
+      <div id="stage-overlay">
+        <img id="stage-actor" alt="">
+        <div class="curtain curtain-l"></div>
+        <div class="curtain curtain-r"></div>
+        <div class="curtain-valance"></div>
+      </div>
       <div id="stage-tag">STAGE 1</div>
       <div id="place-banner"></div>
     </div>
@@ -785,7 +832,7 @@ let curStage = 1;     /* 지금 보여 줄 장소 (1 교실 ~ 6 강당) */
 
 /* ---------- 피날레(커튼 → 무대 발표 → 커튼) 상태 ---------- */
 let finale = null;            /* {phase, t0, curtain} · null 이면 평소 화면 */
-let stageImgEl = null, stageImgReady = false;   /* 무대에 세울 캐릭터 이미지 */
+let stageImgReady = false;    /* 무대 캐릭터 이미지가 준비됐는지 */
 
 const FINALE_MS = {
   CLOSE1 : 1000,   /* 커튼이 닫히는 시간 */
@@ -795,19 +842,40 @@ const FINALE_MS = {
   HOLD   :  600    /* 닫힌 채 잠깐 머무는 시간 */
 };
 
-/* 무대 캐릭터 이미지 불러오기 (파일이 없으면 도트 캐릭터로 대체) */
+/* 무대 캐릭터 이미지 불러오기
+   ★ 캔버스에 그리지 않고 화면 위에 <img> 로 얹기 때문에
+     선생님이 넣은 그림이 도트로 뭉개지지 않고 원본 화질 그대로 나옵니다.
+     (파일이 없으면 지금처럼 도트 캐릭터가 대신 무대에 섭니다) */
 function loadStageImage(path){
-  stageImgEl = null; stageImgReady = false;
+  stageImgReady = false;
+  const el = document.getElementById('stage-actor');
+  el.classList.remove('on');
+  el.removeAttribute('src');
   if(!path) return;
-  const im = new Image();
-  im.onload  = () => { stageImgEl = im; stageImgReady = true; };
-  im.onerror = () => { stageImgEl = null; stageImgReady = false; };
-  im.src = path;
+  el.onload  = () => { stageImgReady = true; };
+  el.onerror = () => { stageImgReady = false; el.classList.remove('on'); };
+  el.src = path;
+}
+/* 무대 이미지 · 커튼 레이어 표시 상태 갱신 */
+function setStageLayer(opts){
+  const actor = document.getElementById('stage-actor');
+  const cl = document.querySelector('.curtain-l');
+  const cr = document.querySelector('.curtain-r');
+  const val = document.querySelector('.curtain-valance');
+  actor.classList.toggle('on', !!opts.actor && stageImgReady);
+  val.classList.toggle('on', !!opts.curtainOn);
+  cl.classList.toggle('on', !!opts.curtainOn);
+  cr.classList.toggle('on', !!opts.curtainOn);
+  if(opts.curtainOn){
+    /* 가운데에서 살짝 겹치도록 50.5% 까지 */
+    const w = (opts.curtain * 50.5) + '%';
+    cl.style.width = w; cr.style.width = w;
+  }
 }
 
 /* 피날레 진행 : 커튼 닫힘 → 열림 → 발표 → 닫힘 → 엔딩 화면 */
 function updateFinale(){
-  if(!finale) return;
+  if(!finale){ setStageLayer({actor:false, curtainOn:false}); return; }
   const t = performance.now() - finale.t0;
 
   if(finale.phase === 'close1'){
@@ -826,9 +894,17 @@ function updateFinale(){
     finale.curtain = Math.min(1, t / FINALE_MS.CLOSE2);
     if(t >= FINALE_MS.CLOSE2 + FINALE_MS.HOLD){
       finale = null;
+      setStageLayer({actor:false, curtainOn:false});
       showEnding();
+      return;
     }
   }
+  /* 무대 위 캐릭터는 커튼이 열리는 순간부터 보이도록 */
+  setStageLayer({
+    actor: finale.phase !== 'close1',
+    curtainOn: true,
+    curtain: finale.curtain
+  });
 }
 let particles = [];   /* 정답 시 색종이 / 오답 시 땀방울 */
 let floatTexts = [];  /* +10 / -5 등 떠오르는 글자 */
@@ -1170,25 +1246,6 @@ const SCENE_DRAW = {
   4: drawPlayground, 5: drawCafeteria, 6: drawAuditorium
 };
 
-/* ---------- 무대 커튼 (피날레 연출) ----------
-   t = 0 이면 완전히 열린 상태, 1 이면 완전히 닫힌 상태 */
-function drawCurtain(t){
-  if(t <= 0) return;
-  const w = Math.round(97 * t);
-  [0, 1].forEach(side => {
-    const x0 = side ? 192 - w : 0;
-    px(x0, 0, w, 144, '#a8203a');
-    for(let i=0; i<w; i+=9){
-      px(x0 + i, 0, 3, 144, '#8a1730');
-      px(x0 + i + 4, 0, 2, 144, '#c62e4a');
-    }
-    px(side ? x0 : x0 + w - 3, 0, 3, 144, '#e05a72');
-  });
-  /* 상단 금색 밸런스는 항상 보이도록 */
-  px(0, 0, 192, 12, '#e8b23a'); px(0, 12, 192, 3, '#c08a1e');
-  for(let x=0; x<192; x+=12) px(x, 12, 6, 5, '#e8b23a');
-}
-
 /* ---------- 피날레 : 무대 위 캐릭터 & 관객 ---------- */
 function drawPerformance(){
   /* 스포트라이트가 좌우로 살짝 흔들림 */
@@ -1197,18 +1254,13 @@ function drawPerformance(){
   cx2.beginPath(); cx2.moveTo(96 - 8 + sway, 14); cx2.lineTo(96 + 8 + sway, 14);
   cx2.lineTo(96 + 30, 118); cx2.lineTo(96 - 30, 118); cx2.closePath(); cx2.fill();
 
-  /* 무대 위 캐릭터 : 이미지가 준비되면 이미지, 아니면 도트 캐릭터 */
+  /* 무대 위 캐릭터
+     · 선생님이 넣은 이미지가 있으면 캔버스에는 그림자만 그리고,
+       캐릭터는 위쪽 <img> 레이어가 원본 화질로 보여 줍니다.
+     · 이미지가 없으면 여기서 도트 캐릭터를 그립니다. */
   const bob = Math.floor(Math.sin(tick / 9) * 2);
-  if(stageImgReady && stageImgEl){
-    const bw = 60, bh = 78;
-    const r = Math.min(bw / stageImgEl.width, bh / stageImgEl.height);
-    const w = Math.max(1, Math.round(stageImgEl.width * r));
-    const h = Math.max(1, Math.round(stageImgEl.height * r));
-    cx2.drawImage(stageImgEl, 96 - (w >> 1), 122 - h + bob, w, h);
-  } else {
-    px(74, 121, 44, 4, 'rgba(40,20,40,.35)');
-    drawChar(80, 74 + bob, 2);
-  }
+  px(74, 121, 44, 4, 'rgba(40,20,40,.35)');
+  if(!stageImgReady) drawChar(80, 74 + bob, 2);
 
   /* 객석 박수 : 위로 튀어 오르는 점들 */
   for(let i=0; i<12; i++){
@@ -1231,7 +1283,8 @@ function drawScene(){
     if(finale.phase === 'perform') drawPerformance();
     drawParticles();
     drawFloatTexts();
-    drawCurtain(finale.curtain);
+    /* 커튼은 캔버스가 아니라 위쪽 레이어(.curtain)가 그립니다.
+       그래야 선생님이 넣은 무대 이미지를 커튼이 제대로 가려 줍니다. */
     requestAnimationFrame(drawScene);
     return;
   }
@@ -1381,7 +1434,7 @@ function resetState(){
   };
   feverOn = false; feverLv = 0;
   finale = null; finaleEnding = null;
-  stageImgEl = null; stageImgReady = false;
+  stageImgReady = false;
   curStage = 0;                       /* 첫 문제에서 장소를 새로 잡도록 */
   placeInited = false;
   particles = []; floatTexts = []; mood = 'normal';

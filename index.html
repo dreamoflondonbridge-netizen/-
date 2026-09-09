@@ -338,6 +338,16 @@ body{
 #start .lead{font-size:13px; color:#6b543a; line-height:1.8; margin:10px 0 16px;}
 .rules{text-align:left; font-size:12px; line-height:1.9; background:#f3e6c6; border:3px solid var(--frame); padding:12px; margin-bottom:16px;}
 #ending .ed-title{font-size:14px; color:#8a6a3a;}
+/* 히든 엔딩은 결과 화면을 다르게 (보라빛 특별 테두리) */
+#ending.hidden-end{box-shadow:0 0 0 4px #c9a0ff, 0 0 0 8px var(--frame), 8px 8px 0 8px rgba(90,50,140,.30);}
+#ending.hidden-end .ed-title{color:#7a3fb8;}
+#ending.hidden-end .ed-name{text-shadow:0 0 10px rgba(160,90,230,.35);}
+/* 히든 엔딩 신문은 '특종' 도장 */
+#news-paper.np-scoop .np-masthead::after{
+  content:'특 종'; display:inline-block; margin-top:6px; padding:2px 10px;
+  font-size:12px; letter-spacing:4px; color:#b03030;
+  border:2px solid #b03030; transform:rotate(-4deg);
+}
 #ending .ed-name{font-size:26px; margin:6px 0 10px;}
 #ending .ed-img-wrap{width:200px; height:200px; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; background:#f3e6c6; border:4px solid var(--frame); box-shadow:inset 4px 4px 0 rgba(0,0,0,.12);}
 /* 엔딩 카드 이미지도 도트로 변환하지 않고 원본 그대로 표시 */
@@ -684,11 +694,37 @@ SENTENCES.forEach(sen => {
    ▶ 판정 순서는 배열의 위에서 아래 순서입니다.
      먼저 조건이 맞는 엔딩이 채택되므로,
      '한 스탯 900점' 엔딩 4개를 총점 엔딩보다 위에 두었습니다.
-   ▶ cond 는 (스탯, 총점) 을 받습니다.
+   ▶ cond 는 (스탯, 총점, 플레이시간초, 0점인스탯) 을 받습니다.
        cond:(s, total) => s.logic >= STAT_MAX   ← 논리력이 최대치일 때
        cond:(s, total) => total >= 850          ← 총점이 850점 이상일 때
    ================================================================== */
 const ENDINGS = [
+  /* ===============================================================
+     0단계 · 히든 엔딩  ★ 조건이 특이해서 아주 드물게 나옵니다
+     hidden:true 인 엔딩은 커튼이 열렸을 때 박수 대신
+     '청중이 웅성거리는' 장면이 연출됩니다.
+     =============================================================== */
+
+  /* 퀴즈 전체를 5분(300초) 안에 끝낸 경우 */
+  { name:'AI 발표 로봇', emoji:'🤖', hidden:true,
+    imagePath:'images/robot.png',
+    stageImagePath:'images/robot-stage.png',
+    desc:'58개의 빈칸을 5분 만에 격파! 인간의 속도가 아니다…',
+    news:{ headline:'[충격] 발표자는 사람이 아니었다',
+           body:'“이 사람은 사람이 아니다.” 발표자가 인간이 아니라 인간의 탈을 쓴 AI 보이스 및 자동 생성 로봇이었음이 밝혀졌다.' },
+    cond:(s, total, sec) => sec <= 300 },
+
+  /* 4개 스탯이 완전히 똑같은 점수로 끝난 경우 */
+  { name:'완벽주의자', emoji:'⚖️', hidden:true,
+    imagePath:'images/perfect.png',
+    stageImagePath:'images/perfect-stage.png',
+    desc:'논리·전달·매체·호응이 소수점 하나 없이 완전히 같은 점수.\n이건 우연일 리가 없다…',
+    news:{ headline:'완벽 추구하다 발표 직전 기절… 남긴 자료는 ‘전설의 족보’로',
+           body:'모든 분야에서 완벽을 추구하다 보니 발표 직전 피로 누적으로 기절. 정작 발표는 못 했지만, 그가 남긴 완벽한 발표 준비 자료가 학계의 전설적 족보로 남아 추앙받았다.' },
+    cond:(s, total, sec) => s.logic > 0 &&
+        s.logic === s.deliv && s.deliv === s.media && s.media === s.enga },
+
+
   /* ===============================================================
      1단계 · 한 스탯을 최대치(900점)까지 채운 경우  ← 가장 먼저 검사
      (총점 판정보다 먼저 두지 않으면 이 엔딩들은 절대 나오지 않습니다.
@@ -729,6 +765,34 @@ const ENDINGS = [
            body:'발표 한 번 했을 뿐인데 급식실에서 소시지 반찬을 2개 더 받았다! 점심시간 방송부 라디오 고정 DJ로 전격 발탁되었다.' },
     desc:'청중 호응도 750점 만점! 발표만 시작하면 교실이 들썩,\n모두가 좋아하는 다원중의 인기쟁이.',
     cond:(s, total) => s.enga >= STAT_MAX },
+
+
+  /* ===============================================================
+     1.5단계 · 히든 엔딩 (특정 스탯을 한 번도 올리지 않은 경우)
+     =============================================================== */
+  { name:'ASMR 유튜버', emoji:'🎧', hidden:true,
+    imagePath:'images/asmr.png',
+    stageImagePath:'images/asmr-stage.png',
+    desc:'전달력 0점. 목소리가 너무 작아 오히려 전설이 되었다…',
+    news:{ headline:'속삭임에 청중 뇌 피로 해소… 유튜브 채널 제안까지',
+           body:'발표자의 목소리가 너무 작아 속삭이는 수준. 청중들은 내용을 들으려고 숨도 안 쉬고 집중하다가 뜻밖의 뇌 피로 해소와 안정을 얻었다. 발표가 끝난 후 심사위원이 “자연의 소리 같았다”며 구독과 좋아요를 누르고 유튜브 채널 개설을 제안했다.' },
+    cond:(s, total, sec, zeroPick) => zeroPick === 'deliv' },
+
+  { name:'텍스트 테러리스트', emoji:'📄', hidden:true,
+    imagePath:'images/textbomb.png',
+    stageImagePath:'images/textbomb-stage.png',
+    desc:'매체 활용도 0점. 슬라이드가 곧 벽이었다…',
+    news:{ headline:'슬라이드당 5,000자… 발표장에 안경사 출장 판매',
+           body:'PPT 슬라이드 한 장당 흰 바탕에 검은색 나눔고딕 10포인트 글씨가 5,000자씩 빽빽하게 들어차 있었다. 발표는 잘하는데 청중들의 시력이 단체로 0.5씩 떨어져 발표장에 안경사들이 출장 판매를 오는 기현상이 발생했다.' },
+    cond:(s, total, sec, zeroPick) => zeroPick === 'media' },
+
+  { name:'아무말 대잔치', emoji:'🎪', hidden:true,
+    imagePath:'images/nonsense.png',
+    stageImagePath:'images/nonsense-stage.png',
+    desc:'논리력 0점. 주제는 사라졌지만 웃음은 남았다…',
+    news:{ headline:'친환경 에너지에서 첫사랑까지… 청중 배꼽 실종',
+           body:'주제는 ‘친환경 에너지’인데 말하다 보니 갑자기 오늘 점심에 먹은 돈까스 얘기로 새고, 마지막엔 학창 시절 첫사랑 얘기로 끝났다. 주제와는 억만광년 떨어져 있지만 입담이 너무 재밌어서 청중들은 자지러지며 배를 잡고 웃었다.' },
+    cond:(s, total, sec, zeroPick) => zeroPick === 'logic' },
 
   /* ===============================================================
      2단계 · 총점(4개 스탯의 합)으로 판정
@@ -903,6 +967,16 @@ const Sfx = (() => {
     statUp(){ if(!on) return; tone(659.25,0,0.08,'square',0.12); tone(987.77,0.07,0.16,'square',0.12); },
     /* 감점 반응음 */
     statDown(){ if(!on) return; slide(330,165,0,0.22,'triangle',0.16); },
+    /* 청중이 웅성거리는 소리 (낮은 잡음이 여러 겹 겹침) */
+    murmur(){
+      if(!on) return;
+      for(let i=0; i<14; i++){
+        noise(Math.random() * 1.6, 0.18 + Math.random()*0.22,
+              0.035 + Math.random()*0.03, 260 + Math.random()*420, 2.2);
+      }
+      slide(220, 190, 0.10, 1.4, 'triangle', 0.05);
+      slide(175, 205, 0.55, 1.2, 'triangle', 0.04);
+    },
     /* 신문이 펼쳐지는 소리 (종이 넘기는 느낌) */
     news(){
       if(!on) return;
@@ -985,6 +1059,7 @@ const FACE = {
 let mood = 'normal', blinkTimer = 0, blinking = false, tick = 0;
 let PLAYER = '지수';  /* 발표자(주인공) 이름 - 시작 화면에서 학생이 직접 정합니다 */
 let feverLv = 0;      /* 피버 단계 : 0 없음 / 1 FEVER / 2 SUPER FEVER */
+let isHiddenEnding = false;   /* 히든 엔딩이면 무대에서 박수 대신 '웅성거림' 연출 */
 let curStage = 1;     /* 지금 보여 줄 장소 (1 교실 ~ 6 강당) */
 
 /* ---------- 피날레(커튼 → 무대 발표 → 커튼) 상태 ---------- */
@@ -1436,9 +1511,9 @@ const SCENE_DRAW = {
 
 /* ---------- 피날레 : 무대 위 캐릭터 & 관객 ---------- */
 function drawPerformance(){
-  /* 스포트라이트가 좌우로 살짝 흔들림 */
-  const sway = Math.sin(tick / 30) * 8;
-  cx2.fillStyle = 'rgba(255,245,200,.18)';
+  /* 스포트라이트 : 히든 엔딩은 조명이 흐릿하게 흔들림 */
+  const sway = Math.sin(tick / (isHiddenEnding ? 14 : 30)) * (isHiddenEnding ? 14 : 8);
+  cx2.fillStyle = isHiddenEnding ? 'rgba(210,220,255,.10)' : 'rgba(255,245,200,.18)';
   cx2.beginPath(); cx2.moveTo(96 - 8 + sway, 14); cx2.lineTo(96 + 8 + sway, 14);
   cx2.lineTo(96 + 30, 118); cx2.lineTo(96 - 30, 118); cx2.closePath(); cx2.fill();
 
@@ -1450,6 +1525,8 @@ function drawPerformance(){
   px(74, 121, 44, 4, 'rgba(40,20,40,.35)');
   if(!stageImgReady) drawChar(80, 74 + bob, 2);
 
+  if(isHiddenEnding){ drawMurmur(); return; }
+
   /* 객석 박수 : 위로 튀어 오르는 점들 */
   for(let i=0; i<12; i++){
     const t2 = (tick * 1.6 + i * 17) % 40;
@@ -1457,6 +1534,33 @@ function drawPerformance(){
   }
   /* 반짝이는 플래시 */
   if(tick % 14 < 3) px(20 + (tick * 7) % 150, 130, 3, 3, '#fffdf0');
+}
+
+/* ---------- 히든 엔딩 : 청중이 웅성거리는 장면 ---------- */
+function drawMurmur(){
+  /* 객석 관객들이 서로 고개를 돌리며 수군거림 */
+  for(let i=0; i<8; i++){
+    const sway = Math.round(Math.sin(tick / 9 + i * 1.3) * 2);
+    px(8 + i*24 + sway, 128, 8, 6, '#7c6a90');       /* 머리 */
+    px(9 + i*24 + sway, 129, 6, 2, '#8d7aa2');
+  }
+  /* 머리 위로 떠오르는 물음표 · 말줄임표 */
+  const marks = ['?', '?!', '…', '???', '…', '?', '?!'];
+  cx2.font = '9px monospace';
+  cx2.textAlign = 'center';
+  for(let i=0; i<marks.length; i++){
+    const t2 = (tick * 0.8 + i * 34) % 120;
+    if(t2 > 96) continue;
+    const x = 16 + i * 27 + Math.sin(tick/18 + i) * 3;
+    const y = 128 - t2 * 0.42;
+    cx2.fillStyle = 'rgba(20,14,25,.85)'; cx2.fillText(marks[i], x + 1, y + 1);
+    cx2.fillStyle = '#e9dfc6';            cx2.fillText(marks[i], x, y);
+  }
+  /* 무대 위로 흐르는 식은땀 */
+  for(let i=0; i<3; i++){
+    const t2 = (tick * 1.1 + i * 30) % 60;
+    px(84 + i*13, 70 + t2 * 0.5, 2, 3, '#9fd8f0');
+  }
 }
 
 function drawScene(){
@@ -1618,10 +1722,12 @@ function resetState(){
     combo: 0, maxCombo: 0,                       /* 콤보 */
     tries: 0,                                    /* 현재 문제 시도 횟수 */
     stats: { logic:0, deliv:0, media:0, enga:0 },
+    playMs: 0,                 /* 지금까지 플레이한 시간 (이어서 하기 하면 누적) */
+    tickStart: Date.now(),     /* 이번에 게임을 켠 시각 */
     finished: false
   };
   feverOn = false; feverLv = 0;
-  finale = null; finaleEnding = null;
+  finale = null; finaleEnding = null; isHiddenEnding = false;
   stageImgReady = false;
   const nb = document.getElementById('news-bg'); if(nb) nb.classList.remove('on');
   const bo = document.getElementById('blackout'); if(bo) bo.classList.remove('on');
@@ -1639,6 +1745,12 @@ const elQHead=$('q-head'), elQCtx=$('q-ctx'), elQLine=$('q-line'), elFb=$('feedb
 const elAnswer=$('answer'), elModalBg=$('modal-bg'), elCombo=$('combo-badge'), elFever=$('fever-flag');
 const elStageTag=$('stage-tag'), elWrap=$('stage-wrap');
 const statRow = { logic:$('st-logic'), deliv:$('st-deliv'), media:$('st-media'), enga:$('st-enga') };
+
+/* 지금까지 실제로 플레이한 시간(초). 이어서 하기를 해도 누적됩니다. */
+function playedSeconds(){
+  if(!S || !S.tickStart) return Infinity;
+  return (S.playMs + (Date.now() - S.tickStart)) / 1000;
+}
 
 /* ---------- 정답 판정 : 띄어쓰기 무시 / 대소문자 무시 ---------- */
 function normalize(str){
@@ -1900,7 +2012,10 @@ function playFinale(){
   mood = 'happy';
 
   /* 결과를 미리 정해 두고, 무대에 세울 이미지를 불러온다 */
-  finaleEnding = decideEnding(S.stats);
+  S.playMs = S.playMs + (Date.now() - S.tickStart);   /* 플레이 시간 확정 */
+  S.tickStart = Date.now();
+  finaleEnding = decideEnding(S.stats, S.playMs / 1000);
+  isHiddenEnding = !!finaleEnding.hidden;
   loadStageImage(finaleEnding.stageImagePath);
 
   /* 대사창을 무대 안내로 바꾸고 입력창은 숨긴다 */
@@ -1930,14 +2045,23 @@ function onPerformStart(){
   const pf = performanceFor(total);
   elQHead.textContent = '🎬 발표 무대';
   elQCtx.textContent = '총점 ' + total + '점';
-  elQLine.innerHTML = '👀 수많은 청중의 시선이 <b>당신</b>에게 집중됩니다';
-  elFb.className = 'good';
-  elFb.textContent = pf.title + '  ' + withName(pf.line).split('\n').join(' ');
-  Sfx.ending();
-  burst('good');
-  setTimeout(() => burst('good'), 500);
-  setTimeout(() => burst('good'), 1100);
-  setTimeout(() => Sfx.applause(), 1600);
+  if(isHiddenEnding){
+    /* 히든 엔딩 : 환호 대신 청중이 술렁이는 장면 */
+    elQLine.innerHTML = '🗣️ 웅성웅성… 청중들이 <b>술렁이기</b> 시작합니다';
+    elFb.className = '';
+    elFb.textContent = '“…저건 뭐지?”  “처음 보는데?”  강당이 술렁입니다.';
+    Sfx.murmur();
+    setTimeout(() => Sfx.murmur(), 1900);
+  } else {
+    elQLine.innerHTML = '👀 수많은 청중의 시선이 <b>당신</b>에게 집중됩니다';
+    elFb.className = 'good';
+    elFb.textContent = pf.title + '  ' + withName(pf.line).split('\n').join(' ');
+    Sfx.ending();
+    burst('good');
+    setTimeout(() => burst('good'), 500);
+    setTimeout(() => burst('good'), 1100);
+    setTimeout(() => Sfx.applause(), 1600);
+  }
 }
 
 /* 무대가 끝나고 커튼이 다시 닫힐 때 */
@@ -1957,7 +2081,9 @@ function showNewspaper(){
   $('np-headline').textContent = withName(n.headline);
   $('np-text').textContent = withName(n.body);
   $('np-caption').textContent = '▲ ' + PLAYER + ' (' + end.name + ')';
-  $('np-reporter').textContent = '다원일보 · 발표문화부 기자';
+  $('np-reporter').textContent = end.hidden
+    ? '다원일보 · 특종취재팀' : '다원일보 · 발표문화부 기자';
+  $('news-paper').classList.toggle('np-scoop', !!end.hidden);
 
   /* 사진 : 엔딩 이미지가 있으면 신문 사진처럼, 없으면 이모지 */
   const box = $('np-photo');
@@ -1973,11 +2099,15 @@ function showNewspaper(){
 }
 
 /* ---------- 엔딩 판정 ---------- */
-function decideEnding(stats){
+function decideEnding(stats, seconds){
   const total = STAT_KEYS.reduce((a, k) => a + stats[k], 0);
+  if(seconds === undefined) seconds = Infinity;   /* 시간을 안 넘기면 AI 로봇 엔딩은 제외 */
+  /* 0점인 스탯이 여러 개일 때 늘 같은 엔딩만 나오지 않도록 그중 하나를 골라 판정 */
+  const zeros = STAT_KEYS.filter(k => stats[k] === 0);
+  const zeroPick = zeros.length ? zeros[(Math.random() * zeros.length) | 0] : null;
   /* 배열 위에서부터 검사해서 먼저 맞는 엔딩을 채택합니다.
-     cond 는 (스탯, 총점) 두 가지를 받습니다. */
-  for(const e of ENDINGS){ if(e.cond(stats, total)) return e; }
+     cond 는 (스탯, 총점, 플레이시간초, 0점인스탯) 을 받습니다. */
+  for(const e of ENDINGS){ if(e.cond(stats, total, seconds, zeroPick)) return e; }
   return ENDINGS[ENDINGS.length - 1];
 }
 function showEnding(){
@@ -1992,7 +2122,10 @@ function showEnding(){
   const end = finaleEnding || decideEnding(S.stats);
   finaleEnding = null;
   $('answer-row').style.display = '';   /* 다음 판을 위해 입력창 되돌리기 */
-  $('ed-title-line').textContent = '🎉 ' + PLAYER + '의 발표 육성 완료! 최종 결과 🎉';
+  $('ed-title-line').textContent = end.hidden
+    ? '✨ 히든 엔딩 발견! ' + PLAYER + '의 최종 결과 ✨'
+    : '🎉 ' + PLAYER + '의 발표 육성 완료! 최종 결과 🎉';
+  $('ending').classList.toggle('hidden-end', !!end.hidden);
   $('ed-name').textContent = end.emoji + ' ' + end.name;
   $('ed-desc').innerHTML = escapeHtml(withName(end.desc)).replace(/\n/g, '<br>');
 
@@ -2032,6 +2165,7 @@ function saveGame(){
       i: S.i, solved: S.solved,
       combo: S.combo, maxCombo: S.maxCombo,
       stats: S.stats,
+      playMs: Math.round(S.playMs + (Date.now() - S.tickStart)),   /* 누적 플레이 시간 */
       total: TOTAL,          /* 문항 수가 바뀌면 예전 기록은 버리기 위해 함께 저장 */
       ts: Date.now()
     }));
@@ -2082,6 +2216,8 @@ function resumeGame(d){
   S.i = d.i; S.solved = d.solved;
   S.combo = d.combo || 0; S.maxCombo = d.maxCombo || 0;
   STAT_KEYS.forEach(k => S.stats[k] = d.stats[k]);
+  S.playMs = d.playMs || 0;          /* 이전에 플레이한 시간을 이어받음 */
+  S.tickStart = Date.now();
   elStart.classList.remove('on');
   elEnding.classList.remove('on');
   elGame.style.display = 'block';

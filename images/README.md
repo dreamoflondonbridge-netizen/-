@@ -20,6 +20,16 @@
 | 🌱 발표 꿈나무 (총점 430+) | `sprout.png` | `sprout-stage.png` |
 | 🏃 교무실로. (그 외) | `teacher.png` | `teacher-stage.png` |
 
+## 🔒 히든 엔딩 (조건이 특이해서 드물게 나옵니다)
+
+| 엔딩 | 조건 | 결과 화면용 | 강당 무대용 |
+|---|---|---|---|
+| 🤖 AI 발표 로봇 | 5분 안에 완주 | `robot.png` | `robot-stage.png` |
+| ⚖️ 완벽주의자 | 4스탯이 완전히 같은 점수 | `perfect.png` | `perfect-stage.png` |
+| 🎧 ASMR 유튜버 | 전달력 0점 | `asmr.png` | `asmr-stage.png` |
+| 📄 텍스트 테러리스트 | 매체 활용도 0점 | `textbomb.png` | `textbomb-stage.png` |
+| 🎪 아무말 대잔치 | 논리력 0점 | `nonsense.png` | `nonsense-stage.png` |
+
 ## 그림 만들 때
 
 - **결과 화면용** : 정사각형에 가까운 그림이 잘 맞습니다. 200×200픽셀 이상이면 충분합니다.

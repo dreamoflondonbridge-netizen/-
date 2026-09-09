@@ -173,6 +173,28 @@ body{
 }
 .curtain-valance.on{display:block;}
 
+/* ---------- 암전 화면 + 주인공 혼잣말 ---------- */
+#blackout{
+  position:absolute; inset:0; background:#000;
+  opacity:0; visibility:hidden; transition:opacity .55s ease;
+  display:flex; align-items:center; justify-content:center; padding:6%;
+}
+#blackout.on{opacity:1; visibility:visible;}
+#blackout-bubble{
+  max-width:88%; font-size:15px; line-height:1.8; word-break:keep-all; text-align:center;
+  color:#3b2a18; background:var(--paper);
+  border:4px solid var(--frame); padding:14px 18px;
+  box-shadow:0 0 0 4px rgba(255,217,168,.35);
+  opacity:0; transform:translateY(8px); position:relative;
+}
+#blackout-bubble.show{animation:bubbleIn .45s ease-out forwards;}
+@keyframes bubbleIn{to{opacity:1; transform:translateY(0);}}
+#blackout-bubble::after{   /* 말풍선 꼬리 */
+  content:''; position:absolute; bottom:-14px; left:38px; width:14px; height:14px;
+  background:var(--paper); border-right:4px solid var(--frame); border-bottom:4px solid var(--frame);
+  transform:rotate(45deg);
+}
+
 #place-banner{
   position:absolute; left:50%; top:44%; transform:translate(-50%,-50%) scale(.8);
   opacity:0; pointer-events:none; white-space:nowrap;
@@ -240,6 +262,56 @@ body{
 .pick{display:flex; align-items:center; justify-content:center; gap:6px; font-size:14px;}
 .pick.p1{background:var(--logic);} .pick.p2{background:var(--deliv);}
 .pick.p3{background:var(--media);} .pick.p4{background:var(--enga);}
+
+/* ---------- 엔딩 직전 신문 기사 ---------- */
+#news-bg{
+  position:fixed; inset:0; background:rgba(20,14,8,.82);
+  display:none; align-items:center; justify-content:center; padding:16px; z-index:60;
+}
+#news-bg.on{display:flex;}
+#news-paper{
+  width:100%; max-width:520px; max-height:92vh; overflow-y:auto;
+  background:#f6f1e3; color:#241d14; padding:20px 20px 22px; text-align:center;
+  font-family:'Nanum Myeongjo','Batang','바탕',serif;   /* 신문 느낌의 명조 계열 */
+  border:3px solid #241d14;
+  box-shadow:0 0 0 2px #f6f1e3, 0 0 0 5px #241d14, 10px 12px 0 5px rgba(0,0,0,.35);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.018) 0 1px, transparent 1px 3px);
+}
+#news-bg.on #news-paper{animation:newsIn 1.05s cubic-bezier(.2,.85,.3,1) both;}
+@keyframes newsIn{
+  0%{transform:scale(.06) rotate(-900deg); opacity:0;}
+  70%{opacity:1;}
+  100%{transform:scale(1) rotate(0); opacity:1;}
+}
+.np-masthead{border-bottom:4px double #241d14; padding-bottom:8px; margin-bottom:10px;}
+.np-title{font-size:30px; font-weight:bold; letter-spacing:6px; line-height:1.2;}
+.np-sub{font-size:11px; letter-spacing:.5px; margin-top:6px; color:#5a4a38;}
+.np-headline{
+  font-size:22px; line-height:1.45; font-weight:bold; word-break:keep-all;
+  padding:10px 0; border-bottom:2px solid #241d14; margin-bottom:12px;
+}
+.np-body{display:flex; gap:14px; text-align:left; align-items:flex-start;}
+@media(max-width:430px){ .np-body{flex-direction:column; align-items:center; text-align:center;} }
+.np-photo{flex:0 0 40%; max-width:180px;}
+.np-photo-box{
+  width:100%; aspect-ratio:3/4; background:#e3dbc9;
+  border:2px solid #241d14; display:flex; align-items:center; justify-content:center;
+  overflow:hidden; filter:grayscale(.35) contrast(1.06);   /* 신문 인쇄 느낌 */
+}
+.np-photo-box img{width:100%; height:100%; object-fit:cover; image-rendering:auto;}
+.np-photo-box .np-emoji{font-size:52px; filter:none;}
+.np-photo figcaption{font-size:10px; color:#5a4a38; margin-top:5px; line-height:1.5; word-break:keep-all;}
+.np-text{font-size:14px; line-height:1.95; word-break:keep-all; text-align:justify; flex:1;}
+.np-text::first-letter{font-size:30px; font-weight:bold; float:left; line-height:1; margin:2px 5px 0 0;}
+.np-foot{
+  margin-top:14px; padding-top:8px; border-top:1px solid #9a8a72;
+  font-size:11px; color:#5a4a38; text-align:right;
+}
+#btn-news-next{
+  margin-top:14px; font-family:"Galmuri11","DungGeunMo",'Malgun Gothic',monospace;
+  position:sticky; bottom:-2px;   /* 화면이 작아 스크롤될 때도 버튼이 항상 보이도록 */
+}
 
 /* ---------- 시작 / 엔딩 화면 ---------- */
 #start,#ending{display:none; padding:22px 18px; text-align:center;}
@@ -350,6 +422,10 @@ body{
         <div class="curtain curtain-l"></div>
         <div class="curtain curtain-r"></div>
         <div class="curtain-valance"></div>
+        <!-- 암전 : 문제를 다 풀면 화면이 까매지고 주인공 혼잣말이 나옵니다 -->
+        <div id="blackout">
+          <div id="blackout-bubble"></div>
+        </div>
       </div>
       <div id="stage-tag">STAGE 1</div>
       <div id="place-banner"></div>
@@ -381,6 +457,26 @@ body{
       <button class="pixel-btn" id="btn-home" style="font-size:14px; padding:12px 18px;">🏠 처음 화면 (이름 바꾸기)</button>
     </div>
   </section>
+
+  <!-- ============ 엔딩 직전 신문 기사 ============ -->
+  <div id="news-bg">
+    <div id="news-paper">
+      <div class="np-masthead">
+        <div class="np-title">다 원 일 보</div>
+        <div class="np-sub"><span id="np-date">2026년 9월 9일</span> · 제 1호 · 다원중학교 발표부</div>
+      </div>
+      <h2 class="np-headline" id="np-headline">헤드라인</h2>
+      <div class="np-body">
+        <figure class="np-photo">
+          <div class="np-photo-box" id="np-photo"></div>
+          <figcaption id="np-caption">사진 설명</figcaption>
+        </figure>
+        <p class="np-text" id="np-text">기사 본문</p>
+      </div>
+      <div class="np-foot"><span id="np-reporter">다원일보 취재부</span></div>
+      <button class="pixel-btn" id="btn-news-next" style="font-size:15px; padding:11px 24px;">→ 결과 확인하기</button>
+    </div>
+  </div>
 
   <!-- ============ 정답 시 스탯 선택 모달 ============ -->
   <div id="modal-bg">
@@ -601,24 +697,36 @@ const ENDINGS = [
   { name:'말싸움의 달인', emoji:'🧠',
     imagePath:'images/logic.png',
     stageImagePath:'images/logic-stage.png',
+    /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
+    news:{ headline:'단 3문장으로 악플러 굴복시킨 中학생',
+           body:'인터넷 악플러와의 키보드 배틀에서 단 3문장으로 상대방을 완전히 납득시켰다. 상대는 눈물을 흘리며 사과문과 함께 긴 장문의 반성문을 남기고 탈퇴했다.' },
     desc:'논리력 750점 만점! 근거와 근거로 상대를 설득하는,\n다원중에서 말로는 아무도 못 이기는 발표자.',
     cond:(s, total) => s.logic >= STAT_MAX },
 
   { name:'스피치의 달인', emoji:'🎙️',
     imagePath:'images/speech.png',
     stageImagePath:'images/speech-stage.png',
+    /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
+    news:{ headline:'‘간장 공장 공장장’ 0.5초… 랩퍼들 줄 섰다',
+           body:'얼마나 발음이 정확한지 ‘간장 공장 공장장’을 0.5초 만에 안 틀리고 읊는다. 랩퍼들도 속사포 발성을 배우러 줄을 서는 중이다.' },
     desc:'전달력 750점 만점! 목소리 크기, 속도, 눈맞춤까지 완벽한\n타고난 이야기꾼 발표자.',
     cond:(s, total) => s.deliv >= STAT_MAX },
 
   { name:'PPT의 달인', emoji:'💻',
     imagePath:'images/ppt.png',
     stageImagePath:'images/ppt-stage.png',
+    /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
+    news:{ headline:'마우스 없이 컴활 1급 만점 합격',
+           body:'마우스 클릭 한 번으로 모든 자료를 재구성하는 경지에 도달! 얼마 전 컴퓨터활용능력 1급 실기를 ‘마우스 없이’ 만점으로 합격했다고 한다.' },
     desc:'매체 활용도 750점 만점! 그래프, 사진, 영상을 자유자재로\n슬라이드 한 장으로 설명을 끝내는 발표자.',
     cond:(s, total) => s.media >= STAT_MAX },
 
   { name:'다원중 인기쟁이', emoji:'❤️',
     imagePath:'images/popular.png',
     stageImagePath:'images/popular-stage.png',
+    /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
+    news:{ headline:'급식실 소시지 2개 추가… 라디오 DJ 전격 발탁',
+           body:'발표 한 번 했을 뿐인데 급식실에서 소시지 반찬을 2개 더 받았다! 점심시간 방송부 라디오 고정 DJ로 전격 발탁되었다.' },
     desc:'청중 호응도 750점 만점! 발표만 시작하면 교실이 들썩,\n모두가 좋아하는 다원중의 인기쟁이.',
     cond:(s, total) => s.enga >= STAT_MAX },
 
@@ -629,36 +737,54 @@ const ENDINGS = [
   { name:'전설의 발표왕', emoji:'👑',
     imagePath:'images/king.png',
     stageImagePath:'images/king-stage.png',
+    /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
+    news:{ headline:'외계인, 15분 발표에 자진 회군',
+           body:'국내, 국외, 우주 발표 대회까지 모조리 석권! 급기야 외계인 침략 당시 ‘지구 침략의 불합리성’에 대해 15분간 발표하여 외계인을 자진 회군시켰다.' },
     desc:'총점 850점 이상! 논리·전달·매체·호응 무엇 하나 빠지지 않는 완전체.\n다원중 강당이 {이름}의 무대가 되었다!',
     cond:(s, total) => total >= 850 },
 
   { name:'발표의 신', emoji:'⚡',
     imagePath:'images/god.png',
     stageImagePath:'images/god-stage.png',
+    /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
+    news:{ headline:'스피커마저 감동… 하울링 스스로 멈춰',
+           body:'그가 발표를 시작하자 강당의 마이크와 스피커마저 감동해 스스로 하울링을 멈추었다. 최근엔 30분 동안 진행한 ‘내일 점심 메뉴 발표’에 전교생과 교직원 전원이 눈물을 흘렸다고 한다.' },
     desc:'총점 770점 이상! 무대에 서는 순간 공기가 달라진다.\n선생님도 감탄한 신의 경지.',
     cond:(s, total) => total >= 770 },
 
   { name:'발표의 달인', emoji:'🏆',
     imagePath:'images/master.png',
     stageImagePath:'images/master-stage.png',
+    /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
+    news:{ headline:'‘오늘 점심 뭐 먹죠?’ 질문에 20분 명발표',
+           body:'어떠한 돌발 질문이 나와도 0.1초 만에 유려하게 대답한다. 최근엔 ‘오늘 점심 뭐 먹을까요?’라는 질문에 20분간 명발표를 진행했다.' },
     desc:'총점 690점 이상! 어떤 주제를 줘도 척척 해내는 믿음직한 발표자.',
     cond:(s, total) => total >= 690 },
 
   { name:'발표의 정석', emoji:'📘',
     imagePath:'images/standard.png',
     stageImagePath:'images/standard-stage.png',
+    /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
+    news:{ headline:'오차 0.01초… 종소리와 동시에 발표 종료',
+           body:'서론-본론-결론이 정확히 33.3%씩 배분된 완벽한 레이아웃. 발표 시간을 측정했더니 오차 범위 0.01초로 정확히 종이 울렸다.' },
     desc:'총점 610점 이상! 도입-전개-정리, 교과서 그대로 탄탄하게.\n이제 개성만 더하면 완벽!',
     cond:(s, total) => total >= 610 },
 
   { name:'준비된 발표생', emoji:'📝',
     imagePath:'images/ready.png',
     stageImagePath:'images/ready-stage.png',
+    /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
+    news:{ headline:'큐카드가 대백과사전 두께',
+           body:'발표 대본에 ‘여기서 물 한 모금 마시기’, ‘여기서 약간 헛기침’까지 적어두는 철저함! 준비한 큐카드가 대백과사전 두께에 달한다.' },
     desc:'총점 530점 이상! 자료도 챙기고 연습도 했다.\n준비하는 사람은 결국 잘하게 되어 있다.',
     cond:(s, total) => total >= 530 },
 
   { name:'발표 꿈나무', emoji:'🌱',
     imagePath:'images/sprout.png',
     stageImagePath:'images/sprout-stage.png',
+    /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
+    news:{ headline:'마이크 거꾸로… 그래도 ‘감사합니다!’까지',
+           body:'손은 덜덜 떨렸지만 ‘감사합니다!’까지 무사히 마쳤다. 비록 마이크를 거꾸로 들고 말했지만, 마음만은 누구보다 당당했다.' },
     desc:'총점 430점 이상! 울렁증은 이제 그만.\n조금씩 자라나는 중인 새싹 발표자, 다음엔 더 잘할 수 있어!',
     cond:(s, total) => total >= 430 },
 
@@ -666,6 +792,9 @@ const ENDINGS = [
   { name:'교무실로.', emoji:'🏃‍♂️',
     imagePath:'images/teacher.png',
     stageImagePath:'images/teacher-stage.png',
+    /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
+    news:{ headline:'[속보] 교무실에서 찾습니다',
+           body:'교무실로 오세요^^' },
     desc:'…선생님이 잠깐 보자고 하십니다.\n학습지 다시 한 번 복습하고 재도전!',
     cond:(s, total) => true }
 ];
@@ -774,6 +903,13 @@ const Sfx = (() => {
     statUp(){ if(!on) return; tone(659.25,0,0.08,'square',0.12); tone(987.77,0.07,0.16,'square',0.12); },
     /* 감점 반응음 */
     statDown(){ if(!on) return; slide(330,165,0,0.22,'triangle',0.16); },
+    /* 신문이 펼쳐지는 소리 (종이 넘기는 느낌) */
+    news(){
+      if(!on) return;
+      noise(0.00, 0.35, 0.09, 2400, 0.7);
+      noise(0.18, 0.30, 0.07, 1500, 0.8);
+      [523.25, 659.25, 783.99].forEach((f,i) => tone(f, 0.35 + i*0.09, 0.16, 'triangle', 0.11));
+    },
     /* 장소 이동 : 뽕~ 하고 올라가는 짧은 이동음 */
     move(){
       if(!on) return;
@@ -856,12 +992,21 @@ let finale = null;            /* {phase, t0, curtain} · null 이면 평소 화�
 let stageImgReady = false;    /* 무대 캐릭터 이미지가 준비됐는지 */
 
 const FINALE_MS = {
-  CLOSE1 : 1000,   /* 커튼이 닫히는 시간 */
-  OPEN   :  800,   /* 커튼이 다시 열리는 시간 */
-  SHOW   : 4200,   /* 무대에서 발표하는 시간 */
-  CLOSE2 : 1000,   /* 마지막에 커튼이 닫히는 시간 */
-  HOLD   :  600    /* 닫힌 채 잠깐 머무는 시간 */
+  DARK_IN : 700,   /* 화면이 까맣게 어두워지는 시간 */
+  LINE1   : 2900,  /* 첫 번째 혼잣말이 떠 있는 시간 */
+  LINE2   : 3100,  /* 두 번째 혼잣말이 떠 있는 시간 */
+  DARK_OUT:  800,  /* 암전이 걷히며 닫힌 커튼이 드러나는 시간 */
+  OPEN    :  900,  /* 커튼이 열리는 시간 */
+  SHOW    : 4400,  /* 무대에서 발표하는 시간 */
+  CLOSE2  : 1000,  /* 마지막에 커튼이 닫히는 시간 */
+  HOLD    :  700   /* 닫힌 채 잠깐 머무는 시간 */
 };
+
+/* 암전 중에 나오는 주인공의 혼잣말 (순서대로 하나씩) */
+const DARK_LINES = [
+  '후.. 드디어 모든 준비가 끝났다.',
+  '떨리지만, 연습했던 걸 전부 보여주는 거야!'
+];
 
 /* 무대 캐릭터 이미지 불러오기
    ★ 캔버스에 그리지 않고 화면 위에 <img> 로 얹기 때문에
@@ -894,39 +1039,61 @@ function setStageLayer(opts){
   }
 }
 
-/* 피날레 진행 : 커튼 닫힘 → 열림 → 발표 → 닫힘 → 엔딩 화면 */
+/* 암전 화면과 혼잣말 말풍선 제어 */
+function setBlackout(on, line){
+  const bo = document.getElementById('blackout');
+  const bb = document.getElementById('blackout-bubble');
+  bo.classList.toggle('on', !!on);
+  if(line !== undefined && bb.textContent !== line){
+    bb.textContent = line;
+    bb.classList.remove('show'); void bb.offsetWidth; bb.classList.add('show');
+  }
+  if(!on){ bb.classList.remove('show'); }
+}
+
+/* 피날레 진행
+   암전 + 혼잣말1 → 혼잣말2 → 암전 걷힘(닫힌 커튼) → 커튼 열림 → 무대
+   → 커튼 닫힘 → 신문 기사 → 엔딩 카드                              */
 function updateFinale(){
   if(!finale){ setStageLayer({actor:false, curtainOn:false}); return; }
   const t = performance.now() - finale.t0;
+  const P = finale.phase;
 
-  if(finale.phase === 'close1'){
-    finale.curtain = Math.min(1, t / FINALE_MS.CLOSE1);
-    if(t >= FINALE_MS.CLOSE1){
-      finale.phase = 'perform'; finale.t0 = performance.now();
-      onPerformStart();
-    }
-  } else if(finale.phase === 'perform'){
+  if(P === 'dark1'){
+    finale.curtain = 1;                       /* 암전 뒤에서 커튼은 이미 닫아 둠 */
+    setBlackout(true, DARK_LINES[0]);
+    if(t >= FINALE_MS.DARK_IN + FINALE_MS.LINE1){ goPhase('dark2'); }
+  }
+  else if(P === 'dark2'){
+    finale.curtain = 1;
+    setBlackout(true, DARK_LINES[1]);
+    if(t >= FINALE_MS.LINE2){ goPhase('reveal'); onRevealStart(); }
+  }
+  else if(P === 'reveal'){                    /* 암전이 걷히며 닫힌 커튼이 보임 */
+    finale.curtain = 1;
+    setBlackout(false);
+    if(t >= FINALE_MS.DARK_OUT){ goPhase('perform'); onPerformStart(); }
+  }
+  else if(P === 'perform'){
     finale.curtain = Math.max(0, 1 - t / FINALE_MS.OPEN);
-    if(t >= FINALE_MS.OPEN + FINALE_MS.SHOW){
-      finale.phase = 'close2'; finale.t0 = performance.now();
-      onPerformEnd();
-    }
-  } else if(finale.phase === 'close2'){
+    if(t >= FINALE_MS.OPEN + FINALE_MS.SHOW){ goPhase('close2'); onPerformEnd(); }
+  }
+  else if(P === 'close2'){
     finale.curtain = Math.min(1, t / FINALE_MS.CLOSE2);
     if(t >= FINALE_MS.CLOSE2 + FINALE_MS.HOLD){
-      finale = null;
-      setStageLayer({actor:false, curtainOn:false});
-      showEnding();
-      return;
+      finale.phase = 'news';                  /* 신문은 시간이 아니라 버튼으로 넘어감 */
+      showNewspaper();
     }
   }
-  /* 무대 위 캐릭터는 커튼이 열리는 순간부터 보이도록 */
+  /* 'news' 단계에서는 커튼을 닫은 채로 유지 (뒤에서 화면이 바뀌지 않도록) */
+
   setStageLayer({
-    actor: finale.phase !== 'close1',
+    actor: (P !== 'dark1' && P !== 'dark2'),   /* 암전 중에는 캐릭터를 숨김 */
     curtainOn: true,
     curtain: finale.curtain
   });
 }
+function goPhase(name){ finale.phase = name; finale.t0 = performance.now(); }
 let particles = [];   /* 정답 시 색종이 / 오답 시 땀방울 */
 let floatTexts = [];  /* +10 / -5 등 떠오르는 글자 */
 let feverOn = false;
@@ -1456,6 +1623,8 @@ function resetState(){
   feverOn = false; feverLv = 0;
   finale = null; finaleEnding = null;
   stageImgReady = false;
+  const nb = document.getElementById('news-bg'); if(nb) nb.classList.remove('on');
+  const bo = document.getElementById('blackout'); if(bo) bo.classList.remove('on');
   curStage = 0;                       /* 첫 문제에서 장소를 새로 잡도록 */
   placeInited = false;
   particles = []; floatTexts = []; mood = 'normal';
@@ -1736,14 +1905,23 @@ function playFinale(){
 
   /* 대사창을 무대 안내로 바꾸고 입력창은 숨긴다 */
   $('answer-row').style.display = 'none';
+  $('place-banner').classList.remove('show');   /* 장소 이동 배너가 남아 있으면 즉시 감춤 */
+  elCombo.style.display = 'none';               /* 콤보 뱃지도 정리 */
   elStageTag.textContent = 'STAGE 6 · 🎪 강당 — 발표 무대';
   elQHead.textContent = '🎬 발표 무대';
   elQCtx.textContent = '모든 복습을 마쳤습니다!';
   elQLine.innerHTML = '<b>' + escapeHtml(PLAYER) + '</b>의 발표가 곧 시작됩니다…';
-  elFb.className = ''; elFb.textContent = '🎭 커튼이 천천히 닫힙니다…';
+  elFb.className = ''; elFb.textContent = '🌑 무대 뒤, 잠시 숨을 고릅니다…';
 
   Sfx.curtain();
-  finale = { phase:'close1', t0: performance.now(), curtain: 0 };
+  finale = { phase:'dark1', t0: performance.now(), curtain: 1 };
+}
+
+/* 암전이 걷히기 시작할 때 */
+function onRevealStart(){
+  elFb.className = '';
+  elFb.textContent = '🎭 커튼 너머로 웅성거리는 소리가 들립니다…';
+  Sfx.curtain();
 }
 
 /* 커튼이 열리고 무대가 시작될 때 */
@@ -1752,9 +1930,9 @@ function onPerformStart(){
   const pf = performanceFor(total);
   elQHead.textContent = '🎬 발표 무대';
   elQCtx.textContent = '총점 ' + total + '점';
-  elQLine.innerHTML = '<b>' + escapeHtml(pf.title) + '</b>';
+  elQLine.innerHTML = '👀 수많은 청중의 시선이 <b>당신</b>에게 집중됩니다';
   elFb.className = 'good';
-  elFb.textContent = withName(pf.line).split('\n').join(' ');
+  elFb.textContent = pf.title + '  ' + withName(pf.line).split('\n').join(' ');
   Sfx.ending();
   burst('good');
   setTimeout(() => burst('good'), 500);
@@ -1767,6 +1945,31 @@ function onPerformEnd(){
   elFb.className = '';
   elFb.textContent = '🎭 커튼이 닫힙니다… 잠시 후 결과가 발표됩니다!';
   Sfx.curtain();
+}
+
+/* ---------- 엔딩 직전 신문 기사 ---------- */
+function showNewspaper(){
+  const end = finaleEnding || decideEnding(S.stats);
+  const n = end.news || { headline: end.name, body: end.desc };
+  const d = new Date();
+
+  $('np-date').textContent = d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일';
+  $('np-headline').textContent = withName(n.headline);
+  $('np-text').textContent = withName(n.body);
+  $('np-caption').textContent = '▲ ' + PLAYER + ' (' + end.name + ')';
+  $('np-reporter').textContent = '다원일보 · 발표문화부 기자';
+
+  /* 사진 : 엔딩 이미지가 있으면 신문 사진처럼, 없으면 이모지 */
+  const box = $('np-photo');
+  box.innerHTML = '';
+  const img = document.createElement('img');
+  img.alt = end.name;
+  img.onerror = () => { box.innerHTML = '<span class="np-emoji">' + end.emoji + '</span>'; };
+  img.src = end.imagePath;
+  box.appendChild(img);
+
+  $('news-bg').classList.add('on');
+  Sfx.news();
 }
 
 /* ---------- 엔딩 판정 ---------- */
@@ -1909,6 +2112,15 @@ $('btn-start').addEventListener('click', () => {
   elFb.className = '';
   updateCombo();
   renderQuestion();
+});
+
+$('btn-news-next').addEventListener('click', () => {
+  Sfx.blip();
+  $('news-bg').classList.remove('on');
+  finale = null;
+  setStageLayer({actor:false, curtainOn:false});
+  setBlackout(false);
+  showEnding();
 });
 
 $('btn-resume').addEventListener('click', () => {

@@ -518,6 +518,9 @@ const STAT_META = {
 };
 const STAT_KEYS = ['logic','deliv','media','enga'];
 
+/* ★ 게임을 시작할 때 4개 스탯이 갖고 시작하는 기본 점수 */
+const STAT_START = 20;
+
 /* ★ 한 스탯이 올라갈 수 있는 최대 점수(= '달인' 엔딩 조건).
    여기까지만 오르고 더는 올라가지 않습니다.
    난이도 조절: 이 숫자를 올리면 달인 엔딩이 어려워지고, 내리면 쉬워집니다. */
@@ -696,7 +699,7 @@ SENTENCES.forEach(sen => {
      '한 스탯 900점' 엔딩 4개를 총점 엔딩보다 위에 두었습니다.
    ▶ cond 는 (스탯, 총점, 플레이시간초, 0점인스탯) 을 받습니다.
        cond:(s, total) => s.logic >= STAT_MAX   ← 논리력이 최대치일 때
-       cond:(s, total) => total >= 850          ← 총점이 850점 이상일 때
+       cond:(s, total) => total >= 900          ← 총점이 900점 이상일 때
    ================================================================== */
 const ENDINGS = [
   /* ===============================================================
@@ -786,6 +789,14 @@ const ENDINGS = [
            body:'PPT 슬라이드 한 장당 흰 바탕에 검은색 나눔고딕 10포인트 글씨가 5,000자씩 빽빽하게 들어차 있었다. 발표는 잘하는데 청중들의 시력이 단체로 0.5씩 떨어져 발표장에 안경사들이 출장 판매를 오는 기현상이 발생했다.' },
     cond:(s, total, sec, zeroPick) => zeroPick === 'media' },
 
+  { name:'발표장의 유령', emoji:'👻', hidden:true,
+    imagePath:'images/ghost.png',
+    stageImagePath:'images/ghost-stage.png',
+    desc:'청중 호응도 0점. 아무도 그가 무대에 있었다는 걸 기억하지 못했다…',
+    news:{ headline:'무대에 아무도 없었다?… 발표장에 떠도는 그림자',
+           body:'반응과 소통이 완전히 zero라 존재감이 완전히 휘발되어 버렸다. 발표가 끝났는데도 아무도 발표자가 무대에 있었다는 사실조차 인지하지 못하고, 결국 다음 학기에도 발표장을 떠나지 못한 채 밤마다 PPT 슬라이드를 넘겨주는 유령이 돼버렸다는…' },
+    cond:(s, total, sec, zeroPick) => zeroPick === 'enga' },
+
   { name:'아무말 대잔치', emoji:'🎪', hidden:true,
     imagePath:'images/nonsense.png',
     stageImagePath:'images/nonsense-stage.png',
@@ -804,8 +815,8 @@ const ENDINGS = [
     /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
     news:{ headline:'외계인, 15분 발표에 자진 회군',
            body:'국내, 국외, 우주 발표 대회까지 모조리 석권! 급기야 외계인 침략 당시 ‘지구 침략의 불합리성’에 대해 15분간 발표하여 외계인을 자진 회군시켰다.' },
-    desc:'총점 850점 이상! 논리·전달·매체·호응 무엇 하나 빠지지 않는 완전체.\n다원중 강당이 {이름}의 무대가 되었다!',
-    cond:(s, total) => total >= 850 },
+    desc:'총점 900점 이상! 논리·전달·매체·호응 무엇 하나 빠지지 않는 완전체.\n다원중 강당이 {이름}의 무대가 되었다!',
+    cond:(s, total) => total >= 900 },
 
   { name:'발표의 신', emoji:'⚡',
     imagePath:'images/god.png',
@@ -813,8 +824,8 @@ const ENDINGS = [
     /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
     news:{ headline:'스피커마저 감동… 하울링 스스로 멈춰',
            body:'그가 발표를 시작하자 강당의 마이크와 스피커마저 감동해 스스로 하울링을 멈추었다. 최근엔 30분 동안 진행한 ‘내일 점심 메뉴 발표’에 전교생과 교직원 전원이 눈물을 흘렸다고 한다.' },
-    desc:'총점 770점 이상! 무대에 서는 순간 공기가 달라진다.\n선생님도 감탄한 신의 경지.',
-    cond:(s, total) => total >= 770 },
+    desc:'총점 820점 이상! 무대에 서는 순간 공기가 달라진다.\n선생님도 감탄한 신의 경지.',
+    cond:(s, total) => total >= 820 },
 
   { name:'발표의 달인', emoji:'🏆',
     imagePath:'images/master.png',
@@ -822,8 +833,8 @@ const ENDINGS = [
     /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
     news:{ headline:'‘오늘 점심 뭐 먹죠?’ 질문에 20분 명발표',
            body:'어떠한 돌발 질문이 나와도 0.1초 만에 유려하게 대답한다. 최근엔 ‘오늘 점심 뭐 먹을까요?’라는 질문에 20분간 명발표를 진행했다.' },
-    desc:'총점 690점 이상! 어떤 주제를 줘도 척척 해내는 믿음직한 발표자.',
-    cond:(s, total) => total >= 690 },
+    desc:'총점 740점 이상! 어떤 주제를 줘도 척척 해내는 믿음직한 발표자.',
+    cond:(s, total) => total >= 740 },
 
   { name:'발표의 정석', emoji:'📘',
     imagePath:'images/standard.png',
@@ -831,8 +842,8 @@ const ENDINGS = [
     /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
     news:{ headline:'오차 0.01초… 종소리와 동시에 발표 종료',
            body:'서론-본론-결론이 정확히 33.3%씩 배분된 완벽한 레이아웃. 발표 시간을 측정했더니 오차 범위 0.01초로 정확히 종이 울렸다.' },
-    desc:'총점 610점 이상! 도입-전개-정리, 교과서 그대로 탄탄하게.\n이제 개성만 더하면 완벽!',
-    cond:(s, total) => total >= 610 },
+    desc:'총점 660점 이상! 도입-전개-정리, 교과서 그대로 탄탄하게.\n이제 개성만 더하면 완벽!',
+    cond:(s, total) => total >= 660 },
 
   { name:'준비된 발표생', emoji:'📝',
     imagePath:'images/ready.png',
@@ -840,8 +851,8 @@ const ENDINGS = [
     /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
     news:{ headline:'큐카드가 대백과사전 두께',
            body:'발표 대본에 ‘여기서 물 한 모금 마시기’, ‘여기서 약간 헛기침’까지 적어두는 철저함! 준비한 큐카드가 대백과사전 두께에 달한다.' },
-    desc:'총점 530점 이상! 자료도 챙기고 연습도 했다.\n준비하는 사람은 결국 잘하게 되어 있다.',
-    cond:(s, total) => total >= 530 },
+    desc:'총점 580점 이상! 자료도 챙기고 연습도 했다.\n준비하는 사람은 결국 잘하게 되어 있다.',
+    cond:(s, total) => total >= 580 },
 
   { name:'발표 꿈나무', emoji:'🌱',
     imagePath:'images/sprout.png',
@@ -849,8 +860,8 @@ const ENDINGS = [
     /* 엔딩 후 신문 기사 (headline = 기사 제목, body = 기사 내용) */
     news:{ headline:'마이크 거꾸로… 그래도 ‘감사합니다!’까지',
            body:'손은 덜덜 떨렸지만 ‘감사합니다!’까지 무사히 마쳤다. 비록 마이크를 거꾸로 들고 말했지만, 마음만은 누구보다 당당했다.' },
-    desc:'총점 430점 이상! 울렁증은 이제 그만.\n조금씩 자라나는 중인 새싹 발표자, 다음엔 더 잘할 수 있어!',
-    cond:(s, total) => total >= 430 },
+    desc:'총점 480점 이상! 울렁증은 이제 그만.\n조금씩 자라나는 중인 새싹 발표자, 다음엔 더 잘할 수 있어!',
+    cond:(s, total) => total >= 480 },
 
   /* 위 조건에 하나도 해당하지 않을 때 (총점 500점 미만) */
   { name:'교무실로.', emoji:'🏃‍♂️',
@@ -1721,7 +1732,7 @@ function resetState(){
     solved: 0,                                   /* 맞힌 문항 수 */
     combo: 0, maxCombo: 0,                       /* 콤보 */
     tries: 0,                                    /* 현재 문제 시도 횟수 */
-    stats: { logic:0, deliv:0, media:0, enga:0 },
+    stats: { logic:STAT_START, deliv:STAT_START, media:STAT_START, enga:STAT_START },
     playMs: 0,                 /* 지금까지 플레이한 시간 (이어서 하기 하면 누적) */
     tickStart: Date.now(),     /* 이번에 게임을 켠 시각 */
     finished: false

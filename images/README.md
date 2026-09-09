@@ -29,6 +29,7 @@
 | 🎧 ASMR 유튜버 | 전달력 0점 | `asmr.png` | `asmr-stage.png` |
 | 📄 텍스트 테러리스트 | 매체 활용도 0점 | `textbomb.png` | `textbomb-stage.png` |
 | 🎪 아무말 대잔치 | 논리력 0점 | `nonsense.png` | `nonsense-stage.png` |
+| 👻 발표장의 유령 | 청중 호응도 0점 | `ghost.png` | `ghost-stage.png` |
 
 ## 그림 만들 때
 

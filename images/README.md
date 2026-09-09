@@ -8,16 +8,16 @@
 
 | 엔딩 | 결과 화면용 (세로로 긴 그림) | 강당 무대용 (배경 없는 그림) |
 |---|---|---|
-| 🧠 말싸움의 달인 (논리 900) | `logic.png` | `logic-stage.png` |
-| 🎙️ 스피치의 달인 (전달 900) | `speech.png` | `speech-stage.png` |
-| 💻 PPT의 달인 (매체 900) | `ppt.png` | `ppt-stage.png` |
-| ❤️ 다원중 인기쟁이 (호응 900) | `popular.png` | `popular-stage.png` |
-| 👑 전설의 발표왕 (총점 1050+) | `king.png` | `king-stage.png` |
-| ⚡ 발표의 신 (총점 950+) | `god.png` | `god-stage.png` |
-| 🏆 발표의 달인 (총점 850+) | `master.png` | `master-stage.png` |
-| 📘 발표의 정석 (총점 750+) | `standard.png` | `standard-stage.png` |
-| 📝 준비된 발표생 (총점 650+) | `ready.png` | `ready-stage.png` |
-| 🌱 발표 꿈나무 (총점 500+) | `sprout.png` | `sprout-stage.png` |
+| 🧠 말싸움의 달인 (논리 750 만점) | `logic.png` | `logic-stage.png` |
+| 🎙️ 스피치의 달인 (전달 750 만점) | `speech.png` | `speech-stage.png` |
+| 💻 PPT의 달인 (매체 750 만점) | `ppt.png` | `ppt-stage.png` |
+| ❤️ 다원중 인기쟁이 (호응 750 만점) | `popular.png` | `popular-stage.png` |
+| 👑 전설의 발표왕 (총점 850+) | `king.png` | `king-stage.png` |
+| ⚡ 발표의 신 (총점 770+) | `god.png` | `god-stage.png` |
+| 🏆 발표의 달인 (총점 690+) | `master.png` | `master-stage.png` |
+| 📘 발표의 정석 (총점 610+) | `standard.png` | `standard-stage.png` |
+| 📝 준비된 발표생 (총점 530+) | `ready.png` | `ready-stage.png` |
+| 🌱 발표 꿈나무 (총점 430+) | `sprout.png` | `sprout-stage.png` |
 | 🏃 교무실로. (그 외) | `teacher.png` | `teacher-stage.png` |
 
 ## 그림 만들 때

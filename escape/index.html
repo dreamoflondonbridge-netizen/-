@@ -194,7 +194,8 @@ button{background:none;border:0;cursor:pointer}
   padding:20px 20px 22px;animation:rise .26s cubic-bezier(.2,.9,.3,1)
 }
 .sheet.wide{width:min(940px,100%)}
-@keyframes rise{from{transform:translateY(16px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+@keyframes rise{from{transform:translateY(18px) scale(.955);opacity:0;filter:blur(6px)}
+  to{transform:none;opacity:1;filter:blur(0)}}
 .sheet h2{font-family:var(--f-disp);font-size:19px;font-weight:400;letter-spacing:.03em;margin-bottom:3px}
 .sheet .sub{font-size:12.5px;color:var(--dust);margin-bottom:15px}
 .sheet p{font-size:14.5px;color:#c7cfca}
@@ -674,6 +675,265 @@ button{background:none;border:0;cursor:pointer}
 .flick{animation:flick 4.5s infinite}
 @keyframes flick{0%,97%,100%{opacity:1}97.5%{opacity:.25}98.2%{opacity:.9}98.7%{opacity:.35}}
 .credit{margin-top:16px;font-size:11.5px;color:#4e5856}
+</style>
+
+<style>
+/* ==========================================================================
+   12. 연출(ACT) — 클릭하면 실제로 열리고 걷히고 찢어진다
+   ========================================================================== */
+.act{position:relative;width:100%;aspect-ratio:16/8;overflow:hidden;background-color:#0a0e0f;
+  border:1px solid var(--edge);border-radius:2px;perspective:1000px;isolation:isolate}
+.act i{position:absolute;display:block}
+.actline{position:absolute;left:6%;right:6%;top:50%;transform:translateY(-50%) scale(.96);
+  z-index:6;text-align:center;opacity:0;transition:opacity .8s,transform .8s;pointer-events:none}
+.actline span{font-family:var(--f-hand);font-size:clamp(19px,4.4vw,29px);line-height:1.28;
+  color:#fff6e2;text-shadow:0 2px 14px rgba(0,0,0,.95),0 0 26px rgba(240,165,58,.5)}
+.act.revealed .actline{opacity:1;transform:translateY(-50%) scale(1)}
+.act .scrim{inset:0;z-index:5;opacity:0;transition:opacity .8s;
+  background:radial-gradient(ellipse 78% 36% at 50% var(--ty,50%),rgba(4,6,7,.68),transparent 74%),
+   linear-gradient(180deg,rgba(4,6,7,.32),rgba(4,6,7,.08) 45%,rgba(4,6,7,.6))}
+.act.revealed .scrim{opacity:1}
+.act.hasimg .back,.act.hasimg .inside,.act.hasimg .stuff,.act.hasimg .cells,
+.act.hasimg .boards,.act.hasimg .sky,.act.hasimg .files,.act.hasimg .fill2,
+.act.hasimg .body2,.act.hasimg .f,.act.hasimg .bookbg,.act.hasimg .hole,.act.hasimg .wallL,
+.act.hasimg .wallR{background:none;background-image:inherit;background-size:cover;
+  background-position:center;background-color:transparent}
+.act-print .actline{top:67%}  .act-print .scrim{--ty:67%}
+.act-drawer .actline{top:60%}  .act-drawer .scrim{--ty:60%}
+.act-tape .actline{top:48%}
+.actafter{margin-top:14px;opacity:0;transition:opacity .5s}
+.actafter.on{opacity:1}
+
+/* 화이트보드 날개가 열린다 */
+.act-wing{background:linear-gradient(170deg,#2b3335,#141a1c)}
+.act-wing .back{inset:0;background:linear-gradient(168deg,#b9bdb6,#868d86)}
+.act-wing .back::after{content:"";position:absolute;left:10%;right:10%;bottom:14%;height:4px;
+  background:rgba(40,50,45,.3)}
+.act-wing .wing{inset:0;transform-origin:left center;backface-visibility:hidden;
+  background:linear-gradient(102deg,#aeb2ab,#767c75);border-right:3px solid #3a4244;
+  box-shadow:14px 0 40px rgba(0,0,0,.6);transition:transform 1.5s cubic-bezier(.42,0,.18,1)}
+.act-wing.go .wing{transform:rotateY(-112deg)}
+
+/* 커튼이 걷힌다 + 번개 */
+.act-curtain{background:#080f12}
+.act-curtain .sky{inset:0;background:linear-gradient(168deg,#243740,#0a1216)}
+.act-curtain.go .sky{animation:skyflash 1.6s .55s ease-out}
+@keyframes skyflash{0%{filter:brightness(1)}6%{filter:brightness(7)}11%{filter:brightness(1.2)}
+  17%{filter:brightness(5)}26%{filter:brightness(1)}100%{filter:brightness(1)}}
+.act-curtain .grid{inset:0;background:linear-gradient(90deg,transparent 48.6%,#2a2720 48.6% 51.4%,transparent 51.4%),
+  linear-gradient(180deg,transparent 47%,#2a2720 47% 53%,transparent 53%)}
+.act-curtain .rain{inset:-20%;opacity:.5;
+  background:repeating-linear-gradient(76deg,rgba(190,220,230,.35) 0 1px,transparent 1px 26px);
+  animation:rainfall .55s linear infinite}
+@keyframes rainfall{to{transform:translate3d(-26px,110px,0)}}
+.act-curtain .cl,.act-curtain .cr{top:-2%;bottom:-2%;width:54%;z-index:3;
+  background:repeating-linear-gradient(90deg,#3b2731 0 6%,#26171f 6% 12%);
+  box-shadow:0 0 40px rgba(0,0,0,.8) inset;
+  transition:transform 1.6s cubic-bezier(.52,0,.16,1)}
+.act-curtain .cl{left:0}.act-curtain .cr{right:0}
+.act-curtain.go .cl{transform:translateX(-92%)}
+.act-curtain.go .cr{transform:translateX(92%)}
+.act-curtain .sill{left:0;right:0;bottom:0;height:12%;background:linear-gradient(180deg,#3a3227,#201a12);z-index:4}
+.act-curtain .slip2{left:44%;bottom:9%;width:16%;height:16%;background:linear-gradient(176deg,#ded5bd,#b6ad95);
+  transform:rotate(-7deg);z-index:4;box-shadow:0 4px 10px rgba(0,0,0,.6)}
+
+/* 미닫이문이 닫힌다 */
+.act-slam{background:linear-gradient(96deg,#2b2519,#16120c)}
+.act-slam .frame{inset:0;background:linear-gradient(100deg,#3a3327,#231d14);
+  box-shadow:inset 0 0 60px rgba(0,0,0,.8)}
+.act-slam .panel{top:0;bottom:0;left:0;right:0;z-index:3;transform:translateX(-101%);
+  background:linear-gradient(96deg,#4a412f,#2c2519);border-right:5px solid #14100a;
+  transition:transform .42s cubic-bezier(.9,.02,1,.6)}
+.act-slam .panel::after{content:"";position:absolute;left:14%;right:14%;top:10%;height:42%;
+  background:linear-gradient(170deg,#22323a,#0d161a);border:4px solid #14100a}
+.act-slam.go .panel{transform:translateX(0)}
+.act-slam.go{animation:shk .4s .4s}
+.act-slam .dust{inset:0;z-index:4;opacity:0;
+  background:radial-gradient(ellipse 60% 24% at 50% 92%,rgba(210,196,160,.5),transparent 70%)}
+.act-slam.go .dust{animation:puff 1.5s .42s ease-out}
+@keyframes puff{0%{opacity:0;transform:translateY(12%) scaleX(.7)}
+  18%{opacity:.85}100%{opacity:0;transform:translateY(-16%) scaleX(1.5)}}
+
+/* 판이 뒤집힌다 (주기율표) */
+.act-flip{background:#10161a}
+.act-flip .card3d{inset:0;transform-style:preserve-3d;transition:transform 1.4s cubic-bezier(.38,0,.2,1)}
+.act-flip.go .card3d{transform:rotateY(180deg)}
+.act-flip .f,.act-flip .b{inset:0;backface-visibility:hidden}
+.act-flip .f{background:linear-gradient(170deg,#d7cfb8,#a49d87);
+  background-image:linear-gradient(170deg,#d7cfb8,#a49d87),
+   repeating-linear-gradient(90deg,rgba(60,60,50,.45) 0 1px,transparent 1px 9%),
+   repeating-linear-gradient(0deg,rgba(60,60,50,.45) 0 1px,transparent 1px 14%)}
+.act-flip .b{transform:rotateY(180deg);background:linear-gradient(170deg,#b8b09a,#8c8572)}
+
+/* 책장이 넘어간다 (출석부) */
+.act-pages{background:linear-gradient(178deg,#241c16,#100b08)}
+.act-pages .bookbg{left:8%;right:8%;top:8%;bottom:8%;background:linear-gradient(176deg,#d8cfb6,#aba28a)}
+.act-pages .pg{left:50%;right:8%;top:8%;bottom:8%;transform-origin:left center;backface-visibility:hidden;
+  background:linear-gradient(96deg,#e0d8c0,#c2b9a0);border-left:1px solid #9a927c;
+  transition:transform 1s cubic-bezier(.4,0,.25,1)}
+.act-pages.go .pg{transform:rotateY(-168deg)}
+.act-pages.go .pg:nth-of-type(2){transition-delay:.16s}
+.act-pages.go .pg:nth-of-type(3){transition-delay:.32s}
+.act-pages.go .pg:nth-of-type(4){transition-delay:.48s}
+.act-pages .ink{left:54%;right:12%;top:16%;height:8%;background:#15130f;opacity:.85}
+.act-pages .ink.i2{top:30%;right:22%}.act-pages .ink.i3{top:44%;right:16%}
+
+/* 테이프가 뜯기고 상자가 열린다 */
+.act-tape{background:linear-gradient(178deg,#6b5537,#31240f)}
+.act-tape .inner{left:12%;right:12%;top:14%;bottom:6%;background:linear-gradient(180deg,#120d08,#241a10);
+  box-shadow:inset 0 10px 26px rgba(0,0,0,.8)}
+.act-tape .lid{left:12%;right:12%;height:44%;background:linear-gradient(176deg,#8a6f4a,#5b4629);
+  border:1px solid #2d2213;transition:transform 1.1s cubic-bezier(.4,0,.2,1)}
+.act-tape .lid.l{top:14%;transform-origin:top center}
+.act-tape .lid.r{bottom:6%;transform-origin:bottom center}
+.act-tape.go .lid.l{transform:rotateX(118deg)}
+.act-tape.go .lid.r{transform:rotateX(-118deg)}
+.act-tape .tape{left:12%;right:12%;top:47%;height:7%;z-index:4;background:rgba(224,214,190,.55);
+  transform-origin:center;transition:transform .5s ease-in}
+.act-tape.go .tape{transform:scaleX(0)}
+.act-tape .bloodspot{left:14%;top:16%;width:28%;height:26%;z-index:3;opacity:.7;
+  border-radius:54% 40% 60% 44%;filter:blur(2px);
+  background:radial-gradient(ellipse at 40% 36%,rgba(110,10,14,.9),transparent 74%)}
+.act-tape .out{left:17%;right:17%;top:38%;height:40%;z-index:3;opacity:0;
+  background:linear-gradient(176deg,#ded5bd,#bbb29a);box-shadow:0 8px 20px rgba(0,0,0,.6);
+  transition:transform 1s .7s cubic-bezier(.3,1.3,.5,1),opacity .5s .7s;transform:translateY(40%)}
+.act-tape.go .out{opacity:1;transform:translateY(-24%)}
+
+/* 틈새에서 종이가 빠져나온다 */
+.act-crack{background:linear-gradient(170deg,#232b2e,#0c1214)}
+.act-crack .wallL{left:0;top:0;bottom:0;width:46%;background:linear-gradient(90deg,#2d2620,#443a2c)}
+.act-crack .wallR{right:0;top:0;bottom:0;width:46%;background:linear-gradient(270deg,#2d2620,#443a2c)}
+.act-crack .dark{left:46%;right:46%;top:0;bottom:0;background:#05080a}
+.act-crack .pp{left:41%;width:18%;top:64%;height:36%;background:linear-gradient(176deg,#ded5bd,#b7ae96);
+  transform:translateY(46%) rotate(2deg);box-shadow:0 6px 16px rgba(0,0,0,.7);
+  transition:transform 1.2s cubic-bezier(.3,1.1,.45,1)}
+.act-crack.go .pp{transform:translateY(-34%) rotate(-4deg)}
+
+/* 캐비닛 문이 열린다 */
+.act-cab{background:#0a0d0e}
+.act-cab .inside{inset:0;background:linear-gradient(180deg,#211d18,#0e0c0a)}
+.act-cab .files{left:10%;right:10%;bottom:6%;top:22%;
+  background:repeating-linear-gradient(90deg,#b9ac8c 0 5%,#9c8f72 5% 6.5%,#cabda0 6.5% 11%);
+  box-shadow:inset 0 14px 30px rgba(0,0,0,.65)}
+.act-cab .dr{top:0;bottom:0;width:50%;z-index:3;background:linear-gradient(96deg,#3b433f,#232a28);
+  border:1px solid #101413;transition:transform 1.3s cubic-bezier(.4,0,.2,1)}
+.act-cab .dr.l{left:0;transform-origin:left center}
+.act-cab .dr.r{right:0;transform-origin:right center}
+.act-cab.go .dr.l{transform:rotateY(-116deg)}
+.act-cab.go .dr.r{transform:rotateY(116deg)}
+
+/* 서랍이 빠져나온다 */
+.act-drawer{background:linear-gradient(180deg,#1b2122,#0a0e0f)}
+.act-drawer .hole{left:8%;right:8%;top:6%;bottom:0;background:#05080a;
+  box-shadow:inset 0 18px 40px rgba(0,0,0,.9)}
+.act-drawer .box{left:8%;right:8%;top:16%;height:96%;background:linear-gradient(178deg,#3d4948,#20292a);
+  border:1px solid #0d1213;border-radius:2px 2px 0 0;transform:translateY(56%);
+  transition:transform 1.1s cubic-bezier(.3,1.05,.45,1);box-shadow:0 -10px 30px rgba(0,0,0,.7)}
+.act-drawer.go .box{transform:translateY(6%)}
+.act-drawer .box::after{content:"";position:absolute;left:38%;right:38%;top:8%;height:7%;border-radius:2px;
+  background:#7d8886}
+.act-drawer .junk{left:16%;right:16%;top:34%;height:30%;opacity:0;transition:opacity .5s .8s;
+  background:radial-gradient(ellipse 22% 50% at 18% 50%,#6b6252,transparent 70%),
+   radial-gradient(ellipse 18% 40% at 48% 60%,#8a7f66,transparent 70%),
+   radial-gradient(ellipse 20% 46% at 80% 45%,#57614f,transparent 70%)}
+.act-drawer.go .junk{opacity:1}
+
+/* 복사기에서 종이가 나온다 */
+.act-print{background:linear-gradient(100deg,#39413f,#1e2423)}
+.act-print .body2{inset:0;background:linear-gradient(100deg,#3c4442,#232928)}
+.act-print .lid2{left:8%;right:8%;top:8%;height:16%;background:linear-gradient(180deg,#1a2a2c,#0d1618);
+  border:1px solid #0a0e0f;overflow:hidden}
+.act-print .beam{top:0;bottom:0;width:14%;background:linear-gradient(90deg,transparent,#6fe0c4,transparent);
+  opacity:0;left:-14%}
+.act-print.go .beam{animation:scanbeam 1.2s .1s ease-in-out}
+@keyframes scanbeam{0%{opacity:0;left:-14%}10%{opacity:.9}90%{opacity:.9}100%{opacity:0;left:100%}}
+.act-print .slot{left:13%;right:13%;top:42%;height:4.5%;background:#0b1010;z-index:4;
+  box-shadow:0 4px 10px rgba(0,0,0,.75)}
+.act-print .sheetout{left:18%;right:18%;top:45%;height:45%;z-index:3;
+  background:linear-gradient(176deg,#ded5bd,#bfb69e);
+  transform:translateY(-99%);transition:transform 1.15s 1.15s cubic-bezier(.35,1.05,.5,1);
+  box-shadow:0 10px 22px rgba(0,0,0,.6)}
+.act-print.go .sheetout{transform:translateY(0)}
+
+/* 휴대폰이 울린다 */
+.act-phone{background:radial-gradient(ellipse at 50% 50%,#131a1c,#05090a)}
+.act-phone .ph{left:38%;width:24%;top:8%;height:84%;border-radius:14px;border:2px solid #333b3d;
+  background:linear-gradient(180deg,#14191b,#080c0d)}
+.act-phone.go .ph{animation:buzz .12s 10 alternate}
+@keyframes buzz{from{transform:translate(-2px,1px) rotate(-.6deg)}to{transform:translate(2px,-1px) rotate(.6deg)}}
+.act-phone .scr{left:41.5%;width:17%;top:13%;height:74%;border-radius:6px;opacity:0;
+  background:linear-gradient(180deg,#0f2b26,#08151a);box-shadow:0 0 40px rgba(111,224,196,.45)}
+.act-phone.go .scr{animation:screenon 1.4s .5s forwards}
+@keyframes screenon{0%{opacity:0}12%{opacity:.9}18%{opacity:.15}28%{opacity:1}40%{opacity:.5}100%{opacity:1}}
+
+/* CRT 전원이 들어온다 */
+.act-crt{background:#05080a}
+.act-crt .tube{left:6%;right:6%;top:8%;bottom:8%;border-radius:8px;background:#070d0e;
+  box-shadow:inset 0 0 40px rgba(0,0,0,.9)}
+.act-crt .glow{left:8%;right:8%;top:50%;height:3px;background:#d8f5ec;opacity:0;
+  box-shadow:0 0 22px #6fe0c4;transform-origin:center}
+.act-crt.go .glow{animation:crtline 1.5s forwards}
+@keyframes crtline{0%{opacity:0;transform:scaleX(0)}
+  14%{opacity:1;transform:scaleX(1)}38%{opacity:1;height:3px;top:50%}
+  60%{opacity:.9;height:84%;top:8%}100%{opacity:.16;height:84%;top:8%}}
+.act-crt .fill2{left:8%;right:8%;top:8%;height:84%;opacity:0;border-radius:4px;
+  background:linear-gradient(170deg,#123b3a,#061a1f);transition:opacity .7s .9s}
+.act-crt.go .fill2{opacity:1}
+.act-crt .lines{left:8%;right:8%;top:8%;height:84%;z-index:4;opacity:.35;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.55) 0 1px,transparent 1px 3px);
+  animation:roll 7s linear infinite}
+@keyframes roll{to{background-position:0 60px}}
+
+/* 손전등이 훑는다 (교탁 아래) */
+.act-sweep{background:#05070a}
+.act-sweep .stuff{inset:0;background:linear-gradient(180deg,#2a2118,#100b06);
+  background-image:radial-gradient(ellipse 18% 30% at 22% 62%,#4a4234,transparent 70%),
+   radial-gradient(ellipse 14% 24% at 58% 70%,#3b3527,transparent 70%),
+   linear-gradient(180deg,#2a2118,#100b06)}
+.act-sweep .glint{left:66%;top:48%;width:16%;height:18%;border-radius:40%;opacity:0;
+  background:radial-gradient(circle,#fff3d0,rgba(240,200,120,.1) 70%,transparent);
+  transition:opacity .5s 1.15s}
+.act-sweep.go .glint{opacity:1;animation:twink 1.6s 1.2s ease-in-out}
+@keyframes twink{0%,100%{filter:brightness(1)}45%{filter:brightness(1.9)}}
+.act-sweep .cone{inset:0;z-index:3;background:radial-gradient(circle 26% at var(--sx,-20%) 55%,
+  rgba(250,235,190,.4),rgba(0,0,0,.85) 62%,rgba(0,0,0,.94));}
+.act-sweep.go .cone{animation:sweepx 1.7s ease-in-out forwards}
+@keyframes sweepx{0%{--sx:-15%}100%{--sx:72%}}
+@property --sx{syntax:'<percentage>';inherits:true;initial-value:-15%}
+
+/* 사물함 문이 열린다 */
+.act-locker{background:#080b0c}
+.act-locker .cells{inset:0;background:linear-gradient(180deg,#1a1f21,#0a0e0f);
+  background-image:repeating-linear-gradient(0deg,transparent 0 32%,rgba(0,0,0,.6) 32% 34%),
+   repeating-linear-gradient(90deg,transparent 0 24%,rgba(0,0,0,.6) 24% 26%)}
+.act-locker .lit{left:38%;width:24%;top:34%;height:32%;background:linear-gradient(180deg,#0f2b26,#08151a);
+  box-shadow:0 0 34px rgba(111,224,196,.4);opacity:0;transition:opacity .6s 1s}
+.act-locker.go .lit{opacity:1}
+.act-locker .dr2{inset:0;z-index:3;transform-origin:left center;
+  background:linear-gradient(96deg,#3d4448,#262d30);border-right:2px solid #101414;transition:transform 1.3s cubic-bezier(.4,0,.2,1)}
+.act-locker.go .dr2{transform:rotateY(-108deg)}
+
+/* 마룻바닥 종이가 나부낀다 */
+.act-floor{background:linear-gradient(180deg,#241f1a,#0d0b09)}
+.act-floor .boards{inset:0;background:repeating-linear-gradient(92deg,#2a231b 0 11%,#1d1812 11% 11.6%)}
+.act-floor .pp2{left:40%;width:22%;top:62%;height:26%;background:linear-gradient(176deg,#d8cfb6,#a79f88);
+  transform:rotate(-12deg);box-shadow:2px 6px 14px rgba(0,0,0,.75);
+  transition:transform 1.1s cubic-bezier(.3,1.1,.45,1)}
+.act-floor.go .pp2{transform:translateY(-36%) rotate(6deg)}
+
+/* 방 분위기 — 형광등 깜빡임 · 지나가는 그림자 */
+.roomflick{position:absolute;inset:0;z-index:6;pointer-events:none;background:#dfe7ea;opacity:0}
+.roomflick.on{animation:rf 1.1s steps(1,end)}
+@keyframes rf{0%{opacity:0}6%{opacity:.16}9%{opacity:0}15%{opacity:.1}19%{opacity:0}
+  46%{opacity:.14}50%{opacity:0}56%{opacity:.07}60%{opacity:0}100%{opacity:0}}
+.shadowpass{position:absolute;top:-10%;bottom:-10%;width:38%;z-index:6;pointer-events:none;left:-45%;
+  background:linear-gradient(90deg,transparent,rgba(0,0,0,.82) 35% 65%,transparent);filter:blur(9px)}
+.shadowpass.go{animation:spass 3.4s ease-in-out forwards}
+@keyframes spass{to{left:110%}}
+.sway{animation:sway 6s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:rotate(-.7deg)}50%{transform:rotate(.7deg)}}
+.breathe{animation:breathe 5.5s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5%)}}
 </style>
 
 <div id="app" class="nosel">
@@ -1160,6 +1420,31 @@ function bindDnD(root,opt){
   });
   return {clear:clearSel};
 }
+/* 연출 팝업 — 장면이 실제로 열리고 걷힌 뒤에 문장이 떠오른다 */
+function actPop(o){
+  const hasimg=has(o.key);
+  pop({title:o.title,sub:o.sub,wide:o.wide,
+    html:'<div class="act '+o.cls+(hasimg?' hasimg':'')+'" style="'+bg(o.key)+'">'+
+      (o.scene||'')+'<i class="scrim"></i>'+
+      (o.text?'<div class="actline"><span>'+o.text+'</span></div>':'')+'</div>'+
+      (o.hint?'<p class="hint">'+o.hint+'</p>':'')+
+      (o.after?'<div class="actafter" id="af">'+o.after+'</div>':'')+
+      (o.text?'<div class="row"><button class="btn" data-ok style="visibility:hidden">'+
+        (o.btn||'쪽지를 챙긴다')+'</button></div>':''),
+    onMount(sheet,w){
+      const el=sheet.querySelector('.act');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('go')));
+      if(o.sfx) o.sfx();
+      const b=sheet.querySelector('[data-ok]');
+      if(b) b.onclick=()=>{ closePop(w); if(o.onOk) o.onOk(); };
+      setTimeout(()=>{
+        el.classList.add('revealed');
+        if(b) b.style.visibility='';
+        const af=sheet.querySelector('#af'); if(af) af.classList.add('on');
+        if(o.onShown) o.onShown(sheet,w);
+      },o.dur||1500);
+    }});
+}
 function needItem(k,msg){
   if(hasItem(k)) return true;
   pop({title:'손이 닿지 않는다',html:'<p>'+msg+'</p>'});
@@ -1241,46 +1526,41 @@ function boardPop(){
 /* --- 화이트보드 날개 --- */
 function wbPop(){
   SFX.creak();
-  pop({title:'화이트보드',img:'s1-whiteboard',sub:'접혀 있던 날개가 삐걱이며 열린다.',
-    html:'<div class="mini" style="padding:26px 18px;display:grid;place-items:center;'+
-      'background:linear-gradient(170deg,#b9bdb6,#8d938c)">'+
-      '<div class="revealtext" id="wbt" style="color:#1d2422;opacity:0;transition:opacity 1.1s;text-align:center">'+
-      '소설책을 읽으면<br>독자의 정신이 성장한다.</div></div>'+
-      '<div class="row"><button class="btn" data-ok style="display:none">쪽지로 옮겨 적는다</button></div>',
-    onMount(sheet,w){
-      setTimeout(()=>{ sheet.querySelector('#wbt').style.opacity='1';
-        sheet.querySelector('[data-ok]').style.display=''; },600);
-      sheet.querySelector('[data-ok]').onclick=()=>{ closePop(w); markDone('wb'); award('a6'); };
-    }});
+  actPop({title:'화이트보드',sub:'접혀 있던 날개를 당기자 삐걱이며 열린다.',
+    key:'s1-whiteboard',cls:'act-wing',dur:1750,btn:'옮겨 적는다',
+    scene:'<i class="back"></i><i class="wing"></i>',
+    text:'소설책을 읽으면<br>독자의 정신이 성장한다.',
+    sfx(){ setTimeout(()=>SFX.creak(),120); setTimeout(()=>SFX.clunk(),1450); },
+    onOk(){ markDone('wb'); award('a6'); }});
 }
 /* --- 앞문 --- */
 function frontDoorPop(){
-  SFX.clunk(); shake();
-  pop({title:'앞문',img:'s1-frontdoor',sub:'손을 대자마자 미닫이문이 스스로 닫혔다. 철컥.',
-    html:'<div class="mini" style="padding:26px 18px;display:grid;place-items:center;'+
-      'background:linear-gradient(96deg,#3a3327,#231d14)">'+
-      '<div class="revealtext" style="text-align:center">문틀 안쪽에 새겨져 있다<br>'+
-      '<span style="color:var(--amber)">소설책을 읽는 것은 독서이다.</span></div></div>'+
-      '<div class="row"><button class="btn" data-ok>문틀의 글씨를 옮겨 적는다</button></div>',
-    onMount(sheet,w){ sheet.querySelector('[data-ok]').onclick=()=>{ closePop(w); markDone('door1'); award('a5'); }; }});
+  actPop({title:'앞문',sub:'손을 대자마자 미닫이문이 스스로 닫혔다.',
+    key:'s1-frontdoor',cls:'act-slam',dur:1700,btn:'문틀의 글씨를 옮겨 적는다',
+    scene:'<i class="frame"></i><i class="panel"></i><i class="dust"></i>',
+    text:'문틀 안쪽에 새겨져 있다<br>소설책을 읽는 것은 독서이다.',
+    sfx(){ setTimeout(()=>{ SFX.clunk(); SFX.thud(); shake(); },400); },
+    onOk(){ markDone('door1'); award('a5'); }});
 }
 /* --- 교탁 --- */
 function podiumPop(){
   if(hasItem('uv')){ pop({title:'교탁',html:'<p>교탁 아래는 이제 텅 비었다.</p>'}); return; }
-  pop({title:'교탁',img:'s1-podium',sub:'아래쪽 선반을 더듬는다.',
-    html:'<p>먼지 뭉치 사이에서 차가운 금속이 잡힌다. 자외선 손전등이다. 스위치는 아직 살아 있다.</p>'+
-      '<div class="row"><button class="btn" data-ok>🔦 UV 랜턴을 꺼낸다</button></div>',
-    onMount(sheet,w){ sheet.querySelector('[data-ok]').onclick=()=>{ giveItem('uv'); markDone('podium'); closePop(w); }; }});
+  actPop({title:'교탁',sub:'몸을 숙여 아래쪽 선반을 손으로 훑는다.',
+    key:'s1-podium',cls:'act-sweep',dur:1900,btn:'🔦 UV 랜턴을 꺼낸다',
+    scene:'<i class="stuff"></i><i class="glint"></i><i class="cone"></i>',
+    text:'먼지 뭉치 사이에서<br>차가운 금속이 잡혔다.',
+    sfx(){ nz({filt:'bandpass',ff:1200,q:1.2,d:1.4,g:.06}); },
+    onOk(){ giveItem('uv'); markDone('podium'); }});
 }
 /* --- 출석부 --- */
 function rollPop(){
-  SFX.creak();
-  pop({title:'출석부',img:'s1-rollbook',sub:'표지를 넘기자 종이가 끼익 울었다.',
-    html:'<p>이름 칸이 전부 까맣게 덧칠돼 있다. 마지막 장에만 다른 필체가 남아 있다.</p>'+
-      '<div class="mini" style="padding:22px;display:grid;place-items:center;background:#1a1412">'+
-      '<div class="revealtext" style="text-align:center">독서는 독자의 정신을 성장시킨다.</div></div>'+
-      '<div class="row"><button class="btn" data-ok>마지막 장을 뜯는다</button></div>',
-    onMount(sheet,w){ sheet.querySelector('[data-ok]').onclick=()=>{ closePop(w); markDone('roll'); award('a4'); }; }});
+  actPop({title:'출석부',sub:'표지를 넘기자 종이가 끼익 울며 저절로 넘어간다.',
+    key:'s1-rollbook',cls:'act-pages',dur:1800,btn:'마지막 장을 뜯는다',
+    scene:'<i class="bookbg"></i><i class="ink"></i><i class="ink i2"></i><i class="ink i3"></i>'+
+      '<i class="pg"></i><i class="pg"></i><i class="pg"></i><i class="pg"></i>',
+    text:'이름 칸은 전부 까맣게 덧칠돼 있다<br>독서는 독자의 정신을 성장시킨다.',
+    sfx(){ SFX.creak(); [0,.16,.32,.48].forEach(t=>setTimeout(()=>SFX.paper(),t*1000+200)); },
+    onOk(){ markDone('roll'); award('a4'); }});
 }
 /* --- 교탁 앞 책상: UV --- */
 function deskFrontPop(){
@@ -1296,20 +1576,23 @@ function deskFrontPop(){
 }
 /* --- 맨 뒷자리 서랍 --- */
 function drawerPop(){
-  pop({title:'맨 뒷자리 책상',img:'s1-drawer',sub:'서랍을 당기자 먼지와 함께 잡동사니가 쏟아진다.',
-    html:'<div class="gridpick">'+
+  actPop({title:'맨 뒷자리 책상',sub:'서랍을 당기자 먼지와 함께 잡동사니가 쏟아진다.',
+    key:'s1-drawer',cls:'act-drawer',dur:1300,
+    scene:'<i class="hole"></i><i class="box"></i><i class="junk"></i>',
+    sfx(){ nz({filt:'lowpass',ff:600,d:.9,g:.1}); setTimeout(()=>SFX.clunk(),900); },
+    after:'<div class="gridpick">'+
       '<button class="pick dim"><span class="em">🥤</span>찌그러진 우유갑</button>'+
       '<button class="pick dim"><span class="em">✏️</span>부러진 연필 세 자루</button>'+
       '<button class="pick" data-p="1"><span class="em">📄</span>접힌 쪽지</button>'+
       '<button class="pick" data-p="2"><span class="em">📄</span>구겨진 쪽지</button>'+
       '<button class="pick dim"><span class="em">🍬</span>굳어버린 사탕</button>'+
       '<button class="pick dim"><span class="em">🧦</span>한 짝뿐인 실내화</button></div>',
-    onMount(sheet,w){
+    onShown(sheet,w){
       sheet.querySelectorAll('.pick.dim').forEach(b=>b.onclick=()=>{SFX.click();toast('쓸모없는 쓰레기다.');});
       sheet.querySelector('[data-p="1"]').onclick=()=>{
         SFX.paper();
-        pop({cls:'notepop',html:'<div class="note" style="transform:rotate(1.4deg)"><div class="torn t"></div>'+
-          '<div class="kind">누군가 접어 둔 쪽지</div>'+
+        pop({cls:'notepop',html:'<div class="note" style="transform:rotate(1.4deg);'+bg('note')+'">'+
+          '<div class="torn t"></div><div class="kind">누군가 접어 둔 쪽지</div>'+
           '<div class="txt" style="color:#5a1a1a">여기서 나가고 싶다...</div>'+
           '<div class="torn b"></div></div>'});
       };
@@ -1336,13 +1619,13 @@ ROOMS.push({
         else { SFX.clunk(); toast('초침이 멈췄다. 학교의 시간도 멈춘 것 같다.'); } };
       run();
     }},
-    {id:'chair',n:'의자',x:65,y:52,w:12,h:24,scare:1,art:'<i class="a chair"></i>',act(el){
+    {id:'chair',n:'의자',idle:'breathe',x:65,y:52,w:12,h:24,scare:1,art:'<i class="a chair"></i>',act(el){
       const c=el.querySelector('.chair'); c.classList.remove('spin'); void c.offsetWidth; c.classList.add('spin');
       SFX.creak(); setTimeout(()=>toast('아무도 앉아 있지 않은 의자가 혼자 돌았다.'),1400);
     }},
     {id:'copier',n:'복사기',x:2,y:36,w:15,h:36,art:'<i class="a copier"></i>',act:copierPop},
     {id:'cal',n:'8월 달력',x:58,y:8,w:12,h:20,art:'<i class="a calendar"></i>',act:calPop},
-    {id:'curtain',n:'커튼',x:72,y:6,w:22,h:36,art:'<i class="a curtain"></i>',act:curtainPop},
+    {id:'curtain',n:'커튼',idle:'sway',x:72,y:6,w:22,h:36,art:'<i class="a curtain"></i>',act:curtainPop},
     {id:'locker',n:'사물함',x:18,y:14,w:15,h:36,art:'<i class="a locker"></i>',act:lockerPop},
     {id:'desk2',n:'교무실 책상',x:36,y:54,w:16,h:18,art:'<i class="a deskT"></i><i class="tornpaper" style="position:absolute;left:20%;top:-10%;width:40%;height:34%"></i>',act:deskTornPop},
     {id:'book',n:'국어 교과서',x:53,y:56,w:11,h:11,art:'<i class="a book"></i>',act:bookPop},
@@ -1353,25 +1636,24 @@ ROOMS.push({
 });
 
 function copierPop(){
+  const hi=has('s2-copier');
   pop({title:'복사기',sub:'전원 램프가 아직 깜빡인다.',
-    html:'<div class="mini" style="padding:22px;display:grid;place-items:center;gap:14px;'+
-      'background:linear-gradient(100deg,#39413f,#202625);'+bg('s2-copier')+'">'+
-      '<div id="out" style="width:70%;aspect-ratio:1.55;background:#0f1414;border:1px dashed #4b5654;'+
-      'display:grid;place-items:center;text-align:center;padding:12px;overflow:hidden">'+
-      '<span style="color:#5c6663;font-size:13px">출력함이 비어 있다</span></div></div>'+
+    html:'<div class="act act-print'+(hi?' hasimg':'')+'" id="pr" style="'+bg('s2-copier')+'">'+
+      '<i class="body2"></i><i class="lid2"><i class="beam"></i></i>'+
+      '<i class="sheetout"></i><i class="slot"></i><i class="scrim"></i>'+
+      '<div class="actline"><span>모든 물고기는 헤엄을 친다.</span></div></div>'+
       '<div class="row center"><button class="btn" data-scan>▶ 스캔</button></div>',
     onMount(sheet,w){
-      const b=sheet.querySelector('[data-scan]'), out=sheet.querySelector('#out');
+      const el=sheet.querySelector('#pr'), b=sheet.querySelector('[data-scan]');
       b.onclick=()=>{
         b.disabled=true; b.textContent='스캔 중...'; SFX.scan();
-        out.innerHTML='<span style="color:var(--phos);font-family:var(--f-mono);font-size:13px">SCANNING…</span>';
+        el.classList.add('go');
+        setTimeout(()=>SFX.paper(),1250);
         setTimeout(()=>{
-          out.style.background='linear-gradient(176deg,#ded5bd,#c3bba4)'; out.style.border='0';
-          out.innerHTML='<span style="font-family:var(--f-hand);font-size:clamp(18px,4vw,26px);color:#2b2721">'+
-            '모든 물고기는 헤엄을 친다.</span>';
-          SFX.paper(); b.textContent='종이를 집는다'; b.disabled=false;
+          el.classList.add('revealed');
+          b.disabled=false; b.textContent='종이를 집는다';
           b.onclick=()=>{ closePop(w); markDone('copier'); award('b1'); };
-        },1300);
+        },2350);
       };
     }});
 }
@@ -1403,38 +1685,35 @@ function calPop(){
     }});
 }
 function curtainPop(){
-  SFX.thunder(); flash('white'); shake();
-  setTimeout(()=>{
-    pop({title:'커튼',img:'s2-curtain',sub:'커튼을 걷는 순간 창밖이 하얗게 터졌다.',
-      html:'<div class="mini" style="padding:24px;display:grid;place-items:center;'+
-        'background:linear-gradient(168deg,#26363c,#0e181c)">'+
-        '<div class="revealtext" style="text-align:center">창틀에 눌려 있던 쪽지<br>'+
-        '<span style="color:var(--phos)">1학기 중간고사에서 복습을 열심히 해서<br>국어 점수가 올랐다.</span></div></div>'+
-        '<div class="row"><button class="btn" data-ok>쪽지를 집는다</button></div>',
-      onMount(sheet,w){ sheet.querySelector('[data-ok]').onclick=()=>{ closePop(w); markDone('curtain'); award('b4'); }; }});
-  },700);
+  actPop({title:'커튼',sub:'먼지 앉은 커튼을 양쪽으로 걷는다.',
+    key:'s2-curtain',cls:'act-curtain',dur:2100,btn:'창틀의 쪽지를 집는다',
+    scene:'<i class="sky"></i><i class="rain"></i><i class="grid"></i>'+
+      '<i class="sill"></i><i class="slip2"></i><i class="cl"></i><i class="cr"></i>',
+    text:'1학기 중간고사에서 복습을 열심히 해서<br>국어 점수가 올랐다.',
+    sfx(){ nz({filt:'bandpass',ff:800,q:1,d:1.6,g:.07});
+      setTimeout(()=>{ SFX.thunder(); flash('white'); shake(); },600); },
+    onOk(){ markDone('curtain'); award('b4'); }});
 }
 function lockerPop(){
-  pop({title:'사물함',img:'s2-locker',sub:'문짝 대부분이 비어 있다.',
-    html:'<div class="gridpick">'+
+  actPop({title:'사물함',sub:'녹슨 손잡이를 당기자 문이 활짝 젖혀진다.',
+    key:'s2-locker',cls:'act-locker',dur:1500,
+    scene:'<i class="cells"></i><i class="lit"></i><i class="dr2"></i>',
+    sfx(){ SFX.creak(); setTimeout(()=>SFX.ring(),1200); },
+    after:'<div class="gridpick">'+
       '<button class="pick dim"><span class="em">🗄️</span>1번 칸 — 비었다</button>'+
       '<button class="pick dim"><span class="em">🗄️</span>2번 칸 — 곰팡이</button>'+
       '<button class="pick" data-phone><span class="em">📵</span>휴대폰 보관함</button>'+
       '<button class="pick dim"><span class="em">🗄️</span>4번 칸 — 잠김</button></div>',
-    onMount(sheet,w){
+    onShown(sheet,w){
       sheet.querySelectorAll('.pick.dim').forEach(b=>b.onclick=()=>{SFX.click();toast('아무것도 없다.');});
       sheet.querySelector('[data-phone]').onclick=()=>{
-        SFX.ring(); closePop(w);
-        pop({title:'휴대폰 보관함',img:'s2-phone',sub:'스물세 대 중 한 대만 화면이 켜져 있다.',
-          html:'<div class="mini" style="padding:24px;display:grid;place-items:center;background:#0a0d0e">'+
-            '<div style="width:min(210px,70%);aspect-ratio:.5;border-radius:16px;border:2px solid #333b3d;'+
-            'background:linear-gradient(180deg,#0f2b26,#08151a);display:grid;place-items:center;padding:16px;'+
-            'text-align:center;box-shadow:0 0 34px rgba(111,224,196,.28)">'+
-            '<span style="font-family:var(--f-hand);font-size:19px;color:#b6f0dd;line-height:1.25">'+
-            '복습을 열심히 하면<br>국어 점수가 오른다.</span></div></div>'+
-            '<p class="hint">발신자 표시 없음. 벨소리는 끊기지 않는다.</p>'+
-            '<div class="row"><button class="btn" data-ok>화면을 옮겨 적는다</button></div>',
-          onMount(s2,w2){ s2.querySelector('[data-ok]').onclick=()=>{ closePop(w2); markDone('locker'); award('b6'); }; }});
+        closePop(w);
+        actPop({title:'휴대폰 보관함',sub:'스물세 대 중 한 대가 혼자 떨고 있다.',
+          key:'s2-phone',cls:'act-phone',dur:2000,btn:'화면을 옮겨 적는다',
+          scene:'<i class="ph"></i><i class="scr"></i>',
+          text:'복습을 열심히 하면<br>국어 점수가 오른다.',
+          sfx(){ SFX.ring(); nz({filt:'lowpass',ff:220,d:1.6,g:.09}); },
+          onOk(){ markDone('locker'); award('b6'); }});
       };
     }});
 }
@@ -1479,12 +1758,12 @@ function bookPop(){
     }});
 }
 function floorNotePop(){
-  SFX.creak(); SFX.paper();
-  pop({title:'바닥',img:'s2-floornote',sub:'발을 디딜 때마다 마루가 비명을 지른다.',
-    html:'<div class="mini" style="padding:26px;display:grid;place-items:center;background:#191512">'+
-      '<div class="revealtext" style="text-align:center">금붕어는 헤엄을 친다.</div></div>'+
-      '<div class="row"><button class="btn" data-ok>주워 든다</button></div>',
-    onMount(sheet,w){ sheet.querySelector('[data-ok]').onclick=()=>{ closePop(w); markDone('fnote'); award('b3'); }; }});
+  actPop({title:'바닥',sub:'발을 디딜 때마다 마루가 비명을 지른다.',
+    key:'s2-floornote',cls:'act-floor',dur:1400,btn:'주워 든다',
+    scene:'<i class="boards"></i><i class="pp2"></i>',
+    text:'금붕어는 헤엄을 친다.',
+    sfx(){ SFX.creak(); setTimeout(()=>SFX.paper(),700); },
+    onOk(){ markDone('fnote'); award('b3'); }});
 }
 </script>
 
@@ -1508,7 +1787,7 @@ ROOMS.push({
       nz({filt:'lowpass',ff:500,d:1.2,g:.1});
       setTimeout(()=>toast('네 병의 액체가 동시에 붉어졌다.'),900);
     }},
-    {id:'skel',n:'인체 골격 모형',x:70,y:20,w:11,h:44,scare:1,
+    {id:'skel',n:'인체 골격 모형',idle:'sway',x:70,y:20,w:11,h:44,scare:1,
      art:'<i class="a skeleton"><i class="pole"></i><i class="skull"></i><i class="rib"></i></i>',act(el){
       const s=el.querySelector('.skeleton'); s.classList.add('drop');
       SFX.thud(); setTimeout(()=>{SFX.scream(); flash('red'); shake();},420);
@@ -1527,18 +1806,12 @@ ROOMS.push({
 });
 
 function periodicPop(){
-  SFX.paper();
-  pop({title:'주기율표',img:'s3-periodic',sub:'모서리를 들추자 판이 통째로 뒤집힌다.',
-    html:'<div class="mini" style="padding:26px;display:grid;place-items:center;'+
-      'background:linear-gradient(170deg,#c8c0a9,#9d9682)">'+
-      '<div class="revealtext" id="pt" style="color:#211f1a;text-align:center;opacity:0;transition:opacity .9s">'+
-      '나 자신을 비롯하여<br>모든 다원중 학생은 인간이다.</div></div>'+
-      '<div class="row"><button class="btn" data-ok style="display:none">뒷면을 옮겨 적는다</button></div>',
-    onMount(sheet,w){
-      setTimeout(()=>{ sheet.querySelector('#pt').style.opacity='1';
-        sheet.querySelector('[data-ok]').style.display=''; },550);
-      sheet.querySelector('[data-ok]').onclick=()=>{ closePop(w); markDone('periodic'); award('c2'); };
-    }});
+  actPop({title:'주기율표',sub:'모서리를 들추자 판이 통째로 뒤집힌다.',
+    key:'s3-periodic',cls:'act-flip',dur:1600,btn:'뒷면을 옮겨 적는다',
+    scene:'<i class="card3d"><i class="f"></i><i class="b"></i></i>',
+    text:'나 자신을 비롯하여<br>모든 다원중 학생은 인간이다.',
+    sfx(){ SFX.paper(); setTimeout(()=>SFX.clunk(),1300); },
+    onOk(){ markDone('periodic'); award('c2'); }});
 }
 /* --- 알코올램프 + 토치 : 가열 게이지 --- */
 function lampPop(){
@@ -1612,13 +1885,16 @@ function microPop(){
 }
 /* --- 실험대 서랍 : 자석 · 셀로판지 안경 --- */
 function sciDrawerPop(){
-  pop({title:'실험대 서랍',img:'s3-drawer',sub:'실험 도구가 굴러다닌다.',
-    html:'<div class="gridpick">'+
+  actPop({title:'실험대 서랍',sub:'서랍이 레일을 긁으며 끝까지 빠져나온다.',
+    key:'s3-drawer',cls:'act-drawer',dur:1300,
+    scene:'<i class="hole"></i><i class="box"></i><i class="junk"></i>',
+    sfx(){ nz({filt:'bandpass',ff:900,q:2,d:1,g:.08}); setTimeout(()=>SFX.clunk(),900); },
+    after:'<div class="gridpick">'+
       '<button class="pick dim"><span class="em">🧪</span>깨진 시험관</button>'+
       '<button class="pick" data-i="magnet"><span class="em">🧲</span>말굽 자석</button>'+
       '<button class="pick" data-i="glasses"><span class="em">👓</span>빨간 셀로판지 안경</button>'+
       '<button class="pick dim"><span class="em">📏</span>부러진 자</button></div>',
-    onMount(sheet,w){
+    onShown(sheet,w){
       sheet.querySelectorAll('.pick.dim').forEach(b=>b.onclick=()=>{SFX.click();toast('쓸 데가 없다.');});
       sheet.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{
         giveItem(b.dataset.i); b.classList.add('dim'); b.onclick=null;
@@ -1628,31 +1904,40 @@ function sciDrawerPop(){
 }
 /* --- 모니터 : 메모장 더블클릭 --- */
 function monitorPop(){
-  pop({title:'실험실 컴퓨터',sub:'전원은 꺼져 있는데 화면만 켜져 있다.',
-    html:'<div class="mini" style="aspect-ratio:16/9;background:linear-gradient(170deg,#0f2b33,#061418);'+
-      'padding:16px;position:relative;'+bg('s3-monitor')+'">'+
-      '<div class="gridpick" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:0">'+
+  actPop({title:'실험실 컴퓨터',sub:'전원 스위치를 누르자 브라운관이 한 줄로 켜진다.',
+    key:'s3-monitor',cls:'act-crt',dur:1700,
+    scene:'<i class="tube"></i><i class="fill2"></i><i class="glow"></i><i class="lines"></i>',
+    sfx(){ tone({f:15600,d:1.8,g:.012,type:'sine'}); nz({filt:'highpass',ff:5000,d:.4,g:.05});
+      setTimeout(()=>SFX.zap(),900); },
+    after:'<div class="gridpick" style="grid-template-columns:repeat(3,minmax(0,1fr))">'+
       '<button class="pick" id="memo"><span class="em">📝</span>메모장</button>'+
       '<button class="pick dim"><span class="em">🗑️</span>휴지통</button>'+
       '<button class="pick dim"><span class="em">📁</span>2007 졸업사진</button></div>'+
-      '<div id="memowin" style="display:none;position:absolute;left:8%;right:8%;top:22%;'+
-      'background:#e7e4da;color:#20211f;border:1px solid #7d8480;box-shadow:0 14px 34px rgba(0,0,0,.7)">'+
-      '<div style="background:#2c3a3e;color:#d8ded9;font-size:11px;padding:4px 8px">무제 - 메모장</div>'+
-      '<div style="padding:16px;font-family:var(--f-mono);font-size:clamp(12px,2.6vw,15px);line-height:1.7">'+
-      '나 자신을 비롯하여 모든 다원중 학생은<br>존엄성을 지니고 있다.</div></div></div>'+
-      '<p class="hint">아이콘은 <b>두 번 눌러야</b> 열린다.</p>'+
-      '<div class="row"><button class="btn" data-ok style="display:none">화면을 옮겨 적는다</button></div>',
-    onMount(sheet,w){
-      const m=sheet.querySelector('#memo'), win=sheet.querySelector('#memowin'), ok=sheet.querySelector('[data-ok]');
+      '<p class="hint">아이콘은 <b>두 번 눌러야</b> 열린다.</p>',
+    onShown(sheet,w){
+      const m=sheet.querySelector('#memo'), el=sheet.querySelector('.act');
       let t=0;
       sheet.querySelectorAll('.pick.dim').forEach(b=>b.onclick=()=>{SFX.click();toast('열리지 않는다.');});
       m.onclick=()=>{
         const now=Date.now();
-        if(now-t<650){ SFX.zap(); win.style.display='block'; ok.style.display=''; }
+        if(now-t<650){
+          SFX.zap();
+          el.insertAdjacentHTML('beforeend',
+            '<div class="memowin" style="position:absolute;left:10%;right:10%;top:18%;z-index:7;'+
+            'background:#e7e4da;color:#20211f;border:1px solid #7d8480;'+
+            'box-shadow:0 14px 34px rgba(0,0,0,.75);animation:rise .3s">'+
+            '<div style="background:#2c3a3e;color:#d8ded9;font-size:11px;padding:4px 8px">무제 - 메모장</div>'+
+            '<div style="padding:14px;font-family:var(--f-mono);font-size:clamp(11px,2.4vw,14px);line-height:1.7">'+
+            '나 자신을 비롯하여 모든 다원중 학생은<br>존엄성을 지니고 있다.</div></div>');
+          const row=document.createElement('div'); row.className='row';
+          row.innerHTML='<button class="btn" data-ok2>화면을 옮겨 적는다</button>';
+          sheet.appendChild(row);
+          row.querySelector('[data-ok2]').onclick=()=>{ closePop(w); markDone('monitor'); award('c3'); };
+          m.onclick=null; m.classList.add('dim');
+        }
         else { SFX.click(); toast('한 번 더 눌러야 열린다.'); }
         t=now;
       };
-      ok.onclick=()=>{ closePop(w); markDone('monitor'); award('c3'); };
     }});
 }
 /* --- 검은 가루 + 자석 --- */
@@ -1715,7 +2000,7 @@ ROOMS.push({
   extra:'<div style="position:absolute;left:12%;top:43%;width:24%;height:3%;background:linear-gradient(180deg,#4a3a26,#241a10)"></div>'+
         '<div style="position:absolute;left:44%;top:70%;width:26%;height:2.5%;background:rgba(0,0,0,.5)"></div>',
   objs:[
-    {id:'mann',n:'마네킹',x:62,y:26,w:10,h:44,scare:1,
+    {id:'mann',n:'마네킹',idle:'sway',x:62,y:26,w:10,h:44,scare:1,
      art:'<i class="a mannequin"><i class="head"></i><i class="body"></i></i>',act(el){
       const m=el.querySelector('.mannequin'); m.classList.toggle('turn');
       SFX.screech(); tone({f:90,to:44,d:1.1,g:.18,type:'sawtooth'});
@@ -1786,24 +2071,23 @@ function radioPop(){
     }});
 }
 function parcelPop(){
-  SFX.paper(); nz({filt:'highpass',ff:1800,d:.5,g:.1});
-  pop({title:'택배 상자',img:'s4-parcel',sub:'받는 사람 칸이 검게 지워져 있다. 테이프를 뜯는다.',
-    html:'<div class="mini" style="padding:26px;display:grid;place-items:center;'+
-      'background:linear-gradient(176deg,#6b5537,#3a2c1a)">'+
-      '<div class="revealtext" style="text-align:center">상자 안엔 종이 한 장뿐<br>'+
-      '<span style="color:var(--amber)">이 도형은 삼각형이다.</span></div></div>'+
-      '<div class="row"><button class="btn" data-ok>종이를 꺼낸다</button></div>',
-    onMount(sheet,w){ sheet.querySelector('[data-ok]').onclick=()=>{ closePop(w); markDone('parcel'); award('d2'); }; }});
+  actPop({title:'택배 상자',sub:'테이프를 잡아 뜯자 날개가 벌어진다.',
+    key:'s4-parcel',cls:'act-tape',dur:1900,btn:'종이를 꺼낸다',
+    scene:'<i class="inner"></i><i class="lid l"></i><i class="lid r"></i>'+
+      '<i class="bloodspot"></i><i class="tape"></i><i class="out"></i>',
+    text:'이 도형은 삼각형이다.',
+    sfx(){ nz({filt:'highpass',ff:1800,d:.7,g:.12});
+      setTimeout(()=>nz({filt:'lowpass',ff:500,d:.6,g:.08}),450);
+      setTimeout(()=>SFX.paper(),1400); },
+    onOk(){ markDone('parcel'); award('d2'); }});
 }
 function winslitPop(){
-  SFX.creak();
-  pop({title:'창틀',img:'s4-window',sub:'유일하게 바깥이 보이는 틈. 손가락을 넣어 본다.',
-    html:'<div class="mini" style="padding:26px;display:grid;place-items:center;'+
-      'background:linear-gradient(168deg,#223036,#0b1316)">'+
-      '<div class="revealtext" style="text-align:center">틈새에 끼워져 있던 쪽지<br>'+
-      '<span style="color:var(--phos)">이 도형은 세 변으로 이루어져 있다.</span></div></div>'+
-      '<div class="row"><button class="btn" data-ok>쪽지를 빼낸다</button></div>',
-    onMount(sheet,w){ sheet.querySelector('[data-ok]').onclick=()=>{ closePop(w); markDone('winslit'); award('d3'); }; }});
+  actPop({title:'창틀',sub:'틈새에 손가락을 넣어 무언가를 끌어올린다.',
+    key:'s4-window',cls:'act-crack',dur:1500,btn:'쪽지를 빼낸다',
+    scene:'<i class="dark"></i><i class="pp"></i><i class="wallL"></i><i class="wallR"></i>',
+    text:'이 도형은 세 변으로 이루어져 있다.',
+    sfx(){ SFX.creak(); setTimeout(()=>SFX.paper(),600); },
+    onOk(){ markDone('winslit'); award('d3'); }});
 }
 /* --- 장기 맞추기 --- */
 function organPop(){
@@ -1837,13 +2121,16 @@ function organPop(){
     }});
 }
 function cabinetPop(){
-  SFX.creak();
-  const docs=['출입 기록부 (1998)','소방 점검표','청소년 활동 실태 보고','비품 대장','폐교 승인 공문'];
-  pop({title:'캐비닛',img:'s4-cabinet',sub:'문을 열자 서류 뭉치가 쏟아진다.',
-    html:'<div class="docs">'+docs.map((d,i)=>
-      '<button class="doc" data-i="'+i+'"><span class="n">'+String(i+1).padStart(2,'0')+'</span>'+d+'</button>').join('')+
+  actPop({title:'캐비닛',sub:'양쪽 문이 동시에 젖혀지며 서류가 쏟아진다.',
+    key:'s4-cabinet',cls:'act-cab',dur:1600,
+    scene:'<i class="inside"></i><i class="files"></i><i class="dr l"></i><i class="dr r"></i>',
+    sfx(){ SFX.creak(); setTimeout(()=>{SFX.paper();SFX.clunk();},1100); },
+    after:'<div class="docs">'+
+      ['출입 기록부 (1998)','소방 점검표','청소년 활동 실태 보고','비품 대장','폐교 승인 공문']
+      .map((d,i)=>'<button class="doc" data-i="'+i+'"><span class="n">'+
+        String(i+1).padStart(2,'0')+'</span>'+d+'</button>').join('')+
       '</div><p class="hint">누군가 세 번째 서류에만 형광펜을 그어 두었다.</p>',
-    onMount(sheet,w){
+    onShown(sheet,w){
       sheet.querySelectorAll('.doc').forEach(b=>b.onclick=()=>{
         if(b.dataset.i==='2'){ closePop(w); markDone('cab'); award('d5'); }
         else { SFX.paper(); toast('필요 없는 서류다.'); }
@@ -1988,6 +2275,7 @@ function clearStage(){
   }
 }
 function enterRoom(i){
+  clearInterval(ambTimer);
   S.room=i; save();
   $('#stageName').innerHTML='<b>Stage '+(i+1)+'.</b> '+ROOMS[i].title;
   renderRoom(); renderInv(); checkReady(); startAmb(i);
@@ -2013,6 +2301,7 @@ function renderRoom(){
     el.dataset.id=o.id; el.tabIndex=0; el.setAttribute('role','button'); el.setAttribute('aria-label',o.n);
     el.innerHTML=(photo?'':(o.art||''))+'<span class="tag">'+o.n+'</span>'+
       ((o.scare||o.noPin)?'':'<span class="pin"></span>');
+    if(o.idle&&!photo) el.classList.add(o.idle);
     const go=()=>{ SFX.click(); o.act(el); };
     el.addEventListener('click',go);
     el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
@@ -2031,6 +2320,34 @@ function renderRoom(){
     room.style.setProperty('--mx',(e.clientX-b.left)+'px');
     room.style.setProperty('--my',(e.clientY-b.top)+'px');
   });
+  startRoomAmbience(room);
+}
+
+/* 방이 가만히 있지 않도록 — 형광등 · 지나가는 그림자 · 먼 소리 */
+let ambTimer=null;
+function startRoomAmbience(room){
+  clearInterval(ambTimer);
+  const fl=document.createElement('div'); fl.className='roomflick'; room.appendChild(fl);
+  const fire=()=>{
+    if(popStack.length||!document.body.contains(room)) return;
+    const r=Math.random();
+    if(r<.3){
+      fl.classList.remove('on'); void fl.offsetWidth; fl.classList.add('on');
+      nz({filt:'highpass',ff:4200,d:.35,g:.04});
+      tone({f:120,d:.5,g:.04,type:'sawtooth',filt:'lowpass',ff:300});
+    }else if(r<.58){
+      const sh=document.createElement('div'); sh.className='shadowpass'; room.appendChild(sh);
+      requestAnimationFrame(()=>sh.classList.add('go'));
+      setTimeout(()=>sh.remove(),3800);
+      nz({filt:'lowpass',ff:260,d:1.8,g:.05});
+    }else if(r<.8){
+      tone({f:74,to:38,d:1.1,g:.11,type:'sine'});
+      nz({filt:'lowpass',ff:200,d:.9,g:.08}); shake(room);
+    }else{
+      tone({f:[784,1046,622][Math.floor(Math.random()*3)],d:2.6,g:.028,type:'sine'});
+    }
+  };
+  ambTimer=setInterval(fire,16000+Math.random()*12000);
 }
 function fmt(ms){
   const s=Math.floor(ms/1000), m=Math.floor(s/60), h=Math.floor(m/60);

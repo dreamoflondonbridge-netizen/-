@@ -97,6 +97,25 @@ button{background:none;border:0;cursor:pointer}
 @media(max-width:760px){.room{aspect-ratio:4/3}}
 .layer{position:absolute;inset:0}
 .floorplane{position:absolute;left:0;right:0;bottom:0}
+/* --- 사진 모드 (images/ 폴더에 배경이 있을 때) --- */
+.bgphoto{background-size:cover;background-position:center}
+.photoscrim{position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(180deg,rgba(4,6,7,.44),rgba(4,6,7,.1) 42%,rgba(4,6,7,.55))}
+.room.photo .ob{border-radius:5px;transition:background .18s,box-shadow .18s}
+.room.photo .ob:hover{filter:none;background:rgba(240,165,58,.13);
+  box-shadow:inset 0 0 0 1px rgba(240,165,58,.55),0 0 26px rgba(240,165,58,.22)}
+.room.photo .ob.done{filter:none;opacity:.72}
+.room.photo .ob.done:hover{background:rgba(233,230,218,.06);
+  box-shadow:inset 0 0 0 1px rgba(233,230,218,.3)}
+.room.photo .ob.ready{box-shadow:inset 0 0 0 2px rgba(240,165,58,.85),0 0 32px rgba(240,165,58,.45);
+  animation:pin 1.6s ease-in-out infinite}
+.closeup{width:calc(100% + 40px);margin:-2px -20px 16px;aspect-ratio:16/9;position:relative;
+  background-color:#0a0e0f;border-top:1px solid var(--edge);border-bottom:1px solid var(--edge)}
+.closeup::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(6,9,10,.3),transparent 42%,rgba(6,9,10,.55))}
+.item .ic.img{width:20px;height:20px;object-fit:contain;display:block}
+.ceil.photo{background-size:cover;background-position:center}
+.ceil.photo .wpaper,.ceil.photo .lamp2,.ceil.photo .blanket{display:none}
 .grime{position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.55;
   background:radial-gradient(ellipse 44% 34% at 10% 14%,rgba(0,0,0,.55),transparent 72%),
    radial-gradient(ellipse 32% 44% at 90% 70%,rgba(0,0,0,.6),transparent 72%),
@@ -843,6 +862,52 @@ function toast(msg){
   const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t);
   setTimeout(()=>t.remove(),2700);
 }
+
+/* ==========================================================================
+   2-b. 이미지 슬롯 — images/ 폴더에 파일을 넣으면 그 자리만 사진으로 바뀐다.
+        파일이 없으면 지금의 CSS 그림이 그대로 쓰인다. 한 장씩 부분 교체 가능.
+   ========================================================================== */
+const IMGDIR='images/';
+const IMG={
+  /* 방 배경 (1600x900) */
+  'room1':'room-01-classroom.jpg', 'room2':'room-02-office.jpg',
+  'room3':'room-03-lab.jpg',       'room4':'room-04-storage.jpg',
+  /* 시작 · 엔딩 · 종이 질감 */
+  'title':'title-corridor.jpg', 'ceiling':'ending-ceiling.jpg', 'note':'note-paper.jpg',
+  /* 소지품 아이콘 (256x256 투명 PNG) */
+  'item-eraser':'item-eraser.png','item-uv':'item-uv.png','item-torch':'item-torch.png',
+  'item-magnet':'item-magnet.png','item-glasses':'item-glasses.png','item-coin':'item-coin.png',
+  /* Stage 1 팝업 */
+  's1-board':'s1-board.jpg','s1-whiteboard':'s1-whiteboard.jpg','s1-frontdoor':'s1-frontdoor.jpg',
+  's1-podium':'s1-podium.jpg','s1-rollbook':'s1-rollbook.jpg','s1-desk-uv':'s1-desk-uv.jpg',
+  's1-drawer':'s1-drawer.jpg',
+  /* Stage 2 팝업 */
+  's2-copier':'s2-copier.jpg','s2-calendar':'s2-calendar.jpg','s2-calendar-back':'s2-calendar-back.jpg',
+  's2-curtain':'s2-curtain.jpg','s2-locker':'s2-locker.jpg','s2-phone':'s2-phone.jpg',
+  's2-torn44':'s2-torn44.jpg','s2-textbook':'s2-textbook.jpg','s2-floornote':'s2-floornote.jpg',
+  /* Stage 3 팝업 */
+  's3-periodic':'s3-periodic.jpg','s3-lamp':'s3-lamp.jpg','s3-micro':'s3-micro.jpg',
+  's3-drawer':'s3-drawer.jpg','s3-monitor':'s3-monitor.jpg','s3-powder':'s3-powder.jpg',
+  's3-a4':'s3-a4.jpg',
+  /* Stage 4 팝업 */
+  's4-radio':'s4-radio.jpg','s4-parcel':'s4-parcel.jpg','s4-window':'s4-window.jpg',
+  's4-organ':'s4-organ.jpg','s4-cabinet':'s4-cabinet.jpg','s4-stain':'s4-stain.jpg'
+};
+const HAVE={};
+const IMGREADY=Promise.all(Object.keys(IMG).map(k=>new Promise(res=>{
+  const i=new Image();
+  i.onload=()=>{ HAVE[k]=IMGDIR+IMG[k]; res(); };
+  i.onerror=()=>res();
+  i.src=IMGDIR+IMG[k];
+})));
+function has(k){ return !!HAVE[k]; }
+function bg(k,extra){
+  return has(k)?('background-image:url("'+HAVE[k]+'");background-size:cover;background-position:center;'+
+    (extra||'')):(extra||'');
+}
+function headImg(k){
+  return has(k)?'<div class="closeup" style="'+bg(k)+'"></div>':'';
+}
 </script>
 
 <script>
@@ -913,6 +978,7 @@ function pop(o){
     (o.noClose?'':'<button class="x" aria-label="닫기">✕</button>')+
     (o.title?'<h2>'+o.title+'</h2>':'')+
     (o.sub?'<div class="sub">'+o.sub+'</div>':'')+
+    (o.img?headImg(o.img):'')+
     '<div class="pbody">'+(o.html||'')+'</div></div>';
   document.body.appendChild(wrap);
   const sheet=wrap.querySelector('.sheet');
@@ -934,7 +1000,7 @@ function award(id){
   S.notes.push(id); SFX.slip(); renderInv(); save();
   const n=NOTES[id];
   pop({cls:'notepop',html:
-    '<div class="note"><div class="torn t"></div>'+
+    '<div class="note" style="'+bg('note')+'"><div class="torn t"></div>'+
     '<div class="kind">쪽지를 손에 넣었다</div>'+
     '<div class="txt">'+n.t+'</div><div class="torn b"></div></div>'+
     '<div class="row center"><button class="btn" data-ok>주머니에 넣는다</button></div>',
@@ -957,7 +1023,9 @@ function renderInv(){
   const ib=$('#items');
   if(!S.items.length) ib.innerHTML='<span class="empty">아직 아무것도 없다.</span>';
   else ib.innerHTML=S.items.map(k=>
-    '<span class="item"><span class="ic">'+ITEMS[k].ic+'</span>'+ITEMS[k].n+'</span>').join('');
+    '<span class="item">'+(has('item-'+k)
+      ? '<img class="ic img" src="'+HAVE['item-'+k]+'" alt="">'
+      : '<span class="ic">'+ITEMS[k].ic+'</span>')+ITEMS[k].n+'</span>').join('');
   const mine=ROOMNOTES[S.room].filter(id=>S.notes.indexOf(id)>-1);
   $('#noteCount').textContent=mine.length+'/6';
   const sb=$('#slips');
@@ -967,7 +1035,7 @@ function renderInv(){
   $$('.slip',sb).forEach(el=>{
     const show=()=>{
       const n=NOTES[el.dataset.note]; SFX.paper();
-      pop({cls:'notepop',html:'<div class="note"><div class="torn t"></div>'+
+      pop({cls:'notepop',html:'<div class="note" style="'+bg('note')+'"><div class="torn t"></div>'+
         '<div class="kind">주머니 속 쪽지</div><div class="txt">'+n.t+'</div>'+
         '<div class="torn b"></div></div>'});
     };
@@ -1136,7 +1204,7 @@ ROOMS.push({
 function boardPop(){
   if(!hasItem('eraser')){
     pop({title:'칠판',sub:'분필 낙서가 빼곡하다. 같은 글씨가 몇 백 번.',
-      html:'<div class="mini"><div class="scrub boardbg"><div class="under">'+
+      html:'<div class="mini"><div class="scrub boardbg" style="'+bg('s1-board')+'"><div class="under">'+
         '<div class="revealtext chalkish">나가고 싶어 나가고 싶어 나가고 싶어</div></div></div></div>'+
         '<p class="hint">분필받이에 낡은 지우개가 굴러다닌다.</p>'+
         '<div class="row"><button class="btn" data-take>지우개를 집는다</button></div>',
@@ -1146,7 +1214,7 @@ function boardPop(){
     return;
   }
   pop({title:'칠판',sub:'지우개로 문질러 낙서를 지운다.',
-    html:'<div class="mini"><div class="scrub boardbg" id="sc">'+
+    html:'<div class="mini"><div class="scrub boardbg" id="sc" style="'+bg('s1-board')+'">'+
       '<div class="under"><div class="revealtext chalkish">미세 먼지 때문에<br>기관지 환자가 늘었다.</div></div>'+
       '<canvas></canvas><span class="scrubmsg">0%</span></div></div>'+
       '<p class="hint">칠판 위를 누른 채 좌우로 쓸어 보자.</p>',
@@ -1173,7 +1241,7 @@ function boardPop(){
 /* --- 화이트보드 날개 --- */
 function wbPop(){
   SFX.creak();
-  pop({title:'화이트보드',sub:'접혀 있던 날개가 삐걱이며 열린다.',
+  pop({title:'화이트보드',img:'s1-whiteboard',sub:'접혀 있던 날개가 삐걱이며 열린다.',
     html:'<div class="mini" style="padding:26px 18px;display:grid;place-items:center;'+
       'background:linear-gradient(170deg,#b9bdb6,#8d938c)">'+
       '<div class="revealtext" id="wbt" style="color:#1d2422;opacity:0;transition:opacity 1.1s;text-align:center">'+
@@ -1188,7 +1256,7 @@ function wbPop(){
 /* --- 앞문 --- */
 function frontDoorPop(){
   SFX.clunk(); shake();
-  pop({title:'앞문',sub:'손을 대자마자 미닫이문이 스스로 닫혔다. 철컥.',
+  pop({title:'앞문',img:'s1-frontdoor',sub:'손을 대자마자 미닫이문이 스스로 닫혔다. 철컥.',
     html:'<div class="mini" style="padding:26px 18px;display:grid;place-items:center;'+
       'background:linear-gradient(96deg,#3a3327,#231d14)">'+
       '<div class="revealtext" style="text-align:center">문틀 안쪽에 새겨져 있다<br>'+
@@ -1199,7 +1267,7 @@ function frontDoorPop(){
 /* --- 교탁 --- */
 function podiumPop(){
   if(hasItem('uv')){ pop({title:'교탁',html:'<p>교탁 아래는 이제 텅 비었다.</p>'}); return; }
-  pop({title:'교탁',sub:'아래쪽 선반을 더듬는다.',
+  pop({title:'교탁',img:'s1-podium',sub:'아래쪽 선반을 더듬는다.',
     html:'<p>먼지 뭉치 사이에서 차가운 금속이 잡힌다. 자외선 손전등이다. 스위치는 아직 살아 있다.</p>'+
       '<div class="row"><button class="btn" data-ok>🔦 UV 랜턴을 꺼낸다</button></div>',
     onMount(sheet,w){ sheet.querySelector('[data-ok]').onclick=()=>{ giveItem('uv'); markDone('podium'); closePop(w); }; }});
@@ -1207,7 +1275,7 @@ function podiumPop(){
 /* --- 출석부 --- */
 function rollPop(){
   SFX.creak();
-  pop({title:'출석부',sub:'표지를 넘기자 종이가 끼익 울었다.',
+  pop({title:'출석부',img:'s1-rollbook',sub:'표지를 넘기자 종이가 끼익 울었다.',
     html:'<p>이름 칸이 전부 까맣게 덧칠돼 있다. 마지막 장에만 다른 필체가 남아 있다.</p>'+
       '<div class="mini" style="padding:22px;display:grid;place-items:center;background:#1a1412">'+
       '<div class="revealtext" style="text-align:center">독서는 독자의 정신을 성장시킨다.</div></div>'+
@@ -1218,7 +1286,7 @@ function rollPop(){
 function deskFrontPop(){
   if(!needItem('uv','책상 위는 긁힌 자국뿐이다. 맨눈으로는 아무것도 보이지 않는다.')) return;
   pop({title:'교탁 앞 책상',sub:'UV 랜턴을 책상 위에서 천천히 움직인다.',
-    html:'<div class="mini"><div class="uvwrap" id="uvw">'+
+    html:'<div class="mini"><div class="uvwrap" id="uvw" style="'+bg('s1-desk-uv')+'">'+
       '<div class="uvtext">미세 먼지는 인간의 건강을 위협한다.</div>'+
       '<div class="uvmask"></div><div class="uvbeam"></div></div></div>'+
       '<p class="hint">책상 가운데에 빛을 잠시 멈춰 두면 글씨가 살아난다.</p>',
@@ -1228,7 +1296,7 @@ function deskFrontPop(){
 }
 /* --- 맨 뒷자리 서랍 --- */
 function drawerPop(){
-  pop({title:'맨 뒷자리 책상',sub:'서랍을 당기자 먼지와 함께 잡동사니가 쏟아진다.',
+  pop({title:'맨 뒷자리 책상',img:'s1-drawer',sub:'서랍을 당기자 먼지와 함께 잡동사니가 쏟아진다.',
     html:'<div class="gridpick">'+
       '<button class="pick dim"><span class="em">🥤</span>찌그러진 우유갑</button>'+
       '<button class="pick dim"><span class="em">✏️</span>부러진 연필 세 자루</button>'+
@@ -1287,7 +1355,7 @@ ROOMS.push({
 function copierPop(){
   pop({title:'복사기',sub:'전원 램프가 아직 깜빡인다.',
     html:'<div class="mini" style="padding:22px;display:grid;place-items:center;gap:14px;'+
-      'background:linear-gradient(100deg,#39413f,#202625)">'+
+      'background:linear-gradient(100deg,#39413f,#202625);'+bg('s2-copier')+'">'+
       '<div id="out" style="width:70%;aspect-ratio:1.55;background:#0f1414;border:1px dashed #4b5654;'+
       'display:grid;place-items:center;text-align:center;padding:12px;overflow:hidden">'+
       '<span style="color:#5c6663;font-size:13px">출력함이 비어 있다</span></div></div>'+
@@ -1311,8 +1379,8 @@ function calPop(){
   const days=[...Array(31)].map((_,i)=>'<span'+(i%7===0?' class="sun"':'')+'>'+(i+1)+'</span>').join('');
   pop({title:'8월 달력',sub:'8월에서 멈춘 채 누렇게 바랬다.',
     html:'<div class="calwrap" id="cw">'+
-      '<div class="back">금붕어는 물고기이다.</div>'+
-      '<div class="front" id="cf"><div class="m">8</div><div class="calgrid">'+days+'</div></div></div>'+
+      '<div class="back" style="'+bg('s2-calendar-back')+'">금붕어는 물고기이다.</div>'+
+      '<div class="front" id="cf" style="'+bg('s2-calendar')+'"><div class="m">8</div><div class="calgrid">'+days+'</div></div></div>'+
       '<p class="hint">달력을 아래로 잡아당겨 찢어 보자.</p>',
     onMount(sheet,w){
       const f=sheet.querySelector('#cf'); let y0=null,tore=false;
@@ -1337,7 +1405,7 @@ function calPop(){
 function curtainPop(){
   SFX.thunder(); flash('white'); shake();
   setTimeout(()=>{
-    pop({title:'커튼',sub:'커튼을 걷는 순간 창밖이 하얗게 터졌다.',
+    pop({title:'커튼',img:'s2-curtain',sub:'커튼을 걷는 순간 창밖이 하얗게 터졌다.',
       html:'<div class="mini" style="padding:24px;display:grid;place-items:center;'+
         'background:linear-gradient(168deg,#26363c,#0e181c)">'+
         '<div class="revealtext" style="text-align:center">창틀에 눌려 있던 쪽지<br>'+
@@ -1347,7 +1415,7 @@ function curtainPop(){
   },700);
 }
 function lockerPop(){
-  pop({title:'사물함',sub:'문짝 대부분이 비어 있다.',
+  pop({title:'사물함',img:'s2-locker',sub:'문짝 대부분이 비어 있다.',
     html:'<div class="gridpick">'+
       '<button class="pick dim"><span class="em">🗄️</span>1번 칸 — 비었다</button>'+
       '<button class="pick dim"><span class="em">🗄️</span>2번 칸 — 곰팡이</button>'+
@@ -1357,7 +1425,7 @@ function lockerPop(){
       sheet.querySelectorAll('.pick.dim').forEach(b=>b.onclick=()=>{SFX.click();toast('아무것도 없다.');});
       sheet.querySelector('[data-phone]').onclick=()=>{
         SFX.ring(); closePop(w);
-        pop({title:'휴대폰 보관함',sub:'스물세 대 중 한 대만 화면이 켜져 있다.',
+        pop({title:'휴대폰 보관함',img:'s2-phone',sub:'스물세 대 중 한 대만 화면이 켜져 있다.',
           html:'<div class="mini" style="padding:24px;display:grid;place-items:center;background:#0a0d0e">'+
             '<div style="width:min(210px,70%);aspect-ratio:.5;border-radius:16px;border:2px solid #333b3d;'+
             'background:linear-gradient(180deg,#0f2b26,#08151a);display:grid;place-items:center;padding:16px;'+
@@ -1372,7 +1440,7 @@ function lockerPop(){
 }
 function deskTornPop(){
   S.flags.saw44=1; save(); SFX.paper();
-  pop({title:'교무실 책상',sub:'책상 위에 종이 한 귀퉁이만 찢겨 남아 있다.',
+  pop({title:'교무실 책상',img:'s2-torn44',sub:'책상 위에 종이 한 귀퉁이만 찢겨 남아 있다.',
     html:'<div class="mini" style="padding:26px;display:grid;place-items:center;background:#1b1713">'+
       '<div style="background:#ded5bd;color:#2b2721;padding:18px 34px;'+
       'clip-path:polygon(0 0,100% 0,100% 74%,68% 100%,34% 80%,0 96%);'+
@@ -1397,7 +1465,7 @@ function bookPop(){
         if(inp.value.trim()==='44'){
           SFX.lockopen();
           closePop(w);
-          pop({title:'44쪽',sub:'책장이 저절로 넘어가며 44쪽이 펼쳐졌다.',
+          pop({title:'44쪽',img:'s2-textbook',sub:'책장이 저절로 넘어가며 44쪽이 펼쳐졌다.',
             html:'<div class="mini" style="padding:26px;display:grid;place-items:center;'+
               'background:linear-gradient(176deg,#ded5bd,#bdb49c)">'+
               '<div style="font-family:var(--f-hand);font-size:clamp(18px,4vw,26px);color:#2b2721;text-align:center">'+
@@ -1412,7 +1480,7 @@ function bookPop(){
 }
 function floorNotePop(){
   SFX.creak(); SFX.paper();
-  pop({title:'바닥',sub:'발을 디딜 때마다 마루가 비명을 지른다.',
+  pop({title:'바닥',img:'s2-floornote',sub:'발을 디딜 때마다 마루가 비명을 지른다.',
     html:'<div class="mini" style="padding:26px;display:grid;place-items:center;background:#191512">'+
       '<div class="revealtext" style="text-align:center">금붕어는 헤엄을 친다.</div></div>'+
       '<div class="row"><button class="btn" data-ok>주워 든다</button></div>',
@@ -1460,7 +1528,7 @@ ROOMS.push({
 
 function periodicPop(){
   SFX.paper();
-  pop({title:'주기율표',sub:'모서리를 들추자 판이 통째로 뒤집힌다.',
+  pop({title:'주기율표',img:'s3-periodic',sub:'모서리를 들추자 판이 통째로 뒤집힌다.',
     html:'<div class="mini" style="padding:26px;display:grid;place-items:center;'+
       'background:linear-gradient(170deg,#c8c0a9,#9d9682)">'+
       '<div class="revealtext" id="pt" style="color:#211f1a;text-align:center;opacity:0;transition:opacity .9s">'+
@@ -1483,7 +1551,7 @@ function lampPop(){
     return;
   }
   pop({title:'알코올램프',sub:'불을 붙이고 종이를 쬔다. 너무 오래 대면 타 버린다.',
-    html:'<div class="mini"><div class="paperheat" id="ph">'+
+    html:'<div class="mini"><div class="paperheat" id="ph" style="'+bg('s3-lamp')+'">'+
       '<div class="heatsheet" id="hs"><span class="hidden">인간은 모두<br>존엄성을 지니고 있다.</span>'+
       '<span class="burn"></span></div></div></div>'+
       '<div class="gauge"><div class="zone"></div><div class="fill" id="gf"></div></div>'+
@@ -1521,7 +1589,7 @@ function lampPop(){
 /* --- 현미경 초점 --- */
 function microPop(){
   pop({title:'현미경',sub:'슬라이드는 이미 물려 있다. 상이 흐리다.',
-    html:'<div class="mini"><div class="scope"><div class="scopecircle">'+
+    html:'<div class="mini"><div class="scope"><div class="scopecircle" style="'+bg('s3-micro')+'">'+
       '<div class="sp" id="sp">편의점에 있는 삼각김밥은<br>유통기한이 지나면<br>판매되지 않는다.</div></div></div></div>'+
       '<input type="range" class="rng" id="foc" min="0" max="100" value="8" aria-label="초점 조절">'+
       '<p class="hint">초점 손잡이를 돌려 글자가 또렷해지는 지점에서 멈춰 보자.</p>',
@@ -1544,7 +1612,7 @@ function microPop(){
 }
 /* --- 실험대 서랍 : 자석 · 셀로판지 안경 --- */
 function sciDrawerPop(){
-  pop({title:'실험대 서랍',sub:'실험 도구가 굴러다닌다.',
+  pop({title:'실험대 서랍',img:'s3-drawer',sub:'실험 도구가 굴러다닌다.',
     html:'<div class="gridpick">'+
       '<button class="pick dim"><span class="em">🧪</span>깨진 시험관</button>'+
       '<button class="pick" data-i="magnet"><span class="em">🧲</span>말굽 자석</button>'+
@@ -1562,7 +1630,7 @@ function sciDrawerPop(){
 function monitorPop(){
   pop({title:'실험실 컴퓨터',sub:'전원은 꺼져 있는데 화면만 켜져 있다.',
     html:'<div class="mini" style="aspect-ratio:16/9;background:linear-gradient(170deg,#0f2b33,#061418);'+
-      'padding:16px;position:relative">'+
+      'padding:16px;position:relative;'+bg('s3-monitor')+'">'+
       '<div class="gridpick" style="grid-template-columns:repeat(3,minmax(0,1fr));margin:0">'+
       '<button class="pick" id="memo"><span class="em">📝</span>메모장</button>'+
       '<button class="pick dim"><span class="em">🗑️</span>휴지통</button>'+
@@ -1591,7 +1659,7 @@ function monitorPop(){
 function powderPop(){
   if(!needItem('magnet','손으로 쓸어 보지만 가루가 손끝에 달라붙기만 한다. 쇳가루다.')) return;
   pop({title:'바닥의 검은 가루',sub:'자석을 대고 쇳가루를 끌어 모은다.',
-    html:'<div class="mini"><div class="scrub ironbg" id="sc">'+
+    html:'<div class="mini"><div class="scrub ironbg" id="sc" style="'+bg('s3-powder')+'">'+
       '<div class="under"><div class="revealtext">편의점에 있는 도시락은<br>유통기한이 지나면 판매되지 않는다.</div></div>'+
       '<canvas></canvas><span class="scrubmsg">0%</span></div></div>'+
       '<p class="hint">🧲 자석을 누른 채 바닥을 쓸어 보자.</p>',
@@ -1621,7 +1689,7 @@ function a4Pop(){
   pop({title:'칠판에 붙은 A4 용지',sub:'검은 글씨와 빨간 글씨가 뒤엉켜 읽을 수가 없다.',
     html:'<style>#a4p .bk{color:#1d1b17}#a4p .rd{color:#cf2b28}'+
       '#a4p.on .rd{color:rgba(207,43,40,0)}#a4p.on{background:#e8cfcb}</style>'+
-      '<div class="mini" style="padding:20px;background:#151a1b;display:grid;place-items:center">'+
+      '<div class="mini" style="padding:20px;background:#151a1b;display:grid;place-items:center;'+bg('s3-a4')+'">'+
       '<div id="a4p" style="background:#ded5bd;padding:20px;line-height:1.9;font-size:clamp(15px,3.4vw,21px);'+
       'font-family:var(--f-hand);word-break:keep-all;transition:background .35s">'+html+'</div></div>'+
       '<div class="row">'+(hasItem('glasses')?'<button class="btn" data-use>👓 셀로판지 안경을 쓴다</button>':
@@ -1676,7 +1744,7 @@ ROOMS.push({
 
 /* --- 라디오 주파수 맞추기 --- */
 function radioPop(){
-  pop({title:'낡은 라디오',sub:'전원은 들어오는데 지지직 소리뿐이다.',
+  pop({title:'낡은 라디오',img:'s4-radio',sub:'전원은 들어오는데 지지직 소리뿐이다.',
     html:'<div class="dialwrap" id="dw"><div class="ticks"></div>'+
       '<div class="target" style="left:41.5%;width:5%"></div><div class="needle" id="nd"></div></div>'+
       '<div class="freq" id="fq">40.0 MHz</div>'+
@@ -1719,7 +1787,7 @@ function radioPop(){
 }
 function parcelPop(){
   SFX.paper(); nz({filt:'highpass',ff:1800,d:.5,g:.1});
-  pop({title:'택배 상자',sub:'받는 사람 칸이 검게 지워져 있다. 테이프를 뜯는다.',
+  pop({title:'택배 상자',img:'s4-parcel',sub:'받는 사람 칸이 검게 지워져 있다. 테이프를 뜯는다.',
     html:'<div class="mini" style="padding:26px;display:grid;place-items:center;'+
       'background:linear-gradient(176deg,#6b5537,#3a2c1a)">'+
       '<div class="revealtext" style="text-align:center">상자 안엔 종이 한 장뿐<br>'+
@@ -1729,7 +1797,7 @@ function parcelPop(){
 }
 function winslitPop(){
   SFX.creak();
-  pop({title:'창틀',sub:'유일하게 바깥이 보이는 틈. 손가락을 넣어 본다.',
+  pop({title:'창틀',img:'s4-window',sub:'유일하게 바깥이 보이는 틈. 손가락을 넣어 본다.',
     html:'<div class="mini" style="padding:26px;display:grid;place-items:center;'+
       'background:linear-gradient(168deg,#223036,#0b1316)">'+
       '<div class="revealtext" style="text-align:center">틈새에 끼워져 있던 쪽지<br>'+
@@ -1741,8 +1809,8 @@ function winslitPop(){
 function organPop(){
   const ORG={brain:'뇌',heart:'심장',eye:'눈'};
   pop({title:'인체 모형',wide:true,sub:'배가 열린 채 비어 있다. 바닥에 장기 세 개가 굴러다닌다.',
-    html:'<div class="organwrap" id="ow">'+
-      '<div class="bodyfig"><div class="h"></div><div class="t"></div></div>'+
+    html:'<div class="organwrap" id="ow" style="'+bg('s4-organ')+'">'+
+      (has('s4-organ')?'':'<div class="bodyfig"><div class="h"></div><div class="t"></div></div>')+
       '<div class="slotO" data-s="brain" style="left:45.5%;top:6%;width:9%;aspect-ratio:1">뇌</div>'+
       '<div class="slotO" data-s="eye" style="left:46%;top:16.5%;width:8%;aspect-ratio:1">눈</div>'+
       '<div class="slotO" data-s="heart" style="left:42.5%;top:33%;width:10%;aspect-ratio:1">심장</div>'+
@@ -1771,7 +1839,7 @@ function organPop(){
 function cabinetPop(){
   SFX.creak();
   const docs=['출입 기록부 (1998)','소방 점검표','청소년 활동 실태 보고','비품 대장','폐교 승인 공문'];
-  pop({title:'캐비닛',sub:'문을 열자 서류 뭉치가 쏟아진다.',
+  pop({title:'캐비닛',img:'s4-cabinet',sub:'문을 열자 서류 뭉치가 쏟아진다.',
     html:'<div class="docs">'+docs.map((d,i)=>
       '<button class="doc" data-i="'+i+'"><span class="n">'+String(i+1).padStart(2,'0')+'</span>'+d+'</button>').join('')+
       '</div><p class="hint">누군가 세 번째 서류에만 형광펜을 그어 두었다.</p>',
@@ -1785,7 +1853,7 @@ function cabinetPop(){
 function stainPop(){
   if(!needItem('coin','손톱으로는 꿈쩍도 하지 않는다. 딱딱한 것으로 긁어내야겠다.')) return;
   pop({title:'바닥 얼룩',sub:'동전 모서리로 굳은 얼룩을 긁어낸다.',
-    html:'<div class="mini"><div class="scrub floorbg" id="sc">'+
+    html:'<div class="mini"><div class="scrub floorbg" id="sc" style="'+bg('s4-stain')+'">'+
       '<div class="under"><div class="revealtext scratch">청소년 놀이 공간을<br>확대해야 한다.</div></div>'+
       '<canvas></canvas><span class="scrubmsg">0%</span></div></div>'+
       '<p class="hint">🪙 동전을 누른 채 얼룩 위를 빠르게 문질러 보자.</p>',
@@ -1931,15 +1999,19 @@ function enterRoom(i){
 }
 function renderRoom(){
   const R=ROOMS[S.room], room=$('#room');
-  room.innerHTML='<div class="layer '+R.wall+'"></div>'+
-    '<div class="floorplane '+R.floor+'"></div><div class="grime"></div>'+(R.extra||'')+
-    '<div class="moon"></div>';
+  const key='room'+(S.room+1), photo=has(key);
+  room.classList.toggle('photo',photo);
+  room.innerHTML=photo
+    ? '<div class="layer bgphoto" style="'+bg(key)+'"></div><div class="photoscrim"></div>'
+    : '<div class="layer '+R.wall+'"></div>'+
+      '<div class="floorplane '+R.floor+'"></div><div class="grime"></div>'+(R.extra||'')+
+      '<div class="moon"></div>';
   R.objs.forEach(o=>{
     const el=document.createElement('div');
     el.className='ob'+(S.done[o.id]?' done':'');
     el.style.cssText='left:'+o.x+'%;top:'+o.y+'%;width:'+o.w+'%;height:'+o.h+'%';
     el.dataset.id=o.id; el.tabIndex=0; el.setAttribute('role','button'); el.setAttribute('aria-label',o.n);
-    el.innerHTML=(o.art||'')+'<span class="tag">'+o.n+'</span>'+
+    el.innerHTML=(photo?'':(o.art||''))+'<span class="tag">'+o.n+'</span>'+
       ((o.scare||o.noPin)?'':'<span class="pin"></span>');
     const go=()=>{ SFX.click(); o.act(el); };
     el.addEventListener('click',go);
@@ -1974,6 +2046,7 @@ function endingSeq(){
   tone({f:120,to:40,d:2.6,g:.14,type:'sine'});
   setTimeout(()=>{
     $('#app').style.display='none';
+    if(has('ceiling')){ const c=$('#ending .ceil'); c.style.cssText=bg('ceiling'); c.classList.add('photo'); }
     $('#ending').classList.add('on');
     b.classList.remove('on');                  /* 천천히 밝아진다 */
     setTimeout(()=>{
@@ -2008,6 +2081,10 @@ function endingSeq(){
   const canResume=!!(sv&&((sv.notes&&sv.notes.length)||sv.room));
   if(canResume) $('#btnResume').style.display='';
 
+  IMGREADY.then(()=>{
+    if(has('title')){ const st=$('#start');
+      if(st) st.style.cssText+=';background-image:url("'+HAVE['title']+'");background-size:cover;background-position:center'; }
+  });
   function begin(fresh){
     ac(); SFX.door();
     if(fresh){ wipe(); S.room=0; S.notes=[]; S.items=[]; S.done={}; S.flags={}; S.elapsed=0; }
@@ -2018,7 +2095,7 @@ function endingSeq(){
     S.t0=Date.now(); S.running=true;
     const st=$('#start'); st.style.transition='opacity .6s'; st.style.opacity='0';
     setTimeout(()=>st.remove(),620);
-    enterRoom(S.room);
+    IMGREADY.then(()=>enterRoom(S.room));
   }
   $('#btnStart').onclick=()=>begin(true);
   $('#btnResume').onclick=()=>begin(false);

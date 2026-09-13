@@ -1,0 +1,1081 @@
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&display=swap">
+<title>논증 징검다리</title>
+<style>
+:root{
+  --hanji:#F1E4C8; --paper:#FBF4E4; --panel:#FFFBF1; --sunk:#E7D8B8;
+  --ink:#241C1A; --ink2:#5E4E45; --edge:#D3BA90;
+  --cheong:#1D6E7E; --cheong2:#4FA7B6; --jeok:#B8392B; --hwang:#D9991B; --nok:#3E7A4A;
+  --stone-a:#C6CAC7; --stone-b:#A0A6A3; --stone-c:#757C79; --stone-ink:#16120F;
+  --shadow:0 2px 0 var(--edge), 0 12px 26px rgba(70,50,22,.15);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --hanji:#14181B; --paper:#1D2328; --panel:#232B31; --sunk:#171D22;
+    --ink:#F0E3C8; --ink2:#B2A38D; --edge:#3A444B;
+    --cheong:#5CB8C7; --cheong2:#8AD6E1; --jeok:#E4695C; --hwang:#EFB93F; --nok:#68B073;
+    --stone-a:#B9BEBB; --stone-b:#949A97; --stone-c:#6B716E;
+    --shadow:0 2px 0 #0D1113, 0 12px 26px rgba(0,0,0,.55);
+  }
+}
+:root[data-theme="dark"]{
+  --hanji:#14181B; --paper:#1D2328; --panel:#232B31; --sunk:#171D22;
+  --ink:#F0E3C8; --ink2:#B2A38D; --edge:#3A444B;
+  --cheong:#5CB8C7; --cheong2:#8AD6E1; --jeok:#E4695C; --hwang:#EFB93F; --nok:#68B073;
+  --stone-a:#B9BEBB; --stone-b:#949A97; --stone-c:#6B716E;
+  --shadow:0 2px 0 #0D1113, 0 12px 26px rgba(0,0,0,.55);
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--hanji);color:var(--ink);font-family:"Gowun Batang",'Nanum Myeongjo',serif;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:1060px;margin:0 auto;padding-inline:16px;padding-block:14px 30px;display:flex;flex-direction:column;gap:12px}
+
+/* ── 낙관 브랜드 ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.seal{background:var(--jeok);color:#FBF4E4;font-family:"Do Hyeon",sans-serif;font-size:15px;line-height:1.05;
+  padding:7px 8px 6px;border-radius:3px;letter-spacing:.1em;box-shadow:inset 0 0 0 2px rgba(251,244,228,.34)}
+.brand-name{font-family:"Do Hyeon",sans-serif;font-size:23px;letter-spacing:.03em}
+.brand-sub{font-size:12.5px;color:var(--ink2);letter-spacing:.02em}
+.tools{display:flex;gap:7px;flex-wrap:wrap}
+.tool{font-family:"Gaegu",cursive;font-size:15px;font-weight:700;color:var(--ink);background:var(--panel);
+  border:1px solid var(--edge);border-radius:999px;padding:5px 13px;cursor:pointer;transition:transform .12s,background .12s}
+.tool b{color:var(--cheong)}
+.tool[aria-pressed="true"] b{color:var(--jeok)}
+.tool:hover{transform:translateY(-1px)}
+.tool:focus-visible,.stone:focus-visible,canvas:focus-visible,.btn:focus-visible{outline:3px solid var(--hwang);outline-offset:3px}
+
+/* ── HUD ── */
+.hud{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:8px 16px;align-items:center;
+  background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:9px 15px;box-shadow:var(--shadow)}
+.k{font-family:"Do Hyeon",sans-serif;font-size:11px;letter-spacing:.16em;color:var(--ink2);display:block}
+.hud strong{font-family:"Do Hyeon",sans-serif;font-size:21px;font-variant-numeric:tabular-nums;line-height:1.1}
+.hud-stage{display:flex;align-items:baseline;gap:7px}
+.hud-stage .sub{font-family:"Gaegu",cursive;font-size:15px;color:var(--cheong);font-weight:700}
+.hud-time{display:flex;align-items:center;gap:9px;min-width:120px}
+.bar{flex:1;height:13px;background:var(--sunk);border-radius:999px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.18)}
+.bar i{display:block;height:100%;width:100%;background:var(--nok);border-radius:999px;transition:width .2s linear,background .3s}
+.bar.warn i{background:var(--hwang)} .bar.crit i{background:var(--jeok);animation:pulse .7s infinite}
+@keyframes pulse{50%{opacity:.45}}
+.hud-time .t{font-family:"Do Hyeon",sans-serif;font-size:16px;font-variant-numeric:tabular-nums;min-width:44px;text-align:right}
+.hud-wind span+span{font-family:"Do Hyeon",sans-serif;font-size:16px}
+.dots{display:flex;gap:5px;padding-top:2px}
+.dots i{width:13px;height:13px;border-radius:50%;background:var(--jeok);box-shadow:inset -2px -2px 0 rgba(0,0,0,.22)}
+.dots i.off{background:var(--sunk);box-shadow:none}
+
+/* ── 현판(懸板) 안내판 ── */
+.plaque{position:relative;background:#33241A;border-radius:8px;padding:13px 20px 15px;
+  box-shadow:inset 0 0 0 3px #33241A, inset 0 0 0 4px #C29B54, 0 8px 18px rgba(50,32,12,.3)}
+.plaque::before,.plaque::after{content:"";position:absolute;top:8px;bottom:8px;width:5px;background:#C29B54;opacity:.5;border-radius:2px}
+.plaque::before{left:9px} .plaque::after{right:9px}
+.pl-eyebrow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0 0 4px}
+.pl-no{font-family:"Do Hyeon",sans-serif;font-size:12px;letter-spacing:.2em;color:#D9991B}
+.pl-topic{font-family:"Gaegu",cursive;font-weight:700;font-size:15px;color:#F1E4C8;background:rgba(241,228,200,.13);
+  border:1px solid rgba(194,155,84,.6);border-radius:999px;padding:1px 11px 2px}
+.pl-text{margin:0;font-family:"Gaegu",cursive;font-weight:700;font-size:clamp(19px,3.4vw,25px);line-height:1.34;color:#F7EEDB;text-wrap:balance}
+.pl-text em{font-style:normal;color:#F3C65C;box-shadow:inset 0 -8px 0 rgba(217,153,27,.22)}
+
+/* ── 강 ── */
+.stagewrap{position:relative}
+canvas{width:100%;aspect-ratio:960/660;display:block;border-radius:12px;border:1px solid var(--edge);
+  box-shadow:var(--shadow);touch-action:none;cursor:crosshair;background:#2A7488}
+.toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);max-width:82%;
+  font-family:"Gaegu",cursive;font-weight:700;font-size:17px;line-height:1.35;text-align:center;
+  background:#33241A;color:#F7EEDB;border:2px solid #C29B54;border-radius:8px;padding:8px 16px;
+  box-shadow:0 8px 20px rgba(0,0,0,.35);z-index:3;animation:drop .3s ease-out}
+.toast.good{background:#1D5E4A;border-color:#7FD3A8}
+.toast.bad{background:#7E2A21;border-color:#E9927F}
+@keyframes drop{from{opacity:0;transform:translate(-50%,-12px)}}
+
+/* ── 오버레이 ── */
+.screen{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:rgba(24,18,12,.72);border-radius:12px;overflow:auto}
+.card{width:min(680px,100%);max-height:100%;overflow:auto;background:var(--paper);border:1px solid var(--edge);
+  border-radius:12px;padding:22px clamp(16px,3.4vw,30px) 24px;box-shadow:0 18px 40px rgba(0,0,0,.35);color:var(--ink)}
+.card h1{font-family:"Do Hyeon",sans-serif;font-size:clamp(30px,6.4vw,46px);margin:6px 0 4px;letter-spacing:.02em;text-wrap:balance}
+.card h2{font-family:"Do Hyeon",sans-serif;font-size:clamp(22px,4.4vw,30px);margin:0 0 6px;text-wrap:balance}
+.card .lead{font-size:15.5px;line-height:1.7;color:var(--ink2);margin:0 0 16px}
+.card p{line-height:1.72}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.btn{font-family:"Do Hyeon",sans-serif;font-size:18px;padding:11px 22px;border-radius:8px;border:0;cursor:pointer;
+  background:var(--jeok);color:#FBF4E4;box-shadow:0 4px 0 rgba(0,0,0,.22);transition:transform .1s}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.22)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--edge);box-shadow:none}
+.btn.blue{background:var(--cheong)}
+.stagegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;margin-top:14px}
+.sbtn{font-family:"Do Hyeon",sans-serif;background:var(--panel);border:1px solid var(--edge);border-radius:9px;
+  padding:9px 6px;cursor:pointer;color:var(--ink);text-align:center;line-height:1.3}
+.sbtn small{display:block;font-family:"Gaegu",cursive;font-weight:700;font-size:13px;color:var(--cheong)}
+.sbtn[disabled]{opacity:.42;cursor:not-allowed}
+.sbtn.cleared{border-color:var(--nok);box-shadow:inset 0 0 0 1px var(--nok)}
+.recap{margin:14px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px}
+.recap li{background:var(--panel);border:1px solid var(--edge);border-radius:9px;padding:10px 13px;font-size:14.5px;line-height:1.62}
+.recap b{font-family:"Do Hyeon",sans-serif;font-size:13px;letter-spacing:.08em;padding:1px 8px;border-radius:999px;color:#FBF4E4;margin-right:7px}
+.recap b.g{background:var(--cheong)} .recap b.y{background:var(--jeok)}
+.recap span{display:block;color:var(--ink2);font-size:13.5px}
+.recap span.c{color:var(--ink);font-weight:700}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.note{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:13px 15px}
+.note h3{font-family:"Do Hyeon",sans-serif;margin:0 0 6px;font-size:17px}
+.note h3.g{color:var(--cheong)} .note h3.y{color:var(--jeok)}
+.note p{margin:0;font-size:14px;line-height:1.66;color:var(--ink2)}
+.note code{font-family:"Gaegu",cursive;font-weight:700;font-size:15px;color:var(--ink)}
+.grade{font-family:"Do Hyeon",sans-serif;font-size:clamp(26px,5.4vw,38px);color:var(--jeok)}
+.bignum{font-family:"Do Hyeon",sans-serif;font-size:clamp(34px,7vw,54px);font-variant-numeric:tabular-nums;line-height:1}
+
+/* ── 돌 선반 ── */
+.shelfhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:2px}
+.shelf-title{font-family:"Do Hyeon",sans-serif;font-size:17px;letter-spacing:.04em}
+.shelf-hint{font-family:"Gaegu",cursive;font-weight:700;font-size:15px;color:var(--ink2)}
+.shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:15px 14px;
+  padding:4px 2px 12px;max-height:260px;overflow-y:auto}
+.stone{position:relative;border:0;cursor:pointer;text-align:left;padding:15px 17px 16px;min-height:80px;
+  display:flex;align-items:center;gap:10px;color:var(--stone-ink);font-family:"Gowun Batang",serif;font-size:14.5px;line-height:1.5;
+  background:radial-gradient(125% 150% at 33% 16%, var(--stone-a) 0%, var(--stone-b) 45%, var(--stone-c) 100%);
+  border-radius:47% 53% 50% 50% / 57% 43% 57% 43%;
+  box-shadow:0 6px 0 rgba(60,66,64,.75), 0 13px 20px rgba(40,30,15,.26);
+  transition:transform .13s ease, box-shadow .13s ease}
+.stone:nth-child(3n){border-radius:53% 47% 55% 45% / 44% 58% 42% 56%}
+.stone:nth-child(3n+1){border-radius:50% 50% 46% 54% / 60% 40% 60% 40%}
+.stone:hover{transform:translateY(-3px)}
+.stone.sel{transform:translateY(-6px);box-shadow:0 9px 0 rgba(60,66,64,.75), 0 16px 24px rgba(40,30,15,.3), 0 0 0 3px var(--hwang)}
+.stone .dot{flex:0 0 auto;width:11px;height:11px;border-radius:50%;box-shadow:inset -2px -2px 0 rgba(0,0,0,.25)}
+.stone.gone{animation:sink .5s forwards}
+@keyframes sink{to{opacity:0;transform:translateY(16px) scale(.8)}}
+.stone.type{justify-content:center;min-height:80px;
+  background:radial-gradient(125% 150% at 33% 16%, var(--stone-a) 0%, var(--stone-b) 45%, var(--stone-c) 100%)}
+.stone.type .txt{font-family:"Do Hyeon",sans-serif;font-size:27px;letter-spacing:.14em}
+.stone.type::after{content:"논증 방식";position:absolute;bottom:9px;left:50%;transform:translateX(-50%);
+  font-family:"Do Hyeon",sans-serif;font-size:10px;letter-spacing:.18em;color:rgba(22,18,15,.62)}
+.d-p{background:var(--cheong)} .d-c{background:var(--jeok)} .d-t{background:var(--hwang)}
+.foot{margin:0;font-family:"Gaegu",cursive;font-weight:700;font-size:14.5px;color:var(--ink2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.foot .d{width:11px;height:11px;border-radius:50%;display:inline-block}
+
+@media (max-width:680px){
+  .hud{grid-template-columns:1fr auto auto;gap:8px 12px}
+  .hud-time{grid-column:1/-1;order:3}
+  .shelf{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));max-height:230px}
+  .stone{font-size:13.5px;padding:13px 14px;min-height:74px}
+  .two{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <span class="seal">논증<br>징검</span>
+      <span>
+        <span class="brand-name">논증 징검다리</span><br>
+        <span class="brand-sub">귀납과 연역 · 중학교 국어</span>
+      </span>
+    </div>
+    <div class="tools">
+      <button class="tool" id="btnAssist" type="button" aria-pressed="false">조준 도움 <b>끔</b></button>
+      <button class="tool" id="btnSound" type="button" aria-pressed="true">소리 <b>켬</b></button>
+      <button class="tool" id="btnHelp" type="button">도움말</button>
+    </div>
+  </header>
+
+  <div class="hud">
+    <div class="hud-stage">
+      <span><span class="k">STAGE</span><strong id="hudStage">1</strong></span>
+      <span class="sub" id="hudStageName">첫 여울</span>
+    </div>
+    <div class="hud-time"><div class="bar" id="timeBar"><i id="timeFill"></i></div><span class="t" id="hudTime">0:00</span></div>
+    <div class="hud-wind"><span class="k">바람</span><span id="hudWind">없음</span></div>
+    <div class="hud-life"><span class="k">기회</span><span class="dots" id="hudLife"></span></div>
+    <div class="hud-score"><span class="k">점수</span><strong id="hudScore">0</strong></div>
+  </div>
+
+  <div class="plaque">
+    <div class="pl-eyebrow"><span class="pl-no" id="guideNo">준비</span><span class="pl-topic" id="guideTopic">강가</span></div>
+    <p class="pl-text" id="guideText">돌을 골라 강 건너 어르신께 징검다리를 놓아 드리세요.</p>
+  </div>
+
+  <div class="stagewrap">
+    <canvas id="cv" width="960" height="660" tabindex="0" aria-label="강과 징검다리 화면. 스페이스바를 눌러 힘을 모으고, 좌우 방향키로 조준합니다."></canvas>
+    <div class="toast" id="toast" hidden></div>
+    <div class="screen" id="screen" hidden></div>
+  </div>
+
+  <div class="shelfhead">
+    <span class="shelf-title">돌 고르기</span>
+    <span class="shelf-hint" id="shelfHint">돌을 누른 뒤, 강을 꾹 눌러 힘을 모았다가 손을 떼세요.</span>
+  </div>
+  <div class="shelf" id="shelf"></div>
+  <p class="foot">
+    <i class="d d-p"></i> 전제 &nbsp;<i class="d d-c"></i> 결론 &nbsp;<i class="d d-t"></i> 논증 방식
+  </p>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   논증 징검다리 — 귀납·연역 학습 게임
+   문제를 고치려면 아래 STAGES 배열만 손보면 됩니다.
+     type      : '귀납' 또는 '연역'
+     topic     : 안내판에 뜨는 소재 이름 (정답을 알려 주지 않는 말로)
+     premises  : 전제 2개 (연역은 [대전제, 소전제] 순서를 지킵니다)
+     conclusion: 결론 1개
+   ════════════════════════════════════════════════════════════ */
+const STAGES = [
+  { stage:1, name:'첫 여울', items:[
+    { type:'귀납', topic:'참새와 비둘기',
+      premises:['참새는 알을 낳는다.','비둘기도 알을 낳는다.'],
+      conclusion:'그러므로 모든 새는 알을 낳는다.' },
+    { type:'연역', topic:'소크라테스',
+      premises:['모든 사람은 죽는다.','소크라테스는 사람이다.'],
+      conclusion:'그러므로 소크라테스는 죽는다.' }
+  ]},
+  { stage:2, name:'고래 나루', items:[
+    { type:'연역', topic:'고래',
+      premises:['모든 포유류는 새끼에게 젖을 먹인다.','고래는 포유류이다.'],
+      conclusion:'그러므로 고래는 새끼에게 젖을 먹인다.' },
+    { type:'귀납', topic:'쇠붙이',
+      premises:['구리를 가열했더니 부피가 늘어났다.','철을 가열했더니 부피가 늘어났다.'],
+      conclusion:'그러므로 금속은 가열하면 부피가 늘어난다.' }
+  ]},
+  { stage:3, name:'봄꽃 개울', items:[
+    { type:'귀납', topic:'우리 반',
+      premises:['지훈이는 아침을 먹고 등교한다.','수아도 아침을 먹고 등교한다.'],
+      conclusion:'그러므로 우리 반 학생들은 대체로 아침을 먹고 등교한다.' },
+    { type:'연역', topic:'도형 하나',
+      premises:['모든 정사각형은 네 변의 길이가 같다.','이 도형은 정사각형이다.'],
+      conclusion:'그러므로 이 도형은 네 변의 길이가 같다.' },
+    { type:'귀납', topic:'봄꽃',
+      premises:['개나리는 봄에 꽃을 피운다.','진달래도 봄에 꽃을 피운다.'],
+      conclusion:'그러므로 우리 주변의 꽃은 대체로 봄에 핀다.' }
+  ]},
+  { stage:4, name:'별빛 강', items:[
+    { type:'연역', topic:'지구',
+      premises:['모든 행성은 별 주위를 돈다.','지구는 행성이다.'],
+      conclusion:'그러므로 지구는 별 주위를 돈다.' },
+    { type:'귀납', topic:'걷기',
+      premises:['아버지는 꾸준히 걸으신 뒤 건강해지셨다.','이웃집 아주머니도 걷기를 한 뒤 건강해지셨다.'],
+      conclusion:'그러므로 꾸준히 걷는 것은 건강에 좋다.' },
+    { type:'연역', topic:'한글',
+      premises:['세종대왕이 만든 것은 백성을 위한 것이다.','한글은 세종대왕이 만든 것이다.'],
+      conclusion:'그러므로 한글은 백성을 위한 것이다.' }
+  ]},
+  { stage:5, name:'옛이야기 강', items:[
+    { type:'귀납', topic:'고전 소설',
+      premises:['「흥부전」에는 권선징악이 나타난다.','「장화홍련전」에도 권선징악이 나타난다.'],
+      conclusion:'그러므로 우리 고전 소설에는 권선징악이 자주 나타난다.' },
+    { type:'연역', topic:'세 변의 도형',
+      premises:['모든 삼각형의 내각의 합은 180도이다.','이 도형은 삼각형이다.'],
+      conclusion:'그러므로 이 도형의 내각의 합은 180도이다.' },
+    { type:'귀납', topic:'산 위의 물',
+      premises:['한라산에서 물은 100도보다 낮은 온도에 끓었다.','백두산에서도 물은 100도보다 낮은 온도에 끓었다.'],
+      conclusion:'그러므로 높은 산에서는 물이 100도보다 낮은 온도에 끓는다.' }
+  ]},
+  { stage:6, name:'큰물 나루', items:[
+    { type:'연역', topic:'민준이',
+      premises:['우리 학교 학생은 모두 교복을 입는다.','민준이는 우리 학교 학생이다.'],
+      conclusion:'그러므로 민준이는 교복을 입는다.' },
+    { type:'귀납', topic:'책 읽기',
+      premises:['책을 많이 읽은 서연이는 어휘력이 풍부하다.','책을 즐겨 읽는 태호도 어휘력이 뛰어나다.'],
+      conclusion:'그러므로 독서를 많이 하면 어휘력이 좋아진다.' },
+    { type:'연역', topic:'거짓말',
+      premises:['남을 속이는 행동은 옳지 않다.','거짓말은 남을 속이는 행동이다.'],
+      conclusion:'그러므로 거짓말은 옳지 않다.' }
+  ]}
+];
+
+/* 단계별 안내 문구 */
+const GUIDE = {
+  '귀납':[
+    '전제가 될 <em>구체적인 사실</em>의 돌을 던지세요.',
+    '<em>또 하나의 구체적인 사실</em>을 던져 전제를 채우세요.',
+    '두 사실에서 이끌어 낼 수 있는 <em>일반적인 결론</em>은?',
+    '이 결론을 이끌어 낸 <em>논증 방식</em>은?'
+  ],
+  '연역':[
+    '전제가 될 <em>일반적인 원리(대전제)</em>의 돌을 던지세요.',
+    '그 원리에 해당하는 <em>구체적인 사실(소전제)</em>을 던지세요.',
+    '두 전제에서 반드시 나오는 <em>결론</em>은?',
+    '이 결론을 이끌어 낸 <em>논증 방식</em>은?'
+  ]
+};
+const LESSON = {
+  '귀납':'구체적인 사실들을 모아 → 일반적인 결론으로. 이것이 <b>귀납</b>!',
+  '연역':'일반적인 원리에서 → 구체적인 사실을 거쳐 결론으로. 이것이 <b>연역</b>!'
+};
+
+/* ────────── 짧은 도구들 ────────── */
+const $ = s => document.querySelector(s);
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+const lerp = (a,b,t) => a+(b-a)*t;
+const rnd = (a,b) => a+Math.random()*(b-a);
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SAVE_KEY = 'nonjeung-bridge-v1';
+
+function load(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY))||{}; }catch(e){ return {}; } }
+function save(o){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(o)); }catch(e){} }
+let store = Object.assign({best:0, unlocked:1}, load());
+
+/* ────────── 소리 (파일 없이 합성) ────────── */
+const PENTA = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];
+let actx = null, soundOn = true;
+function ac(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
+function tone(freq, t0, dur, type, vol){
+  const a = ac(); if(!a || !soundOn) return;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type||'sine'; o.frequency.setValueAtTime(freq, a.currentTime+t0);
+  g.gain.setValueAtTime(0.0001, a.currentTime+t0);
+  g.gain.exponentialRampToValueAtTime(vol||0.14, a.currentTime+t0+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime+t0+dur);
+  o.connect(g); g.connect(a.destination); o.start(a.currentTime+t0); o.stop(a.currentTime+t0+dur+0.02);
+}
+function noise(t0, dur, vol, freq){
+  const a = ac(); if(!a || !soundOn) return;
+  const n = Math.floor(a.sampleRate*dur), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
+  for(let i=0;i<n;i++) d[i] = (Math.random()*2-1) * (1-i/n);
+  const src = a.createBufferSource(); src.buffer = buf;
+  const f = a.createBiquadFilter(); f.type='bandpass'; f.frequency.value = freq||900; f.Q.value = 1.1;
+  const g = a.createGain(); g.gain.value = vol||0.16;
+  src.connect(f); f.connect(g); g.connect(a.destination); src.start(a.currentTime+t0);
+}
+const sfx = {
+  pick(){ tone(523.25,0,0.09,'triangle',0.1); },
+  throw_(){ noise(0,0.13,0.07,2200); },
+  land(){ tone(150,0,0.12,'sine',0.22); noise(0.02,0.18,0.1,520); },
+  splash(){ noise(0,0.34,0.2,760); tone(320,0,0.26,'sine',0.07); },
+  good(){ PENTA.slice(0,3).forEach((f,i)=>tone(f,i*0.07,0.28,'triangle',0.11)); },
+  bad(){ tone(196,0,0.2,'sawtooth',0.09); tone(147,0.11,0.26,'sawtooth',0.08); },
+  clear(){ [0,1,2,3,4,5].forEach(i=>tone(PENTA[i],i*0.1,0.5,'triangle',0.12)); },
+  step(){ tone(392,0,0.07,'sine',0.08); }
+};
+
+/* ────────── 강·징검다리 배치 ────────── */
+const W = 960, H = 660;
+function geo(s){
+  const t = s/5;
+  const farY = 202 - 62*t, nearY = 558 + 36*t;
+  return {
+    farY, nearY,
+    start:{ x: 322 - 74*t, y: farY - 32 },
+    goal:{  x: 688 + 44*t, y: nearY + 30 },
+    origin:{x: 152, y: nearY + 34 },
+    tol: [58,55,51,48,45,42][s],
+    windMax: [0,0,10,18,26,34][s]
+  };
+}
+function slotsFor(g, n){
+  const p0 = g.start, p3 = g.goal, out = [], amp = 132;
+  const y0 = g.farY + 42, y1 = g.nearY - 38;   /* 돌은 모두 물 위에 놓입니다 */
+  for(let i=0;i<n;i++){
+    const u = n>1 ? i/(n-1) : 0.5;
+    const side = (i%2) ? -1 : 1;
+    const wob = 0.68 + 0.32*Math.abs(Math.sin(i*1.7));
+    const env = Math.sin(Math.PI*u);
+    out.push({
+      x: clamp(lerp(p0.x, p3.x, u) + side*amp*wob*(0.72+0.28*env), 150, 820),
+      y: lerp(y0, y1, u)
+    });
+  }
+  return out;
+}
+
+/* ────────── 상태 ────────── */
+const G = {
+  mode:'title', stageIdx:0, items:[], stones:[], shelf:[], placed:[], slots:[], g:null,
+  itemIdx:0, step:0, usedPrem:[], done:[],
+  score:0, lives:3, time:0, timeMax:0, wind:0, aimMiss:0,
+  sel:null, charging:false, power:0, powerDir:1, aim:-1.0, assist:false,
+  fly:null, fx:[], ripples:[], floats:[],
+  char:{ x:0, y:0, from:null, to:null, t:1 },
+  kidArm:0, running:false, overlay:false, hintShown:false
+};
+
+/* ────────── 스테이지 준비 ────────── */
+function buildStage(idx){
+  const S = STAGES[idx];
+  G.stageIdx = idx; G.items = S.items; G.g = geo(idx);
+  G.stones = []; G.placed = []; G.itemIdx = 0; G.step = 0; G.usedPrem = []; G.done = [];
+  G.lives = 3; G.aimMiss = 0; G.sel = null; G.fly = null; G.fx = []; G.ripples = []; G.floats = [];
+  let id = 0;
+  S.items.forEach((it,i)=>{
+    G.stones.push({ id:id++, item:i, role:'p0', text:it.premises[0] });
+    G.stones.push({ id:id++, item:i, role:'p1', text:it.premises[1] });
+    G.stones.push({ id:id++, item:i, role:'con', text:it.conclusion });
+  });
+  S.items.forEach(it=>{ G.stones.push({ id:id++, item:null, role:'type', kind:it.type, text:it.type }); });
+  G.stones.forEach(st=>{ st.short = st.role==='type' ? st.text : st.text.replace(/^그러므로\s*/,'').slice(0,5)+'…'; });
+  G.shelf = G.stones.slice();
+  for(let i=G.shelf.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [G.shelf[i],G.shelf[j]]=[G.shelf[j],G.shelf[i]]; }
+  G.slots = slotsFor(G.g, G.stones.length);
+  G.timeMax = G.stones.length*15 + 20 - idx*4; G.time = G.timeMax;
+  G.char.x = G.g.start.x; G.char.y = G.g.start.y; G.char.t = 1; G.char.from = null;
+  rollWind();
+  renderShelf(); updateHUD(); setGuide();
+  $('#hudStageName').textContent = S.name;
+}
+function rollWind(){
+  const m = G.g.windMax;
+  G.wind = m ? Math.round(rnd(-m,m)) : 0;
+  const el = $('#hudWind');
+  if(!G.wind){ el.textContent='없음'; el.style.color='var(--ink2)'; return; }
+  const n = Math.min(3, Math.ceil(Math.abs(G.wind)/12));
+  el.textContent = (G.wind<0?'◀':'▶').repeat(n);
+  el.style.color = 'var(--cheong)';
+}
+
+/* ────────── 아래 돌 선반 ────────── */
+function renderShelf(){
+  const box = $('#shelf'); box.innerHTML = '';
+  G.shelf.forEach(st=>{
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'stone' + (st.role==='type'?' type':'') + (G.sel===st.id?' sel':'');
+    b.dataset.id = st.id;
+    b.setAttribute('aria-pressed', G.sel===st.id ? 'true':'false');
+    const dot = st.role==='type' ? 'd-t' : st.role==='con' ? 'd-c' : 'd-p';
+    b.innerHTML = (st.role==='type'?'':'<i class="dot '+dot+'"></i>') + '<span class="txt">'+st.text+'</span>';
+    box.appendChild(b);
+  });
+}
+$('#shelf').addEventListener('click', e=>{
+  const b = e.target.closest('.stone'); if(!b || G.overlay || !G.running || G.fly) return;
+  const id = +b.dataset.id;
+  G.sel = (G.sel===id) ? null : id;
+  if(G.sel!==null){
+    sfx.pick();
+    const t = G.slots[G.placed.length];
+    G.aim = Math.atan2(t.y-G.g.origin.y, t.x-G.g.origin.x);
+    $('#shelfHint').textContent = '이제 강을 꾹 눌러 힘을 모았다가 손을 떼세요.';
+  } else {
+    $('#shelfHint').textContent = '돌을 누른 뒤, 강을 꾹 눌러 힘을 모았다가 손을 떼세요.';
+  }
+  renderShelf();
+});
+
+/* ────────── 안내판 · HUD ────────── */
+function setGuide(){
+  const it = G.items[G.itemIdx];
+  if(!it) return;
+  const no = ['①','②','③','④'][G.itemIdx] || (G.itemIdx+1);
+  $('#guideNo').textContent = '논증 ' + no;
+  $('#guideTopic').textContent = it.topic;
+  $('#guideText').innerHTML = GUIDE[it.type][G.step];
+}
+function updateHUD(){
+  $('#hudStage').textContent = G.stageIdx+1;
+  $('#hudScore').textContent = G.score;
+  const m = Math.floor(Math.max(0,G.time)/60), s = Math.floor(Math.max(0,G.time)%60);
+  $('#hudTime').textContent = m+':'+String(s).padStart(2,'0');
+  const r = clamp(G.time/G.timeMax,0,1);
+  $('#timeFill').style.width = (r*100).toFixed(1)+'%';
+  const bar = $('#timeBar');
+  bar.className = 'bar' + (r<0.18?' crit':r<0.42?' warn':'');
+  const lf = $('#hudLife'); lf.innerHTML='';
+  for(let i=0;i<3;i++){ const i2=document.createElement('i'); if(i>=G.lives) i2.className='off'; lf.appendChild(i2); }
+}
+let toastT = null;
+function toast(msg, kind){
+  const el = $('#toast'); el.innerHTML = msg; el.className = 'toast '+(kind||''); el.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(()=>{ el.hidden = true; }, kind==='good'?2600:2400);
+}
+
+/* ────────── 정답 판정 ────────── */
+function checkStone(st){
+  const it = G.items[G.itemIdx];
+  if(G.step<2){
+    if(st.role==='con') return {ok:false, msg:'아직 결론을 놓을 때가 아니에요. 전제부터 놓아야 해요.'};
+    if(st.role==='type') return {ok:false, msg:'논증 방식은 결론까지 놓은 뒤에 던지는 돌이에요.'};
+    if(st.item!==G.itemIdx) return {ok:false, msg:'다른 논증에 쓰일 돌이에요. 지금은 「'+it.topic+'」 차례!'};
+    if(it.type==='연역'){
+      const want = G.step===0 ? 'p0' : 'p1';
+      if(st.role!==want) return {ok:false, msg: G.step===0
+        ? '연역은 <b>일반적인 원리</b>부터 놓아야 해요.'
+        : '이번엔 그 원리에 해당하는 <b>구체적인 사실</b> 차례예요.'};
+    }else if(G.usedPrem.indexOf(st.role)>=0){
+      return {ok:false, msg:'이미 놓은 전제예요.'};
+    }
+    return {ok:true};
+  }
+  if(G.step===2){
+    if(st.role==='type') return {ok:false, msg:'논증 방식은 결론을 놓은 뒤에 던지세요.'};
+    if(st.role!=='con') return {ok:false, msg:'전제는 다 놓았어요. 이제 <b>결론</b> 차례!'};
+    if(st.item!==G.itemIdx) return {ok:false, msg:'다른 논증의 결론이에요. 지금은 「'+it.topic+'」 차례!'};
+    return {ok:true};
+  }
+  if(st.role!=='type') return {ok:false, msg:'이번엔 문장이 아니라 <b>논증 방식</b>이 적힌 돌이에요.'};
+  if(st.kind!==it.type) return {ok:false, msg:'다시 살펴보세요. 구체적 사실 → 일반적 결론이었나요, 일반적 원리 → 구체적 결론이었나요?'};
+  return {ok:true};
+}
+
+/* ────────── 던지기 ────────── */
+function release(){
+  if(!G.charging) return;
+  G.charging = false;
+  const st = G.shelf.find(s=>s.id===G.sel);
+  if(!st) return;
+  const o = G.g.origin, d = 80 + G.power*720;
+  let L = { x:o.x + Math.cos(G.aim)*d, y:o.y + Math.sin(G.aim)*d };
+  const target = G.slots[G.placed.length];
+  if(G.assist){
+    if(Math.hypot(L.x-target.x, L.y-target.y) < 155){ L = { x:target.x, y:target.y }; }
+  } else if(G.wind){
+    L.x += G.wind * (d/380);
+  }
+  const verdict = checkStone(st);
+  const hit = Math.hypot(L.x-target.x, L.y-target.y);
+  sfx.throw_();
+  G.fly = { st, from:{x:o.x,y:o.y-28}, to:L, t:0, dur: REDUCED?0.25:(0.42 + d/1500), lift: d*0.26,
+            verdict, hit, target, spin: rnd(-6,6) };
+  G.kidArm = 1;
+  G.sel = null; renderShelf();
+}
+function resolveThrow(){
+  const f = G.fly; G.fly = null;
+  const st = f.st, tol = G.g.tol;
+
+  if(!f.verdict.ok){
+    sink(f.to, st);
+    G.score = Math.max(0, G.score-40); G.lives--;
+    sfx.bad(); toast(f.verdict.msg, 'bad');
+    floatText(f.to.x, f.to.y, '-40', '#E4695C');
+    dropStone(st);
+    updateHUD();
+    if(G.lives<=0){ endStage(false, '기회를 모두 썼어요'); }
+    return;
+  }
+  if(f.hit > tol){
+    sink(f.to, st);
+    G.aimMiss++; sfx.splash();
+    toast('내용은 맞았어요! 조준만 아쉬웠네요. 다시 던져 보세요.', '');
+    if(G.aimMiss>=2 && !G.assist && !G.hintShown){
+      G.hintShown = true;
+      setTimeout(()=>toast('조준이 어렵나요? 위쪽 <b>조준 도움</b>을 켜 보세요.',''), 2500);
+    }
+    rollWind();
+    return;
+  }
+
+  /* 성공 */
+  G.aimMiss = 0;
+  const perfect = f.hit <= 22;
+  const slot = G.slots[G.placed.length];
+  G.placed.push({ st, x:slot.x, y:slot.y, pop:1 });
+  G.shelf = G.shelf.filter(s=>s.id!==st.id);
+  G.score += 120 + (perfect?60:0);
+  ripple(slot.x, slot.y, 10, 86);
+  splashDrops(slot.x, slot.y, 9, 0.7);
+  sfx.land();
+  floatText(slot.x, slot.y-34, perfect ? '+180 완벽!' : '+120', perfect ? '#F3C65C' : '#BDF0C6');
+  hop(slot.x, slot.y-16);
+  renderShelf(); rollWind();
+
+  G.step++;
+  if(G.step<=1) G.usedPrem.push(st.role);
+
+  if(G.step>=4){
+    const it = G.items[G.itemIdx];
+    G.done.push(it);
+    sfx.good();
+    toast(LESSON[it.type], 'good');
+    G.itemIdx++; G.step = 0; G.usedPrem = [];
+    if(G.itemIdx>=G.items.length){
+      setTimeout(()=>endStage(true), 900);
+      updateHUD(); return;
+    }
+  }
+  setGuide(); updateHUD();
+}
+function dropStone(st){
+  G.shelf = G.shelf.filter(s=>s.id!==st.id);
+  /* 오답 돌은 물에 빠졌지만, 다시 쓸 수 있도록 잠시 뒤 선반으로 돌려 놓습니다 */
+  setTimeout(()=>{ if(G.running){ G.shelf.push(st); renderShelf(); } }, 900);
+  renderShelf();
+}
+function hop(x,y){
+  G.char.from = { x:G.char.x, y:G.char.y };
+  G.char.to = { x, y }; G.char.t = 0;
+  sfx.step();
+}
+
+/* ────────── 이펙트 ────────── */
+function ripple(x,y,r,max){ G.ripples.push({x,y,r,max,a:0.85}); }
+function splashDrops(x,y,n,p){
+  if(REDUCED) return;
+  for(let i=0;i<n;i++) G.fx.push({ x, y, vx:rnd(-90,90)*p, vy:rnd(-190,-70)*p, life:1, r:rnd(2,5) });
+}
+function sink(pos, st){
+  ripple(pos.x, pos.y, 6, 74); splashDrops(pos.x, pos.y, 14, 1);
+  G.fx.push({ sinker:true, x:pos.x, y:pos.y, life:1, label:st.short });
+  sfx.splash();
+}
+function floatText(x,y,text,color){ G.floats.push({x,y,text,color,life:1}); }
+
+/* ────────── 스테이지 종료 ────────── */
+function endStage(win, reason){
+  G.running = false;
+  if(win){
+    hop(G.g.goal.x, G.g.goal.y);
+    const bonus = Math.max(0, Math.round(G.time)*4);
+    G.score += bonus; updateHUD(); sfx.clear();
+    store.unlocked = Math.max(store.unlocked, Math.min(6, G.stageIdx+2));
+    if(G.score>store.best) store.best = G.score;
+    save(store);
+    setTimeout(()=>{ G.stageIdx+1 >= STAGES.length ? showEnding() : showClear(bonus); }, 1100);
+  } else {
+    sfx.bad();
+    if(G.score>store.best){ store.best=G.score; save(store); }
+    setTimeout(()=>showFail(reason), 500);
+  }
+}
+
+/* ────────── 화면(오버레이) ────────── */
+const SCR = $('#screen');
+function openScreen(html){ SCR.innerHTML = '<div class="card">'+html+'</div>'; SCR.hidden = false; G.overlay = true; SCR.scrollTop=0; }
+function closeScreen(){ SCR.hidden = true; SCR.innerHTML=''; G.overlay = false; }
+
+function showTitle(){
+  G.running = false;
+  let grid = '';
+  for(let i=0;i<STAGES.length;i++){
+    const open = (i+1) <= store.unlocked;
+    grid += '<button class="sbtn'+(open&&i+1<store.unlocked?' cleared':'')+'" data-stage="'+i+'"'+(open?'':' disabled')+'>'
+      + (open?'':'🔒 ') + (i+1) + '<small>'+STAGES[i].name+'</small></button>';
+  }
+  openScreen(
+    '<h1>논증 징검다리</h1>'+
+    '<p class="lead">강 건너 어르신이 물을 건너지 못하고 계십니다. 문장이 적힌 돌을 <b>순서대로</b> 던져 징검다리를 놓아 드리세요. '+
+    '전제 → 결론 → 논증 방식까지 놓으면 하나의 논증이 완성됩니다.</p>'+
+    '<div class="two">'+
+      '<div class="note"><h3 class="g">귀납</h3><p><code>구체적 사실 + 구체적 사실 → 일반적 결론</code><br>여러 사례를 모아 하나의 일반적인 주장을 이끌어 냅니다.</p></div>'+
+      '<div class="note"><h3 class="y">연역</h3><p><code>일반적 원리 + 구체적 사실 → 결론</code><br>이미 아는 원리를 개별 사례에 적용해 결론을 내립니다.</p></div>'+
+    '</div>'+
+    '<div class="btnrow"><button class="btn" data-act="start">▶ 처음부터 시작</button>'+
+      '<button class="btn ghost" data-act="help">도움말</button></div>'+
+    '<p class="lead" style="margin:18px 0 0">스테이지 고르기 · 최고 점수 <b>'+store.best+'점</b></p>'+
+    '<div class="stagegrid">'+grid+'</div>'
+  );
+}
+function showHelp(){
+  openScreen(
+    '<h2>이렇게 놀아요</h2>'+
+    '<ol style="line-height:1.85;padding-left:20px;margin:0 0 6px">'+
+    '<li>위쪽 <b>현판</b>에 적힌 안내를 읽습니다. (“지금은 어떤 돌을 놓을 차례인가?”)</li>'+
+    '<li>아래 <b>돌 선반</b>에서 알맞은 문장의 돌을 눌러 집습니다.</li>'+
+    '<li>강 화면을 <b>꾹 누르면</b> 왼쪽 힘 게이지가 오릅니다. 노란 과녁에 점선이 닿을 때 손을 떼세요.</li>'+
+    '<li>내용도 맞고 조준도 맞으면 돌이 안착하고 어르신이 한 칸 건너갑니다.</li>'+
+    '<li>돌을 잘못 고르면 물에 빠지고 <b>기회가 하나</b> 줄어듭니다. 조준만 빗나간 것은 감점이 없어요.</li>'+
+    '</ol>'+
+    '<div class="two">'+
+      '<div class="note"><h3>키보드</h3><p>강 화면을 누른 뒤 <code>Space</code> 를 길게 눌렀다 떼면 던지고, <code>←</code> <code>→</code> 로 방향을 미세하게 맞춥니다.</p></div>'+
+      '<div class="note"><h3>조준이 어렵다면</h3><p>위쪽 <code>조준 도움</code> 을 켜면 바람이 사라지고 과녁 가까이 던진 돌이 저절로 안착합니다. 내용 판정은 그대로예요.</p></div>'+
+    '</div>'+
+    '<div class="two">'+
+      '<div class="note"><h3 class="g">귀납 (歸納)</h3><p>참새도 알을 낳고 비둘기도 알을 낳더라 → <code>모든 새는 알을 낳는다</code>.<br>사례가 많을수록 믿음직하지만, 결론이 <b>반드시</b> 참인 것은 아닙니다.</p></div>'+
+      '<div class="note"><h3 class="y">연역 (演繹)</h3><p>모든 사람은 죽는다 + 소크라테스는 사람이다 → <code>소크라테스는 죽는다</code>.<br>전제가 참이면 결론은 <b>반드시</b> 참입니다.</p></div>'+
+    '</div>'+
+    '<div class="btnrow"><button class="btn" data-act="back">닫기</button></div>'
+  );
+}
+function recapList(items){
+  return '<ul class="recap">' + items.map(it=>
+    '<li><b class="'+(it.type==='귀납'?'g':'y')+'">'+it.type+'</b>'+
+    '<span>전제 · '+it.premises.join(' / ')+'</span>'+
+    '<span class="c">결론 · '+it.conclusion+'</span></li>').join('') + '</ul>';
+}
+function showClear(bonus){
+  openScreen(
+    '<h2>'+(G.stageIdx+1)+'단계 「'+STAGES[G.stageIdx].name+'」 건넜습니다!</h2>'+
+    '<p class="lead">어르신이 무사히 강을 건너셨어요. 남은 시간 보너스 <b>+'+bonus+'점</b> · 현재 <b>'+G.score+'점</b></p>'+
+    '<h3 style="font-family:\'Do Hyeon\',sans-serif;margin:0">이번에 놓은 논증</h3>'+
+    recapList(G.done)+
+    '<div class="btnrow"><button class="btn" data-act="next">다음 강으로 ▶</button>'+
+      '<button class="btn ghost" data-act="title">처음 화면</button></div>'
+  );
+}
+function showFail(reason){
+  openScreen(
+    '<h2>'+reason+'</h2>'+
+    '<p class="lead">괜찮아요. 전제와 결론의 순서를 한 번만 더 살펴보고 다시 건너 봅시다. 점수 <b>'+G.score+'점</b></p>'+
+    '<div class="two">'+
+      '<div class="note"><h3 class="g">귀납이라면</h3><p><code>구체적 사실 → 구체적 사실 → 일반적 결론 → 귀납</code></p></div>'+
+      '<div class="note"><h3 class="y">연역이라면</h3><p><code>일반적 원리 → 구체적 사실 → 결론 → 연역</code></p></div>'+
+    '</div>'+
+    '<div class="btnrow"><button class="btn" data-act="retry">이 강 다시 건너기</button>'+
+      '<button class="btn ghost" data-act="title">처음 화면</button></div>'
+  );
+}
+function showEnding(){
+  const max = STAGES.reduce((a,s)=>a+s.items.length*4*180, 0);
+  const r = G.score/max;
+  const grade = r>=0.72?'논증 도사':r>=0.55?'징검다리 장인':r>=0.38?'강 건넌 나그네':'다시 오는 뱃사공';
+  openScreen(
+    '<h2>여섯 강을 모두 건넜습니다</h2>'+
+    '<p class="grade">'+grade+'</p>'+
+    '<p class="bignum">'+G.score+'<span style="font-size:.42em"> 점</span></p>'+
+    '<p class="lead" style="margin-top:10px">최고 점수 '+Math.max(store.best,G.score)+'점</p>'+
+    '<div class="two">'+
+      '<div class="note"><h3 class="g">귀납</h3><p>개별 사례를 모아 일반적인 결론으로 나아가는 방법. 새로운 지식을 넓혀 주지만 결론이 언제나 참이라고 보장하지는 못합니다.</p></div>'+
+      '<div class="note"><h3 class="y">연역</h3><p>이미 참인 일반 원리를 개별 사례에 적용하는 방법. 전제가 참이면 결론도 반드시 참이지만, 새로운 지식을 더해 주지는 않습니다.</p></div>'+
+    '</div>'+
+    '<div class="btnrow"><button class="btn" data-act="title">처음 화면으로</button></div>'
+  );
+}
+SCR.addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  if(b.dataset.stage!==undefined){ ac(); closeScreen(); startStage(+b.dataset.stage); return; }
+  const a = b.dataset.act;
+  if(a==='start'){ ac(); closeScreen(); startStage(0); }
+  else if(a==='next'){ closeScreen(); startStage(G.stageIdx+1); }
+  else if(a==='retry'){ closeScreen(); G.score = Math.max(0, G.score-0); startStage(G.stageIdx); }
+  else if(a==='title'){ closeScreen(); G.score = 0; showTitle(); }
+  else if(a==='help'){ showHelp(); }
+  else if(a==='back'){ G.running ? closeScreen() : showTitle(); if(G.running) G.overlay=false; }
+});
+function startStage(idx){
+  if(idx===0) G.score = 0;
+  buildStage(idx); G.running = true; G.overlay = false;
+  $('#shelfHint').textContent = '돌을 누른 뒤, 강을 꾹 눌러 힘을 모았다가 손을 떼세요.';
+  toast('「'+STAGES[idx].name+'」 — 돌 '+G.stones.length+'개로 논증 '+G.items.length+'개를 완성하세요.','');
+}
+
+/* ────────── 버튼 ────────── */
+$('#btnHelp').addEventListener('click', ()=>{ showHelp(); });
+$('#btnSound').addEventListener('click', e=>{
+  soundOn = !soundOn; ac();
+  e.currentTarget.setAttribute('aria-pressed', String(soundOn));
+  e.currentTarget.querySelector('b').textContent = soundOn?'켬':'끔';
+  if(soundOn) sfx.pick();
+});
+$('#btnAssist').addEventListener('click', e=>{
+  G.assist = !G.assist;
+  e.currentTarget.setAttribute('aria-pressed', String(G.assist));
+  e.currentTarget.querySelector('b').textContent = G.assist?'켬':'끔';
+  toast(G.assist?'조준 도움을 켰어요. 바람이 사라지고 과녁 가까이 던지면 안착합니다.':'조준 도움을 껐어요.','');
+});
+
+/* ────────── 입력 ────────── */
+const cv = $('#cv'), ctx = cv.getContext('2d');
+function fit(){
+  const s = Math.min(2, window.devicePixelRatio||1);
+  cv.width = Math.round(W*s); cv.height = Math.round(H*s);
+  ctx.setTransform(s,0,0,s,0,0);
+}
+fit(); addEventListener('resize', fit);
+function pos(e){
+  const r = cv.getBoundingClientRect();
+  return { x:(e.clientX-r.left)*(W/r.width), y:(e.clientY-r.top)*(H/r.height) };
+}
+function setAim(p){
+  const o = G.g.origin;
+  let a = Math.atan2(p.y-o.y, p.x-o.x);
+  if(a > -0.06) a = (p.x>=o.x) ? -0.10 : -Math.PI+0.10;
+  G.aim = clamp(a, -Math.PI+0.08, -0.08);
+}
+function beginCharge(){
+  if(!G.running || G.overlay || G.fly) return false;
+  if(G.sel===null){ toast('먼저 아래 선반에서 돌을 하나 고르세요!',''); return false; }
+  G.charging = true; G.power = 0; G.powerDir = 1; return true;
+}
+cv.addEventListener('pointerdown', e=>{
+  e.preventDefault(); cv.focus(); ac();
+  if(!beginCharge()) return;
+  setAim(pos(e));
+  try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+});
+cv.addEventListener('pointermove', e=>{ if(G.charging) setAim(pos(e)); });
+cv.addEventListener('pointerup', e=>{ e.preventDefault(); release(); });
+cv.addEventListener('pointercancel', ()=>{ G.charging = false; });
+cv.addEventListener('keydown', e=>{
+  if(e.key===' '||e.code==='Space'){ e.preventDefault(); if(!G.charging){ ac(); beginCharge(); } }
+  else if(e.key==='ArrowLeft'){ e.preventDefault(); G.aim = clamp(G.aim-0.022, -Math.PI+0.08, -0.08); }
+  else if(e.key==='ArrowRight'){ e.preventDefault(); G.aim = clamp(G.aim+0.022, -Math.PI+0.08, -0.08); }
+});
+cv.addEventListener('keyup', e=>{ if(e.key===' '||e.code==='Space'){ e.preventDefault(); release(); } });
+
+/* ────────── 풍경 소품 ────────── */
+function buildDecor(){
+  G.decorFor = G.stageIdx;
+  const g = G.g, d = { sp:[], reedT:[], reedB:[], grass:[], weed:[] };
+  for(let i=0;i<72;i++) d.sp.push({ x:rnd(16,944), y:rnd(g.farY+18, g.nearY-14), ph:rnd(0,6.3), s:rnd(.8,2.2) });
+  for(let i=0;i<24;i++) d.reedT.push({ x:rnd(14,946), y:g.farY+rnd(-4,12), h:rnd(15,29), f:rnd(-.35,.35) });
+  for(let i=0;i<24;i++) d.reedB.push({ x:rnd(14,946), y:g.nearY+rnd(-10,6), h:rnd(15,31), f:rnd(-.35,.35) });
+  for(let i=0;i<42;i++) d.grass.push({ x:rnd(90,880), y: Math.random()<.5 ? rnd(26,g.farY-26) : rnd(g.nearY+30, 648), s:rnd(.7,1.3) });
+  for(let i=0;i<4;i++) d.weed.push({ x:rnd(90,880), y:rnd(g.farY+60, g.nearY-60), r:rnd(26,44) });
+  G.decor = d;
+}
+function ell(x,y,rx,ry){ ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,6.2832); ctx.fill(); }
+function shoreline(yBase, amp, down){
+  ctx.beginPath();
+  ctx.moveTo(0, down ? 0 : H);
+  ctx.lineTo(0, yBase);
+  for(let x=0;x<=W;x+=24) ctx.lineTo(x, yBase + Math.sin(x*0.017)*amp + Math.sin(x*0.041)*amp*0.5);
+  ctx.lineTo(W, down ? 0 : H);
+  ctx.closePath(); ctx.fill();
+}
+function tuft(x,y,s,col){
+  ctx.strokeStyle = col; ctx.lineWidth = 2.4*s; ctx.lineCap='round';
+  for(let i=-1;i<=1;i++){
+    ctx.beginPath(); ctx.moveTo(x,y);
+    ctx.quadraticCurveTo(x+i*7*s, y-9*s, x+i*11*s, y-15*s); ctx.stroke();
+  }
+}
+function tree(x, baseY){
+  ctx.fillStyle = '#7A5433';
+  ctx.beginPath(); ctx.moveTo(x-20,-20); ctx.lineTo(x+20,-20);
+  ctx.lineTo(x+27, baseY+6); ctx.lineTo(x-27, baseY+6); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(60,36,18,.35)';
+  for(let i=0;i<3;i++){ ctx.fillRect(x-14+i*12, -16, 4, baseY+18); }
+  ctx.fillStyle = '#3F7A46';
+  [[-34,6,46],[30,2,44],[0,-22,52],[-14,40,34],[20,44,32]].forEach(c=>{ ell(x+c[0], c[1], c[2], c[2]*0.82); });
+  ctx.fillStyle = 'rgba(140,200,120,.34)';
+  [[-40,-4,22],[22,-12,20]].forEach(c=>{ ell(x+c[0], c[1], c[2], c[2]*0.78); });
+}
+
+/* ────────── 인물 ────────── */
+function traveler(x,y,bob){
+  ctx.save(); ctx.translate(x, y+bob);
+  ctx.fillStyle='rgba(10,50,60,.22)'; ell(0, 4, 20, 6);
+  ctx.strokeStyle='#8A6234'; ctx.lineWidth=3.4; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(19,-50); ctx.lineTo(25,2); ctx.stroke();
+  ctx.fillStyle='#F7F1E2';
+  ctx.beginPath(); ctx.moveTo(-15,-48); ctx.lineTo(15,-48); ctx.lineTo(21,0); ctx.lineTo(-21,0); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#CFC3A8'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(0,-48); ctx.lineTo(2,0); ctx.stroke();
+  ctx.fillStyle='#5E7F9B';
+  ctx.beginPath(); ctx.moveTo(-14,-42); ctx.lineTo(-20,-16); ctx.lineTo(-13,-14); ctx.lineTo(-8,-41); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(14,-42); ctx.lineTo(20,-16); ctx.lineTo(13,-14); ctx.lineTo(8,-41); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#F0D3AE'; ell(0,-57,11.5,12);
+  ctx.fillStyle='#FBF6EC'; ell(0,-49,7,5);
+  ctx.fillStyle='#2A2622';
+  ctx.beginPath(); ctx.moveTo(-8,-64); ctx.lineTo(8,-64); ctx.lineTo(6,-78); ctx.lineTo(-6,-78); ctx.closePath(); ctx.fill();
+  ell(0,-64,25,6.5);
+  ctx.fillStyle='#241C1A'; ell(-4,-59,1.5,1.6); ell(4,-59,1.5,1.6);
+  ctx.restore();
+}
+function kid(x,y,arm){
+  ctx.save(); ctx.translate(x,y);
+  ctx.fillStyle='rgba(60,42,20,.2)'; ell(0,3,18,5);
+  ctx.fillStyle='#B8392B';
+  ctx.beginPath(); ctx.moveTo(-12,-24); ctx.lineTo(12,-24); ctx.lineTo(15,0); ctx.lineTo(-15,0); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#1D6E7E';
+  ctx.beginPath(); ctx.moveTo(-14,-46); ctx.lineTo(14,-46); ctx.lineTo(16,-22); ctx.lineTo(-16,-22); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#D9991B'; ctx.fillRect(-16,-30,32,4);
+  ctx.strokeStyle='#F0D3AE'; ctx.lineWidth=6; ctx.lineCap='round';
+  const a = -0.9 - arm*1.5;
+  ctx.beginPath(); ctx.moveTo(10,-42); ctx.lineTo(10+Math.cos(a)*20, -42+Math.sin(a)*20); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-11,-42); ctx.lineTo(-17,-26); ctx.stroke();
+  ctx.fillStyle='#F0D3AE'; ell(0,-55,11,11.5);
+  ctx.fillStyle='#241C1A';
+  ctx.beginPath(); ctx.arc(0,-57,11.5,Math.PI,0); ctx.fill();
+  ell(0,-66,7,5);
+  ctx.fillStyle='#241C1A'; ell(-4,-54,1.5,1.6); ell(4,-54,1.5,1.6);
+  ctx.fillStyle='#B8392B'; ell(-8,-50,2.6,1.8); ell(8,-50,2.6,1.8);
+  ctx.restore();
+}
+
+/* ────────── 돌 ────────── */
+const ROLE_COLOR = { p0:'#1D6E7E', p1:'#1D6E7E', con:'#B8392B', type:'#D9991B' };
+function stoneFace(x,y,st,scale){
+  const rx = 45*scale, ry = 28*scale;
+  ctx.fillStyle = 'rgba(8,44,56,.34)'; ell(x+5, y+13, rx*0.96, ry*0.6);
+  const g = ctx.createLinearGradient(x-rx, y-ry, x+rx*0.6, y+ry);
+  g.addColorStop(0,'#CDD1CE'); g.addColorStop(.45,'#A4AAA7'); g.addColorStop(1,'#767D7A');
+  ctx.fillStyle = g; ell(x, y, rx, ry);
+  ctx.fillStyle = 'rgba(255,255,255,.34)'; ell(x-rx*0.26, y-ry*0.38, rx*0.5, ry*0.4);
+  ctx.fillStyle = 'rgba(40,46,44,.22)'; ell(x+rx*0.3, y+ry*0.42, rx*0.44, ry*0.3);
+  if(scale>0.6){
+    ctx.fillStyle = ROLE_COLOR[st.role]; ell(x, y-ry*0.52, 4.2, 4.2);
+    ctx.fillStyle = '#171310'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    if(st.role==='type'){ ctx.font = '700 19px "Do Hyeon", sans-serif'; ctx.fillText(st.text, x, y+5); }
+    else { ctx.font = '700 14px "Gaegu", sans-serif'; ctx.fillText(st.short, x, y+5); }
+  }
+}
+
+/* ────────── 갱신 ────────── */
+function update(dt){
+  if(G.charging){
+    G.power += G.powerDir*dt/1.12;
+    if(G.power>=1){ G.power=1; G.powerDir=-1; }
+    if(G.power<=0){ G.power=0; G.powerDir=1; }
+  }
+  if(G.kidArm>0) G.kidArm = Math.max(0, G.kidArm - dt*3.2);
+  if(G.fly){
+    G.fly.t += dt/G.fly.dur;
+    if(G.fly.t>=1){ G.fly.t=1; resolveThrow(); }
+  }
+  const c = G.char;
+  if(c.t<1 && c.from){
+    c.t = Math.min(1, c.t + dt/0.55);
+    const e = c.t<0.5 ? 2*c.t*c.t : 1-Math.pow(-2*c.t+2,2)/2;
+    c.x = lerp(c.from.x, c.to.x, e);
+    c.y = lerp(c.from.y, c.to.y, e) - Math.sin(Math.PI*c.t)*36;
+  }
+  for(let i=G.ripples.length-1;i>=0;i--){
+    const r = G.ripples[i]; r.r += dt*120; r.a -= dt*1.1;
+    if(r.a<=0 || r.r>r.max) G.ripples.splice(i,1);
+  }
+  for(let i=G.fx.length-1;i>=0;i--){
+    const p = G.fx[i];
+    if(p.sinker){ p.life -= dt*1.1; p.y += dt*26; }
+    else { p.life -= dt*1.4; p.vy += dt*420; p.x += p.vx*dt; p.y += p.vy*dt; }
+    if(p.life<=0) G.fx.splice(i,1);
+  }
+  for(let i=G.floats.length-1;i>=0;i--){
+    const f = G.floats[i]; f.life -= dt*0.72; f.y -= dt*30;
+    if(f.life<=0) G.floats.splice(i,1);
+  }
+  G.placed.forEach(p=>{ if(p.pop>0) p.pop = Math.max(0, p.pop - dt*2.6); });
+  if(G.running && !G.overlay){
+    G.time -= dt;
+    if(G.time<=0){ G.time=0; updateHUD(); endStage(false,'시간이 다 되었어요'); }
+    else if(Math.random()<0.4) updateHUD();
+  }
+}
+
+/* ────────── 그리기 ────────── */
+function draw(T){
+  if(G.decorFor!==G.stageIdx || !G.decor) buildDecor();
+  const g = G.g, d = G.decor;
+
+  const water = ctx.createLinearGradient(0, g.farY, 0, g.nearY);
+  water.addColorStop(0,'#14596B'); water.addColorStop(.45,'#2A8296'); water.addColorStop(1,'#41A2B2');
+  ctx.fillStyle = water; ctx.fillRect(0,0,W,H);
+
+  ctx.save(); ctx.globalAlpha=.22; ctx.fillStyle='#0B3F50';
+  d.weed.forEach(w=>ell(w.x,w.y,w.r,w.r*0.42)); ctx.restore();
+
+  ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=2.2;
+  for(let y=g.farY+26; y<g.nearY-8; y+=27){
+    ctx.beginPath();
+    for(let x=0;x<=W;x+=16){
+      const yy = y + Math.sin(x*0.021 + T*0.7 + y*0.05)*3.4;
+      x===0 ? ctx.moveTo(x,yy) : ctx.lineTo(x,yy);
+    }
+    ctx.stroke();
+  }
+  ctx.fillStyle='#FFFFFF';
+  d.sp.forEach(s=>{
+    const a = 0.16 + 0.34*Math.abs(Math.sin(T*1.6 + s.ph));
+    ctx.globalAlpha = a; ell(s.x, s.y, s.s, s.s*0.75);
+  });
+  ctx.globalAlpha = 1;
+
+  ctx.fillStyle='#C9A65E'; shoreline(g.farY+7, 9, true);
+  ctx.fillStyle='#E0C280'; shoreline(g.farY-4, 9, true);
+  ctx.fillStyle='#C9A65E'; shoreline(g.nearY-7, 10, false);
+  ctx.fillStyle='#E0C280'; shoreline(g.nearY+4, 10, false);
+  d.grass.forEach(t=>tuft(t.x,t.y,t.s,'#4E8B3F'));
+  d.reedT.forEach(r=>tuft(r.x, r.y, 1+r.f*0.4, '#6FA34A'));
+  d.reedB.forEach(r=>tuft(r.x, r.y, 1+r.f*0.4, '#6FA34A'));
+  tree(54, g.farY-34); tree(906, g.farY-52);
+
+  ctx.setLineDash([7,7]); ctx.lineWidth=2;
+  for(let i=G.placed.length;i<G.slots.length;i++){
+    const s = G.slots[i];
+    ctx.strokeStyle = 'rgba(255,255,255,'+(i===G.placed.length?0.0:0.3)+')';
+    ctx.beginPath(); ctx.ellipse(s.x,s.y,40,25,0,0,6.2832); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  G.ripples.forEach(r=>{
+    ctx.strokeStyle='rgba(255,255,255,'+r.a.toFixed(3)+')'; ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.ellipse(r.x,r.y,r.r,r.r*0.5,0,0,6.2832); ctx.stroke();
+  });
+
+  G.fx.filter(p=>p.sinker).forEach(p=>{
+    ctx.save(); ctx.globalAlpha = Math.max(0,p.life)*0.8;
+    ctx.translate(p.x,p.y); ctx.scale(Math.max(.1,p.life), Math.max(.1,p.life));
+    ctx.fillStyle='#6E7573'; ell(0,0,42,26); ctx.restore();
+  });
+
+  if(G.running && !G.fly && G.placed.length<G.slots.length){
+    const t = G.slots[G.placed.length];
+    const pulse = 0.55 + 0.45*Math.sin(T*3.2);
+    ctx.setLineDash([9,8]); ctx.lineDashOffset = -T*22;
+    ctx.strokeStyle = 'rgba(240,190,60,'+(0.55+0.35*pulse).toFixed(3)+')'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.ellipse(t.x,t.y,g.tol,g.tol*0.6,0,0,6.2832); ctx.stroke();
+    ctx.setLineDash([]); ctx.lineDashOffset=0;
+    ctx.fillStyle='rgba(240,190,60,.9)';
+    ctx.beginPath(); ctx.moveTo(t.x, t.y-g.tol*0.6-16); ctx.lineTo(t.x-8, t.y-g.tol*0.6-30); ctx.lineTo(t.x+8, t.y-g.tol*0.6-30); ctx.closePath(); ctx.fill();
+  }
+
+  G.placed.slice().sort((a,b)=>a.y-b.y).forEach(p=>stoneFace(p.x, p.y, p.st, 1 + p.pop*0.12));
+
+  const c = G.char;
+  traveler(c.x, c.y, G.char.t>=1 ? Math.sin(T*2)*1.6 : 0);
+  kid(g.origin.x, g.origin.y+16, G.charging ? 0.35+G.power*0.3 : G.kidArm);
+
+  if(G.sel!==null && !G.fly && G.running){
+    const o = g.origin, dd = 80 + G.power*720;
+    let L = { x:o.x+Math.cos(G.aim)*dd, y:o.y+Math.sin(G.aim)*dd };
+    if(!G.assist && G.wind) L.x += G.wind*(dd/380);
+    ctx.fillStyle='rgba(255,255,255,.75)';
+    for(let k=0.08;k<1;k+=0.072){
+      const px = lerp(o.x,L.x,k), py = lerp(o.y,L.y,k) - Math.sin(Math.PI*k)*dd*0.26;
+      ctx.globalAlpha = 0.16 + k*0.5; ell(px,py,2.6,2.6);
+    }
+    ctx.globalAlpha=1;
+    ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.ellipse(L.x,L.y,13,7,0,0,6.2832); ctx.stroke();
+  }
+
+  if(G.fly){
+    const f = G.fly, k = f.t;
+    const px = lerp(f.from.x,f.to.x,k), py = lerp(f.from.y,f.to.y,k) - Math.sin(Math.PI*k)*f.lift;
+    ctx.fillStyle='rgba(8,44,56,.26)';
+    ell(lerp(f.from.x,f.to.x,k), lerp(f.from.y,f.to.y,k)+6, 26*(1-k*0.2), 9);
+    ctx.save(); ctx.translate(px,py); ctx.rotate(k*f.spin);
+    stoneFace(0,0,f.st,0.82); ctx.restore();
+  }
+
+  if(G.charging){
+    const gx=26, gy=178, gw=27, gh=306;
+    ctx.fillStyle='rgba(24,18,12,.5)'; ctx.beginPath(); ctx.roundRect(gx-5,gy-5,gw+10,gh+34,10); ctx.fill();
+    ctx.fillStyle='#D9D3C2'; ctx.beginPath(); ctx.roundRect(gx,gy,gw,gh,7); ctx.fill();
+    const ph = gh*G.power;
+    const pg = ctx.createLinearGradient(0,gy+gh,0,gy);
+    pg.addColorStop(0,'#3E7A4A'); pg.addColorStop(.55,'#D9991B'); pg.addColorStop(1,'#B8392B');
+    ctx.fillStyle=pg; ctx.beginPath(); ctx.roundRect(gx, gy+gh-ph, gw, ph, 7); ctx.fill();
+    ctx.fillStyle='#F1E4C8'; ctx.font='700 15px "Do Hyeon", sans-serif'; ctx.textAlign='center';
+    ctx.fillText('힘', gx+gw/2, gy+gh+22);
+  }
+
+  G.fx.filter(p=>!p.sinker).forEach(p=>{
+    ctx.globalAlpha = Math.max(0,p.life);
+    ctx.fillStyle='#DFF3F7'; ell(p.x,p.y,p.r,p.r);
+  });
+  ctx.globalAlpha=1;
+
+  ctx.textAlign='center'; ctx.font='700 24px "Do Hyeon", sans-serif';
+  G.floats.forEach(f=>{
+    ctx.globalAlpha = Math.min(1, f.life*1.5);
+    ctx.lineWidth=4; ctx.strokeStyle='rgba(20,14,8,.55)';
+    ctx.strokeText(f.text, f.x, f.y); ctx.fillStyle=f.color; ctx.fillText(f.text, f.x, f.y);
+  });
+  ctx.globalAlpha=1;
+
+  if(!G.running && !G.overlay){
+    ctx.fillStyle='rgba(24,18,12,.25)'; ctx.fillRect(0,0,W,H);
+  }
+}
+
+/* ────────── 루프 ────────── */
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.05, (now-last)/1000); last = now;
+  if(G.g){ update(dt); draw(now/1000); }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ /* 폰트 로드 후 자동 재그리기 */ });
+
+/* ────────── 시작 ────────── */
+function boot(saved){
+  if(saved && saved.store) store = Object.assign(store, saved.store);
+  G.g = geo(0); G.slots = slotsFor(G.g, 8);
+  G.char.x = G.g.start.x; G.char.y = G.g.start.y;
+  G.time = 0; G.timeMax = 1; updateHUD();
+  showTitle();
+}
+if(window.claude && window.claude.hot){
+  window.claude.hot.snapshot(()=>({ store }));
+  window.claude.hot.ready ? window.claude.hot.ready(boot) : boot({});
+} else boot({});
+</script>
